@@ -1,0 +1,39 @@
+{
+  "id": "/",
+  "name": "The MoSaFa Tools & StudyMate BD",
+  "short_name": "The MoSaFa",
+  "description": "সকল ফ্রি বাংলা অনলাইন টুলস ও এআই প্রাইভেট টিউটর - The MoSaFa StudyMate BD, CV Maker, ভোটার স্থানান্তর ফরম ও প্রিপেইড মিটার সহকারী।",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#e11d48",
+  "categories": ["education", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,2578 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:css='false' b:defaultwidgetversion='2' b:layoutsversion='3' expr:dir='data:blog.languageDirection' lang='bn' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<head>
+  <meta charset='UTF-8'/>
+  <meta content='width=device-width, initial-scale=1.0' name='viewport'/>
+  <title>The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল, কোন বাসে কত ভাড়া ও প্রিপেইড মিটার সহকারী</title>
+  <meta content='The MoSaFa - কোন বাসে কত ভাড়া (বাস রুট ও লাইভ ভাড়া), প্রিপেইড মিটার সহকারী, গল্পের ঘর, প্রেম টেস্ট, লিপি টাইপিং টেস্ট, বয়স ক্যালকুলেটর ও প্রয়োজনীয় সকল বাংলা অনলাইন টুলস।' name='description'/>
+  <meta content='The MoSaFa Tools - সকল অনলাইন টুলস ও বাস ভাড়া গাইড' property='og:title'/>
+  <meta content='কোন বাসে কত ভাড়া, প্রিপেইড মিটার কোড, গল্পের ঘর ও প্রয়োজনীয় সকল অনলাইন টুলস এক ক্লিকে।' property='og:description'/>
+  <meta content='website' property='og:type'/>
+
+  <!-- Google Fonts: Hind Siliguri for Bengali Typography -->
+  <link href='https://fonts.googleapis.com' rel='preconnect'/>
+  <link crossorigin='anonymous' href='https://fonts.gstatic.com' rel='preconnect'/>
+  <link href='https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&amp;display=swap' rel='stylesheet'/>
+
+  <!-- Tailwind CSS CDN -->
+  <script src='https://cdn.tailwindcss.com'></script>
+  <!-- Canvas Confetti CDN -->
+  <script src='https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js'></script>
+
+  <style>
+    /* Reset & Hide Blogger Defaults */
+    #navbar, #navbar-iframe, .navbar, b\:section#navbar, iframe[name="navbar-iframe"], iframe#navbar-iframe {
+      display: none !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      max-height: 0 !important;
+      overflow: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    #Attribution1, .attribution, .quickedit, .blogger-clickToEdit, .cookie-choices-info, .sidebar, #sidebar {
+      display: none !important;
+    }
+
+    /* Complete Blogger CSS Isolation */
+    * {
+      font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      box-sizing: border-box;
+    }
+    a {
+      text-decoration: none !important;
+      color: inherit;
+    }
+    button {
+      font-family: inherit;
+    }
+    .widget, .widget-content, .post, .post-body, .main-inner, .content-outer, .content-inner, .column-center-outer {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      background: transparent !important;
+    }
+    .shadow-xs {
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+    .shadow-2xs {
+      box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.03) !important;
+    }
+    .backdrop-blur-xs {
+      backdrop-filter: blur(2px) !important;
+    }
+
+    body {
+      font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+      background: #f8fafc;
+      min-height: 100vh;
+      color: #1e293b;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Toast Notification */
+    #mosafa-toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 0.75rem 1.25rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+      font-size: 0.82rem;
+      font-weight: 700;
+      opacity: 0;
+      transform: translateY(1rem);
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #mosafa-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Animation Utilities */
+    @keyframes pulseSoft {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.85; }
+    }
+    .animate-pulse-soft {
+      animation: pulseSoft 2s infinite ease-in-out;
+    }
+
+    .tool-card {
+      transition: all 0.22s ease-in-out;
+    }
+    .tool-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+
+  <b:skin><![CDATA[]]></b:skin>
+</head>
+<body class='antialiased min-h-screen flex flex-col justify-between selection:bg-rose-100 selection:text-rose-900 relative'>
+  <!-- Background Particles Canvas -->
+  <canvas id='floatingCanvas' style='position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:0;'></canvas>
+
+  <!-- Top App Bar / Header -->
+  <header class='sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs'>
+    <div class='max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between gap-4'>
+      <!-- Logo & Brand (Matching Screenshot 1) -->
+      <a class='flex items-center gap-2.5 cursor-pointer no-underline group' href='?' id='brand-home-link'>
+        <div class='w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-200 group-hover:scale-105 transition'>
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+        </div>
+        <div>
+          <div class='flex items-center gap-1.5'>
+            <span class='text-lg sm:text-xl font-bold tracking-tight text-slate-900 leading-tight'>The MoSaFa</span>
+            <span class='text-[10px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider'>Tools</span>
+          </div>
+          <p class='text-[11px] sm:text-xs text-slate-500 font-medium'>সকল ফ্রি অনলাইন টুলস এক ক্লিকে</p>
+        </div>
+      </a>
+
+      <!-- Quick Actions -->
+      <div class='flex items-center gap-2'>
+        <a class='px-3 py-1.5 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-800 text-xs font-bold transition flex items-center gap-1.5' href='?tool=bus-fare'>
+          <span>🚌</span>
+          <span class='hidden sm:inline'>বাস ভাড়া</span>
+        </a>
+        <a class='px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition flex items-center gap-1.5' href='?tool=prepaid-meter'>
+          <span>⚡</span>
+          <span class='hidden sm:inline'>মিটার সহকারী</span>
+        </a>
+        <a class='px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold transition flex items-center gap-1.5' href='?tool=golpo-ghor'>
+          <span>📚</span>
+          <span class='hidden sm:inline'>গল্পের ঘর</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container: Swapped dynamically based on ?tool=... query param -->
+  <main class='flex-grow max-w-6xl w-full mx-auto px-3 sm:px-4 py-6' id='mosafa-app-root'>
+    <!-- Default: Hub View (rendered via JS) -->
+  </main>
+
+  <!-- Global Footer -->
+  <footer class='bg-white border-t border-slate-200/80 mt-12 py-8 text-center text-xs text-slate-500'>
+    <div class='max-w-6xl mx-auto px-4 space-y-3'>
+      <div class='flex items-center justify-center gap-3 font-bold text-slate-700 flex-wrap'>
+        <a class='hover:text-sky-600 transition' href='?'>হোম পোর্টাল</a>
+        <span>•</span>
+        <a class='hover:text-sky-600 transition' href='?tool=bus-fare'>কোন বাসে কত ভাড়া</a>
+        <span>•</span>
+        <a class='hover:text-sky-600 transition' href='?tool=prepaid-meter'>প্রিপেইড মিটার সহকারী</a>
+        <span>•</span>
+        <a class='hover:text-sky-600 transition' href='?tool=golpo-ghor'>গল্পের ঘর</a>
+        <span>•</span>
+        <a class='hover:text-sky-600 transition' href='?tool=love-test'>প্রেম টেস্ট</a>
+        <span>•</span>
+        <a class='hover:text-sky-600 transition' href='?tool=age-calc'>বয়স ক্যালকুলেটর</a>
+      </div>
+      <p class='text-[11px] text-slate-400'>
+        © <span id='current-year'>2025</span> The MoSaFa. সর্বস্বত্ব সংরক্ষিত। ১০০% ক্লায়েন্ট-সাইড SPA ও নির্ভুল তথ্য সেবা।
+      </p>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id='mosafa-toast'>
+    <span id='mosafa-toast-icon'>✅</span>
+    <span id='mosafa-toast-msg'>অপারেশন সফল হয়েছে!</span>
+  </div>
+
+  <!-- Hidden Blogger Section for Blogger XML compliance -->
+  <div class='hidden'>
+    <b:section id='main' showaddelement='no'/>
+  </div>
+
+  <!-- Complete Vanilla JavaScript Application Logic -->
+  <script>
+//<![CDATA[
+(function() {
+  'use strict';
+
+  // 1. Toast Notification Helper
+  function showToast(msg, icon) {
+    var toast = document.getElementById('mosafa-toast');
+    var toastMsg = document.getElementById('mosafa-toast-msg');
+    var toastIcon = document.getElementById('mosafa-toast-icon');
+    if (!toast || !toastMsg) return;
+    toastMsg.innerText = msg;
+    if (toastIcon && icon) toastIcon.innerText = icon;
+    toast.classList.add('show');
+    setTimeout(function() {
+      toast.classList.remove('show');
+    }, 2800);
+  }
+  window.showMoSaFaToast = showToast;
+
+  // Floating Particles Animation (Matching React App)
+  (function initParticles() {
+    var canvas = document.getElementById('floatingCanvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    var particles = [];
+    for (var i = 0; i < 22; i++) {
+      particles.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        size: Math.random() * 3 + 1.5,
+        speedY: Math.random() * 0.45 + 0.2,
+        speedX: (Math.random() - 0.5) * 0.25,
+        opacity: Math.random() * 0.16 + 0.05
+      });
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(function(p) {
+        p.y -= p.speedY;
+        p.x += p.speedX;
+        if (p.y < -15) {
+          p.y = canvas.height + 15;
+          p.x = Math.random() * canvas.width;
+        }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(244, 63, 94, ' + p.opacity + ')';
+        ctx.fill();
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+
+  // Set Year
+  var yElem = document.getElementById('current-year');
+  if (yElem) yElem.innerText = new Date().getFullYear();
+
+  // 2. All 18 Tools Registry (Matching Screenshot 1 & App.tsx)
+  var TOOLS = [
+    {
+      id: 'love-test',
+      title: 'প্রেম টেস্ট (Love Test)',
+      badge: '🔥 ভাইরাল টেস্ট',
+      badgeColor: 'bg-rose-50 text-rose-600 border-rose-200',
+      category: 'entertainment',
+      iconBg: 'from-rose-500 to-pink-600',
+      icon: '<svg class="w-6 h-6 fill-white text-white" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+      description: 'দুজনের বয়স, গায়ের রং, পারিবারিক সম্মতি, বাস্তব প্রশ্ন ও স্বভাব যাচাই করে সম্পর্কের গভীরতা ও ভবিষ্যৎ উদ্দেশ্য নির্ণয় করুন। সনদপত্র ডাউনলোড সুবিধা সহ!',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ভার্সন',
+      keywords: ['প্রেম টেস্ট', 'love test', 'সম্পর্ক', 'ভালোবাসা', 'বিবাহ', 'বিচ্ছেদ', 'পরীক্ষা']
+    },
+    {
+      id: 'typing-test',
+      title: 'লিপি টাইপিং টেস্ট (Typing Speed)',
+      badge: '⚡ স্পিড টেস্ট',
+      badgeColor: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+      category: 'typing',
+      iconBg: 'from-indigo-600 to-blue-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></svg>',
+      description: '১ মিনিটে বাংলা টাইপিংয়ের গতি ও নির্ভুলতা পরীক্ষা করুন। লাইভ WPM, CPM ও সঠিকতার হিসাবসহ তাৎক্ষণিক ফলাফল ও অ্যানালিটিক্স।',
+      deviceTag: '💻 শুধু কম্পিউটার / ল্যাপটপ',
+      keywords: ['টাইপিং টেস্ট', 'typing speed test', 'বাংলা টাইপিং', 'wpm', 'cpm', 'লিপি টাইপিং']
+    },
+    {
+      id: 'age-calc',
+      title: 'বয়স ক্যালকুলেটর (Age Calculator)',
+      badge: '📅 নিখুঁত হিসাব',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      category: 'calculator',
+      iconBg: 'from-emerald-500 to-teal-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>',
+      description: 'জন্মতারিখ নির্বাচন করে এক ক্লিকে বের করুন আপনার বর্তমান বয়স — বছর, মাস, দিন, মোট সপ্তাহ, এবং আগামী জন্মদিনের কাউন্টডাউন।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['বয়স ক্যালকুলেটর', 'age calculator', 'জন্ম তারিখ', 'হিসাব', 'দিন', 'মাস', 'বছর']
+    },
+    {
+      id: 'decision-maker',
+      title: 'কয়েন টস ও সিদ্ধান্ত (Coin Toss)',
+      badge: '🪙 ৩ডি টস',
+      badgeColor: 'bg-purple-50 text-purple-600 border-purple-200',
+      category: 'calculator',
+      iconBg: 'from-purple-600 to-violet-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/></svg>',
+      description: 'যেকোনো দ্বিধাদ্বন্দ্বে হেড বা টেল টস করুন। আসল মুদ্রার মতো বাস্তবসম্মত ৩D ঘূর্ণন ও রুদ্ধশ্বাস স্পিন অ্যানিমেশন সহ!',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['কয়েন টস', 'coin toss', 'decision maker', 'র‍্যান্ডম সিদ্ধান্ত', 'হেড টেল']
+    },
+    {
+      id: 'love-calc',
+      title: 'কুইক লাভ পারসেন্টেজ (Love %)',
+      badge: '💖 ইনস্ট্যান্ট স্কোর',
+      badgeColor: 'bg-pink-50 text-pink-600 border-pink-200',
+      category: 'entertainment',
+      iconBg: 'from-pink-500 to-rose-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>',
+      description: 'দুজনের নাম লিখে এক ক্লিকে ভালোবাসার শতকরা হার বের করুন। বন্ধুদের সাথে শেয়ার করার জন্য মজার লাভ মিটার স্কোর ও অ্যানিমেশন।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['লাভ পারসেন্টেজ', 'love percentage calculator', 'ভালোবাসার হার', 'শতাংশ']
+    },
+    {
+      id: 'bangla-status',
+      title: 'বাংলা স্ট্যাটাস ও ক্যাপশন হাব',
+      badge: '💬 ১০০০+ স্ট্যাটাস',
+      badgeColor: 'bg-violet-50 text-violet-700 border-violet-200',
+      category: 'status',
+      iconBg: 'from-violet-600 to-purple-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M14.8 7.5a1.84 1.84 0 0 0-2.6 0l-.2.2-.2-.2a1.84 1.84 0 1 0-2.6 2.6L12 12.7l2.8-2.6a1.84 1.84 0 0 0 0-2.6z"/></svg>',
+      description: 'ভালোবাসা, কষ্ট, ইসলামিক, বন্ধুত্ব, এটিটিউড, মোটিভেশন ও ফানি সহ ১০টি ক্যাটাগরির ১০০০+ সেরা বাংলা ক্যাপশন কালেকশন ও ফটো কার্ড মেকার।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['বাংলা স্ট্যাটাস', 'ক্যাপশন', 'bangla status', 'quotes', 'caption', 'ভালোবাসা', 'কষ্ট']
+    },
+    {
+      id: 'poster-studio',
+      title: 'MoSaFa Poster Studio (পোস্টার স্টুডিও)',
+      badge: '🎨 পোস্টার ও মিম',
+      badgeColor: 'bg-rose-50 text-rose-600 border-rose-200',
+      category: 'status',
+      iconBg: 'from-rose-500 to-pink-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.7 1.7-1.7h2c3 0 5.5-2.5 5.5-5.5C22 6 17.5 2 12 2z"/></svg>',
+      description: 'নিউজ স্টাইল পোস্টার, কোটেশন, ব্যানার, স্লোগান ও ফ্রেন্ড মিম তৈরির ব্রাউজার-বেসড ক্রিয়েটিভ স্টুডিও ও PNG এক্সপোর্ট।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['পোস্টার', 'poster studio', 'মিম', 'meme', 'ব্যানার', 'নিউজ পোস্টার', 'ছবি']
+    },
+    {
+      id: 'life-journey',
+      title: 'MoSaFa Life Journey (জীবন ও ফোন জার্নি)',
+      badge: '⏳ টাইমলাইন',
+      badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+      category: 'calculator',
+      iconBg: 'from-cyan-500 to-blue-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.44 13.17 9.03 14.97 10.83 9.56 16.24 7.76"/></svg>',
+      description: 'ব্যক্তিগত জীবনের সকল স্মরণীয় মাইলফলক ও আজ পর্যন্ত ব্যবহৃত মোবাইল ফোনের ক্রমবিকাশের ভিজ্যুয়াল টাইমলাইন ও কার্ড।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['life journey', 'ফোন জার্নি', 'টাইমলাইন', 'স্মৃতি', 'মোবাইল ইতিহাস', 'মাইলফলক']
+    },
+    {
+      id: 'family-tree',
+      title: 'Family Tree Builder (পারিবারিক বংশলতিকা)',
+      badge: '🌳 বংশবৃক্ষ',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      category: 'entertainment',
+      iconBg: 'from-emerald-500 to-teal-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      description: 'দাদা-দাদী থেকে শুরু করে পরবর্তী প্রজন্মের সকল সদস্যের সম্পর্ক যুক্ত করে সুন্দর পারিবারিক বংশবৃক্ষ তৈরি ও প্রিন্ট করুন।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['family tree', 'বংশলতিকা', 'বংশবৃক্ষ', 'পরিবার', 'আত্মীয়স্বজন', 'দাদা', 'বাবা']
+    },
+    {
+      id: 'random-picker',
+      title: 'Random Picker Wheel (সিদ্ধান্ত চাকা)',
+      badge: '🎡 লাকি হুইল',
+      badgeColor: 'bg-purple-50 text-purple-600 border-purple-200',
+      category: 'calculator',
+      iconBg: 'from-purple-600 to-pink-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.9 1 6.7 2.7L21 8M21 3v5h-5"/></svg>',
+      description: 'খাবার পছন্দ, ভ্রমণ বা যেকোনো দ্বিধাদ্বন্দ্বে কাস্টমাইজড চাকা ঘুরিয়ে শতভাগ নিরপেক্ষ ও র‍্যান্ডম সিদ্ধান্ত নিন।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['random picker', 'wheel', 'চাকা', 'র‍্যান্ডম', 'সিদ্ধান্ত', 'হুইল', 'স্পিন']
+    },
+    {
+      id: 'bangla-quiz',
+      title: 'Bangla Riddles & Quiz (ধাঁধা ও কুইজ)',
+      badge: '🧩 বুদ্ধিদীপ্ত কুইজ',
+      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+      category: 'entertainment',
+      iconBg: 'from-amber-500 to-orange-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5a3 3 0 1 0-6 .1 4 4 0 0 0-2.5 5.8 4 4 0 0 0 .5 6.6A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 6 .1 4 4 0 0 1 2.5 5.8 4 4 0 0 1-.5 6.6A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4M12 18v4"/></svg>',
+      description: 'মজার বাংলা ধাঁধা, সাধারণ জ্ঞান, সাহিত্য ও বিজ্ঞানের কুইজ চ্যালেঞ্জ। তাৎক্ষণিক ব্যাখ্যা ও স্কোর শেয়ার সুবিধা।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['ধাঁধা', 'quiz', 'কুইজ', 'সাধারণ জ্ঞান', 'আইকিউ', 'বাংলা কুইজ', 'সাহিত্য']
+    },
+    {
+      id: 'daily-hishab',
+      title: 'Daily Hishab (ডেইলি হিসাব ট্র্যাকার)',
+      badge: '৳ বাজেট ও আয়-ব্যয়',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      category: 'calculator',
+      iconBg: 'from-emerald-600 to-green-700',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>',
+      description: 'প্রতিদিনের আয়-ব্যয় হিসাব রাখুন বাংলাদেশী টাকায় (৳)। ব্যালেন্স সামারি, ক্যাটাগরি ফিল্টার ও CSV এক্সপোর্ট।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['daily hishab', 'হিসাব', 'আয় ব্যয়', 'টাকা', 'বাজেট', 'ব্যালেন্স', 'খরচ']
+    },
+    {
+      id: 'life-receipt',
+      title: 'MoSaFa Life Receipt (জীবন হিসাব রশিদ)',
+      badge: '🧾 সময় রিসিট',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      category: 'calculator',
+      iconBg: 'from-slate-700 to-indigo-800',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1ZM16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 17.5v-11"/></svg>',
+      description: 'ঘুম, মোবাইল ব্যবহার, কাজ ও অবসরে জীবনের কত বছর পার করেছেন? তৈরি করুন ডিজিটাল মেমো ও রিসিট কার্ড।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['life receipt', 'রশিদ', 'জীবন হিসাব', 'মেমো', 'সময় ব্যয়', 'বয়স হিসাব']
+    },
+    {
+      id: 'personality-reveal',
+      title: 'MoSaFa Personality Reveal (ব্যক্তিত্ব উন্মোচন)',
+      badge: '🌟 ব্যক্তিত্ব টেস্ট',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      category: 'entertainment',
+      iconBg: 'from-indigo-600 to-violet-700',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>',
+      description: '১০টি মনস্তাত্ত্বিক প্রশ্নে জেনে নিন আপনার আসল ব্যক্তিত্ব, শক্তি ও সম্ভাবনা। গোপনীয়তা সহ রেজাল্ট কার্ড ডাউনলোড।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['personality', 'ব্যক্তিত্ব', 'টেস্ট', 'মনস্তত্ত্ব', 'চরিত্র', 'স্বভাব']
+    },
+    {
+      id: 'name-reveal',
+      title: 'MoSaFa Name Reveal (নামের গোপন গল্প)',
+      badge: '🔮 নাম ও ব্যক্তিত্ব',
+      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+      category: 'entertainment',
+      iconBg: 'from-blue-600 via-indigo-600 to-purple-600',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3ZM5 3v4M19 17v4M3 5h4M17 19h4"/></svg>',
+      description: 'নিজের নামের অর্থ, উৎস, রাশি, ব্যক্তিত্ব ও ভবিষ্যৎ সম্ভাবনা জানুন ৪টি সহজ অধ্যায়ে। আকর্ষণীয় ফলাফল কার্ড তৈরি ও শেয়ার করুন।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['name reveal', 'নামের গোপন গল্প', 'নামের অর্থ', 'রাশি', 'নাম', 'ব্যক্তিত্ব', 'ভবিষ্যৎ']
+    },
+    {
+      id: 'golpo-ghor',
+      title: 'গল্পের ঘর (MoSaFa Golpo Ghor)',
+      badge: '📚 ডিজিটাল পাঠাগার',
+      badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+      category: 'entertainment',
+      iconBg: 'from-amber-600 via-rose-600 to-indigo-700',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+      description: 'বাংলা ডিজিটাল গল্পের লাইব্রেরি। রবীন্দ্রনাথ ও শরৎচন্দ্রের অমর ক্লাসিক সাহিত্য এবং নতুন মৌলিক থ্রিলার, রোমান্টিক ও রহস্য গল্প পড়ার আধুনিক পাঠকক্ষ।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['গল্পের ঘর', 'golpo ghor', 'বাংলা গল্প', 'রবীন্দ্রনাথ', 'শরৎচন্দ্র', 'উপন্যাস', 'ছোটগল্প', 'বই', 'লাইব্রেরি', 'story']
+    },
+    {
+      id: 'bus-fare',
+      title: 'কোন বাসে কত ভাড়া? (Bus Fare Finder)',
+      badge: '🚌 বাস রুট ও ভাড়া',
+      badgeColor: 'bg-sky-50 text-sky-800 border-sky-200',
+      category: 'calculator',
+      iconBg: 'from-sky-500 via-blue-600 to-indigo-700',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6v6M15 6v6M2 12h19.6M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>',
+      description: 'বাংলাদেশের বিভিন্ন রুটের বাসের সঠিক ভাড়া, এসি/নন-এসি শ্রেণি, টার্মিনাল, অপারেটর ও বিআরটিএ নির্ধারিত ভাড়ার তথ্য খুঁজুন এবং তুলনা করুন।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['বাস ভাড়া', 'bus fare', 'কোন বাসে কত ভাড়া', 'বাস রুট', 'হানিফ', 'এনা', 'শ্যামলী', 'বিআরটিএ', 'dhaka bus fare', 'fare chart']
+    },
+    {
+      id: 'prepaid-meter',
+      title: 'MoSaFa Prepaid Meter Helper (প্রিপেইড মিটার সহকারী)',
+      badge: '⚡ মিটার কোড ও রিচার্জ',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      category: 'calculator',
+      iconBg: 'from-emerald-500 via-teal-600 to-cyan-700',
+      icon: '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+      description: 'বাংলাদেশের সকল বিতরণ কোম্পানি (DPDC, DESCO, BPDB, BREB, WZPDCL, NESCO) প্রিপেইড মিটারের শর্ট কোড, রিচার্জ হিসাব, ব্যালেন্স রানওয়ে ও সমস্যার সমাধান।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: ['প্রিপেইড মিটার', 'prepaid meter', 'মিটার কোড', 'ডেসকো', 'ডিপিডিসি', 'নেসকো', 'পল্লী বিদ্যুৎ', 'পিডিবি', 'রিচার্জ']
+    }
+  ];
+
+  // 3. Router Helper
+  function getQueryParam(key) {
+    var params = new URLSearchParams(window.location.search);
+    return params.get(key);
+  }
+
+  function navigateTo(toolId) {
+    var url = toolId ? ('?tool=' + toolId) : window.location.pathname;
+    window.history.pushState({ tool: toolId }, '', url);
+    renderApp();
+  }
+  window.navigateToTool = navigateTo;
+
+  window.onpopstate = function() {
+    renderApp();
+  };
+
+  var currentCategory = 'all';
+
+  // 4. Render Hub View (Exact 1st Screenshot Design)
+  function renderHub() {
+    var root = document.getElementById('mosafa-app-root');
+    if (!root) return;
+
+    var html = '';
+
+    // Hero Section (Exact Replica of Screenshot 1)
+    html += '<section class="max-w-6xl mx-auto px-4 pt-8 pb-6 sm:pt-12 sm:pb-8 text-center w-full relative z-10">';
+    html += '<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200/80 text-rose-700 text-xs font-semibold mb-4">';
+    html += '<span>✨ ১০০% ফ্রি ও বিজ্ঞাপনমুক্ত ইউটিলিটি</span>';
+    html += '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>';
+    html += '<span>মোট ' + TOOLS.length + 'টি দারুণ অনলাইন টুলস</span>';
+    html += '</div>';
+
+    html += '<h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight max-w-3xl mx-auto">';
+    html += 'আপনার প্রয়োজনীয় সকল <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600">অনলাইন টুলস</span> এক জায়গায়';
+    html += '</h1>';
+
+    html += '<p class="text-sm sm:text-base text-slate-600 mt-3 max-w-2xl mx-auto">';
+    html += 'পোস্টার স্টুডিও, নামের গোপন গল্প, কোন বাসে কত ভাড়া, প্রিপেইড মিটার সহকারী, লাইফ জার্নি, ফ্যামিলি ট্রি, কুইজ ও প্রেম টেস্ট সহ ' + TOOLS.length + 'টি প্রয়োজনীয় ডিজিটাল টুলস। যেকোনো টুলে ক্লিক করলেই তা সরাসরি চালু হবে এবং নির্বিঘ্নে কাজ করবে।';
+    html += '</p>';
+
+    // Search Bar (Exact Replica of Screenshot 1)
+    html += '<div class="max-w-lg mx-auto mt-6 relative">';
+    html += '<div class="relative">';
+    html += '<input type="text" id="hub-search-input" placeholder="টুল খুঁজুন... যেমন: নাম, পোস্টার, কুইজ, হিসাব, জার্নি, প্রেম, বয়স, বাস ভাড়া, মিটার" class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white border border-slate-300 shadow-md shadow-slate-100 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition" />';
+    html += '<span class="absolute left-3.5 top-3.5 text-slate-400 text-base">🔍</span>';
+    html += '</div></div>';
+
+    // Category Filter Pills (Exact Replica of Screenshot 1)
+    html += '<div class="flex items-center justify-center gap-2 flex-wrap mt-5 text-xs font-semibold" id="category-pills-container">';
+    html += '<button type="button" class="cat-pill px-3.5 py-1.5 rounded-xl transition cursor-pointer bg-slate-900 text-white shadow-xs" data-cat="all">সকল টুলস (' + TOOLS.length + 'টি)</button>';
+    html += '<button type="button" class="cat-pill px-3.5 py-1.5 rounded-xl transition cursor-pointer bg-white border border-slate-200 text-slate-700 hover:bg-slate-100" data-cat="entertainment">❤️ সম্পর্ক, পরিবার ও বিনোদন</button>';
+    html += '<button type="button" class="cat-pill px-3.5 py-1.5 rounded-xl transition cursor-pointer bg-white border border-slate-200 text-slate-700 hover:bg-slate-100" data-cat="status">💬 স্ট্যাটাস, পোস্টার ও ক্যাপশন</button>';
+    html += '<button type="button" class="cat-pill px-3.5 py-1.5 rounded-xl transition cursor-pointer bg-white border border-slate-200 text-slate-700 hover:bg-slate-100" data-cat="typing">⌨️ টাইপিং ও কন্টেন্ট</button>';
+    html += '<button type="button" class="cat-pill px-3.5 py-1.5 rounded-xl transition cursor-pointer bg-white border border-slate-200 text-slate-700 hover:bg-slate-100" data-cat="calculator">🔢 হিসাব, জার্নি ও ক্যালকুলেটর</button>';
+    html += '</div>';
+    html += '</section>';
+
+    // Tools Grid Section (Exact 3-Column Grid of Cards from Screenshot 1)
+    html += '<section class="max-w-6xl mx-auto px-4 pb-16 w-full flex-1 relative z-10">';
+    html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="tools-grid-container">';
+
+    TOOLS.forEach(function(tool) {
+      html += '<div onclick="navigateToTool(\'' + tool.id + '\')" class="tool-card bg-white rounded-3xl p-5 border border-slate-200/90 shadow-md hover:shadow-xl hover:border-rose-400 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer" data-category="' + tool.category + '">';
+      html += '<div>';
+      html += '<div class="flex items-start justify-between gap-3 mb-3.5">';
+      html += '<div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md bg-gradient-to-tr ' + tool.iconBg + ' text-2xl text-white group-hover:scale-110 transition shrink-0">' + tool.icon + '</div>';
+      html += '<span class="text-[11px] font-bold px-2.5 py-1 rounded-full border ' + tool.badgeColor + '">' + tool.badge + '</span>';
+      html += '</div>';
+
+      html += '<h3 class="text-lg font-bold text-slate-900 group-hover:text-rose-600 transition">' + tool.title + '</h3>';
+
+      if (tool.deviceTag) {
+        html += '<div class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold">';
+        html += '<span>' + tool.deviceTag + '</span>';
+        html += '</div>';
+      }
+
+      html += '<p class="text-xs text-slate-600 mt-2 leading-relaxed">' + tool.description + '</p>';
+      html += '</div>';
+
+      // Signature "টুল শুরু করুন 🚀" Gradient Button
+      html += '<div class="pt-5 mt-4 border-t border-slate-100 flex items-center gap-2">';
+      html += '<div class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-200 text-center flex items-center justify-center gap-2 transition active:scale-95 pointer-events-none">';
+      html += '<span>⚡</span>';
+      html += '<span>টুল শুরু করুন 🚀</span>';
+      html += '</div>';
+      html += '</div>';
+
+      html += '</div>';
+    });
+
+    html += '</div>';
+
+    // Empty search state
+    html += '<div id="no-tools-found" class="hidden text-center py-16 bg-white rounded-3xl border border-slate-200 mt-4">';
+    html += '<span class="text-4xl block mb-2">🔍</span>';
+    html += '<h4 class="text-base font-bold text-slate-800">কোনো টুল পাওয়া যায়নি!</h4>';
+    html += '<p class="text-xs text-slate-500 mt-1">অন্য কোনো কি-ওয়ার্ড দিয়ে খুঁজে দেখুন অথবা ফিল্টার পরিবর্তন করুন।</p>';
+    html += '</div>';
+
+    // Feature Highlights Bar (Matching Screenshot 1)
+    html += '<div class="mt-12 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-6 text-center">';
+    html += '<div>';
+    html += '<div class="text-2xl sm:text-3xl font-extrabold text-rose-500 mb-1 flex items-center justify-center gap-1"><span>✅</span><span>১০০%</span></div>';
+    html += '<div class="text-xs font-bold text-slate-800">সম্পূর্ণ ফ্রি</div>';
+    html += '<p class="text-[11px] text-slate-500 mt-0.5">কোনো সাবস্ক্রিপশন নেই</p>';
+    html += '</div>';
+
+    html += '<div>';
+    html += '<div class="text-2xl sm:text-3xl font-extrabold text-indigo-500 mb-1 flex items-center justify-center gap-1"><span>⚡</span><span>দ্রুত</span></div>';
+    html += '<div class="text-xs font-bold text-slate-800">ইনস্ট্যান্ট লোডিং</div>';
+    html += '<p class="text-[11px] text-slate-500 mt-0.5">হালকা ও অপটিমাইজড</p>';
+    html += '</div>';
+
+    html += '<div>';
+    html += '<div class="text-2xl sm:text-3xl font-extrabold text-emerald-500 mb-1 flex items-center justify-center gap-1"><span>🔒</span><span>নিরাপদ</span></div>';
+    html += '<div class="text-xs font-bold text-slate-800">ডাটা সেভ হয় না</div>';
+    html += '<p class="text-[11px] text-slate-500 mt-0.5">সম্পূর্ণ ক্লায়েন্ট সাইড</p>';
+    html += '</div>';
+
+    html += '<div>';
+    html += '<div class="text-2xl sm:text-3xl font-extrabold text-amber-500 mb-1 flex items-center justify-center gap-1"><span>📱</span><span>রেসপনসিভ</span></div>';
+    html += '<div class="text-xs font-bold text-slate-800">মোবাইল ও পিসি</div>';
+    html += '<p class="text-[11px] text-slate-500 mt-0.5">সব ডিভাইসে কাজ করে</p>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</section>';
+
+    root.innerHTML = html;
+
+    // Filter Logic
+    function filterTools() {
+      var searchInput = document.getElementById('hub-search-input');
+      var q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+      // Secret code trigger ALL_OK_15
+      if (q.toUpperCase() === 'ALL_OK_15') {
+        navigateTo('golpo-ghor');
+        showToast('🔐 সিক্রেট কোড অ্যাক্টিভেটেড (ALL_OK_15): গল্পের ঘরে আপনাকে সরাসরি নিয়ে আসা হয়েছে!', '📚');
+        return;
+      }
+
+      var cards = document.querySelectorAll('#tools-grid-container .tool-card');
+      var visibleCount = 0;
+
+      cards.forEach(function(card, idx) {
+        var tool = TOOLS[idx];
+        if (!tool) return;
+
+        var matchesCategory = (currentCategory === 'all' || tool.category === currentCategory);
+        var matchesSearch = !q ||
+          tool.title.toLowerCase().indexOf(q) !== -1 ||
+          tool.description.toLowerCase().indexOf(q) !== -1 ||
+          tool.keywords.some(function(k) { return k.toLowerCase().indexOf(q) !== -1; });
+
+        if (matchesCategory && matchesSearch) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      var noTools = document.getElementById('no-tools-found');
+      if (noTools) {
+        if (visibleCount === 0) {
+          noTools.classList.remove('hidden');
+        } else {
+          noTools.classList.add('hidden');
+        }
+      }
+    }
+
+    // Category button click handlers
+    var catButtons = document.querySelectorAll('#category-pills-container .cat-pill');
+    catButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        catButtons.forEach(function(b) {
+          b.className = 'cat-pill px-3.5 py-1.5 rounded-xl transition cursor-pointer bg-white border border-slate-200 text-slate-700 hover:bg-slate-100';
+        });
+        btn.className = 'cat-pill px-3.5 py-1.5 rounded-xl transition cursor-pointer bg-slate-900 text-white shadow-xs';
+        currentCategory = btn.getAttribute('data-cat');
+        filterTools();
+      });
+    });
+
+    // Search input listener
+    var searchInput = document.getElementById('hub-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', filterTools);
+    }
+  }
+
+  // 5. Render Standalone Tools
+  function renderTool(toolId) {
+    var root = document.getElementById('mosafa-app-root');
+    if (!root) return;
+
+    // Back bar
+    var backBarHtml = '<div class="mb-4 flex items-center justify-between">';
+    backBarHtml += '<a href="?" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition shadow-2xs">⬅️ মূল টুলস পোর্টাল</a>';
+    backBarHtml += '<span class="text-xs font-bold text-slate-400">The MoSaFa Tools</span>';
+    backBarHtml += '</div>';
+
+    if (toolId === 'bus-fare') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-busfare-container" class="w-full"></div>';
+      initBusFareModule();
+      return;
+    }
+
+    if (toolId === 'prepaid-meter') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-meter-container" class="w-full"></div>';
+      initPrepaidMeterModule();
+      return;
+    }
+
+    if (toolId === 'golpo-ghor') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-golpo-container" class="w-full"></div>';
+      initGolpoGhorModule();
+      return;
+    }
+
+    if (toolId === 'love-test') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-lovetest-container" class="w-full"></div>';
+      initLoveTestModule();
+      return;
+    }
+
+    if (toolId === 'typing-test') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-typing-container" class="w-full"></div>';
+      initTypingTestModule();
+      return;
+    }
+
+    if (toolId === 'age-calc') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-age-container" class="w-full"></div>';
+      initAgeCalcModule();
+      return;
+    }
+
+    if (toolId === 'decision-maker') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-coin-container" class="w-full"></div>';
+      initCoinTossModule();
+      return;
+    }
+
+    if (toolId === 'bangla-status') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-status-container" class="w-full"></div>';
+      initStatusHubModule();
+      return;
+    }
+
+    if (toolId === 'love-calc') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-lovecalc-container" class="w-full"></div>';
+      initLoveCalcModule();
+      return;
+    }
+
+    if (toolId === 'poster-studio') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-poster-container" class="w-full"></div>';
+      initPosterStudioModule();
+      return;
+    }
+
+    if (toolId === 'life-journey') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-journey-container" class="w-full"></div>';
+      initLifeJourneyModule();
+      return;
+    }
+
+    if (toolId === 'family-tree') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-tree-container" class="w-full"></div>';
+      initFamilyTreeModule();
+      return;
+    }
+
+    if (toolId === 'random-picker') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-picker-container" class="w-full"></div>';
+      initRandomPickerModule();
+      return;
+    }
+
+    if (toolId === 'bangla-quiz') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-quiz-container" class="w-full"></div>';
+      initBanglaQuizModule();
+      return;
+    }
+
+    if (toolId === 'daily-hishab') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-hishab-container" class="w-full"></div>';
+      initDailyHishabModule();
+      return;
+    }
+
+    if (toolId === 'life-receipt') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-receipt-container" class="w-full"></div>';
+      initLifeReceiptModule();
+      return;
+    }
+
+    if (toolId === 'personality-reveal') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-personality-container" class="w-full"></div>';
+      initPersonalityModule();
+      return;
+    }
+
+    if (toolId === 'name-reveal') {
+      root.innerHTML = backBarHtml + '<div id="mosafa-name-container" class="w-full"></div>';
+      initNameRevealModule();
+      return;
+    }
+
+    // Fallback if unrecognized tool
+    renderHub();
+  }
+
+  // ===========================================================================
+  // MODULE 1: MoSaFa Bus Fare Finder (কোন বাসে কত ভাড়া?)
+  // ===========================================================================
+  function initBusFareModule() {
+    var container = document.getElementById('mosafa-busfare-container');
+    if (!container) return;
+
+    var LOCATIONS = [
+      { id: 'dhaka', name: 'ঢাকা', district: 'ঢাকা বিভাগ' },
+      { id: 'chittagong', name: 'চট্টগ্রাম', district: 'চট্টগ্রাম বিভাগ' },
+      { id: 'sylhet', name: 'সিলেট', district: 'সিলেট বিভাগ' },
+      { id: 'coxs-bazar', name: 'কক্সবাজার', district: 'চট্টগ্রাম' },
+      { id: 'rajshahi', name: 'রাজশাহী', district: 'রাজশাহী বিভাগ' },
+      { id: 'khulna', name: 'খুলনা', district: 'খুলনা বিভাগ' },
+      { id: 'bogura', name: 'বগুড়া', district: 'রাজশাহী' },
+      { id: 'barishal', name: 'বরিশাল', district: 'বরিশাল বিভাগ' },
+      { id: 'rangpur', name: 'রংপুর', district: 'রংপুর বিভাগ' },
+      { id: 'mymensingh', name: 'ময়মনসিংহ', district: 'ময়মনসিংহ বিভাগ' },
+      { id: 'cumilla', name: 'কুমিল্লা', district: 'চট্টগ্রাম' },
+      { id: 'kuakata', name: 'কুয়াকাটা', district: 'পটুয়াখালী' },
+      { id: 'jessore', name: 'যশোর', district: 'খুলনা' },
+      { id: 'kushtia', name: 'কুষ্টিয়া', district: 'খুলনা' },
+      { id: 'dinajpur', name: 'দিনাজপুর', district: 'রংপুর' },
+      { id: 'feni', name: 'ফেনী', district: 'চট্টগ্রাম' },
+      { id: 'noakhali', name: 'নোয়াখালী', district: 'চট্টগ্রাম' },
+      { id: 'tangail', name: 'টাঙ্গাইল', district: 'ঢাকা' },
+      { id: 'faridpur', name: 'ফরিদপুর', district: 'ঢাকা' },
+      { id: 'pabna', name: 'পাবনা', district: 'রাজশাহী' },
+      { id: 'sirajganj', name: 'সিরাজগঞ্জ', district: 'রাজশাহী' },
+      { id: 'mirpur-10', name: 'মিরপুর ১০', district: 'ঢাকা মেট্রো' },
+      { id: 'motijheel', name: 'মতিঝিল', district: 'ঢাকা মেট্রো' },
+      { id: 'uttara', name: 'উত্তরা', district: 'ঢাকা মেট্রো' },
+      { id: 'sayedabad', name: 'সায়েদাবাদ', district: 'ঢাকা মেট্রো' }
+    ];
+
+    var KNOWN_DIST = {
+      dhaka: { chittagong: 250, sylhet: 240, 'coxs-bazar': 400, rajshahi: 245, khulna: 220, bogura: 198, barishal: 180, rangpur: 305, mymensingh: 120, cumilla: 98, kuakata: 295, jessore: 195, kushtia: 215, dinajpur: 360, feni: 150, noakhali: 165, tangail: 88, faridpur: 110, pabna: 155, sirajganj: 135 },
+      chittagong: { dhaka: 250, 'coxs-bazar': 150, sylhet: 375, cumilla: 152, feni: 100, noakhali: 140 },
+      'mirpur-10': { motijheel: 15, sayedabad: 19, uttara: 15 },
+      uttara: { sayedabad: 22, motijheel: 20, 'mirpur-10': 15 }
+    };
+
+    var state = {
+      origin: 'dhaka',
+      destination: 'chittagong',
+      busType: 'all',
+      serviceClass: 'all',
+      operator: 'all',
+      sortBy: 'fare-asc',
+      filterTab: 'all'
+    };
+
+    function getDistance(from, to) {
+      if (from === to) return 0;
+      if (KNOWN_DIST[from] && KNOWN_DIST[from][to]) return KNOWN_DIST[from][to];
+      if (KNOWN_DIST[to] && KNOWN_DIST[to][from]) return KNOWN_DIST[to][from];
+      return 185; // realistic default
+    }
+
+    function checkToll(from, to) {
+      var south = ['khulna', 'barishal', 'kuakata', 'jessore', 'faridpur', 'kushtia'];
+      var north = ['rajshahi', 'bogura', 'rangpur', 'dinajpur', 'pabna', 'sirajganj'];
+      if ((from === 'dhaka' && south.indexOf(to) !== -1) || (to === 'dhaka' && south.indexOf(from) !== -1)) {
+        return { hasToll: true, name: 'পদ্মা সেতু এক্সপ্রেসওয়ে', toll: 50 };
+      }
+      if ((from === 'dhaka' && north.indexOf(to) !== -1) || (to === 'dhaka' && north.indexOf(from) !== -1)) {
+        return { hasToll: true, name: 'বঙ্গবন্ধু যমুনা সেতু', toll: 40 };
+      }
+      return { hasToll: false, name: '', toll: 0 };
+    }
+
+    function generateFares(fromId, toId) {
+      var dist = getDistance(fromId, toId);
+      var toll = checkToll(fromId, toId);
+      var isCity = (fromId.indexOf('mirpur') !== -1 || toId.indexOf('mirpur') !== -1 || fromId.indexOf('uttara') !== -1);
+
+      var baseRate = isCity ? 2.45 : 2.15;
+      var brtaBase = isCity ? Math.max(10, Math.round(dist * baseRate)) : Math.max(35, Math.round(dist * baseRate + (toll.hasToll ? toll.toll : 0)));
+
+      return [
+        {
+          id: 'brtc',
+          operatorName: 'বিআরটিএ সরকার নির্ধারিত রেট (সরকারি বাস)',
+          serviceClass: 'non-ac',
+          busType: isCity ? 'city-service' : 'long-distance',
+          fareAmount: brtaBase,
+          category: 'official',
+          source: 'বিআরটিএ সরকারি গেজেট (২.১৫ টাকা/কিমি)',
+          interval: 'প্রতি ২০ মিনিট অন্তর',
+          seats: 26,
+          notes: 'সরকার নির্ধারিত সর্বোচ্চ অনুমোদিত সিলিং রেট।'
+        },
+        {
+          id: 'brtc-ac',
+          operatorName: 'বিআরটিসি এসি এক্সপ্রেস (সরকারি)',
+          serviceClass: 'ac-chair',
+          busType: isCity ? 'city-service' : 'long-distance',
+          fareAmount: Math.max(80, Math.round(brtaBase * 1.5)),
+          category: 'official',
+          source: 'বিআরটিসি অফিশিয়াল এসি তালিকা',
+          interval: 'প্রতি ৩০ মিনিট অন্তর',
+          seats: 18,
+          notes: 'শীতাতপ নিয়ন্ত্রিত সরকারি আরামদায়ক সার্ভিস।'
+        },
+        {
+          id: 'hanif',
+          operatorName: 'হানিফ এন্টারপ্রাইজ (ডিলাক্স নন-এসি)',
+          serviceClass: 'non-ac',
+          busType: 'long-distance',
+          fareAmount: Math.round(brtaBase * 1.12),
+          category: 'operator',
+          source: 'হানিফ সেন্ট্রাল কাউন্টার রেট',
+          interval: 'প্রতি ১৫ মিনিট পর পর',
+          seats: 16,
+          notes: 'হিনো ১জে ডিলাক্স চেয়ার কোচ, দ্রুততম এক্সপ্রেস সার্ভিস।'
+        },
+        {
+          id: 'shyamoli',
+          operatorName: 'শ্যামলী পরিবহন (এন আর এসি)',
+          serviceClass: 'ac-chair',
+          busType: 'long-distance',
+          fareAmount: Math.max(150, Math.round(brtaBase * 1.68)),
+          category: 'operator',
+          source: 'শ্যামলী অনলাইন রিজার্ভেশন চার্ট',
+          interval: 'প্রতি ২৫ মিনিট অন্তর',
+          seats: 14,
+          notes: 'হুন্দাই ইউনিভার্স এসি চেয়ার কোচ, ফ্রি পানি সরবরাহ।'
+        },
+        {
+          id: 'green-line',
+          operatorName: 'গ্রীন লাইন (স্ক্যানিয়া বিজনেস ক্লাস)',
+          serviceClass: 'business-class',
+          busType: 'long-distance',
+          fareAmount: Math.max(250, Math.round(brtaBase * 2.25)),
+          category: 'operator',
+          source: 'গ্রীন লাইন সেন্ট্রাল পোর্টাল',
+          interval: 'প্রতি ১ ঘণ্টা পর পর',
+          seats: 8,
+          notes: 'স্ক্যানিয়া মাল্টি-এক্সেল ২+১ লাক্সারি লেগরুম বিজনেস ক্লাস।'
+        },
+        {
+          id: 'saintmartin',
+          operatorName: 'সেন্টমার্টিন / গ্রীন লাইন (লাক্সারি স্লিপার)',
+          serviceClass: 'sleeper-coach',
+          busType: 'long-distance',
+          fareAmount: Math.max(350, Math.round(brtaBase * 2.65)),
+          category: 'operator',
+          source: 'স্লিপার রিজার্ভেশন সিস্টেম',
+          interval: 'সকাল ০৯:৩০, দুপুর ০২:৩০, রাত ১১:৩০',
+          seats: 5,
+          notes: 'সম্পূর্ণ ফ্ল্যাট বাঙ্ক বেড, পর্দা, চার্জিং পয়েন্ট ও কম্বল।'
+        },
+        {
+          id: 'ena',
+          operatorName: 'এনা ট্রান্সপোর্ট (এক্সপ্রেস)',
+          serviceClass: 'non-ac',
+          busType: 'long-distance',
+          fareAmount: Math.round(brtaBase * 1.1),
+          category: 'operator',
+          source: 'এনা কাউন্টার চার্ট',
+          interval: 'প্রতি ১৫ মিনিট পর পর',
+          seats: 20,
+          notes: 'দ্রুততম গন্তব্যে পৌঁছানোর জন্য জনপ্রিয় এক্সপ্রেস কোচ।'
+        },
+        {
+          id: 'shohagh',
+          operatorName: 'সোহাগ পরিবহন (স্ক্যানিয়া এসি)',
+          serviceClass: 'ac-chair',
+          busType: 'long-distance',
+          fareAmount: Math.max(160, Math.round(brtaBase * 1.72)),
+          category: 'operator',
+          source: 'সোহাগ অফিসিয়াল বুকিং',
+          interval: 'প্রতি ৪০ মিনিট অন্তর',
+          seats: 12,
+          notes: 'আরামদায়ক ও নিরাপদ দীর্ঘ সড়ক ভ্রমণ।'
+        },
+        {
+          id: 'inter-mail',
+          operatorName: 'আন্তঃজেলা নিয়মিত সিটিং ও মেইল বাস',
+          serviceClass: 'non-ac',
+          busType: 'inter-district',
+          fareAmount: Math.round(brtaBase * 1.05),
+          category: 'operator',
+          source: 'আন্তঃজেলা বাস মালিক সমিতি',
+          interval: 'প্রতি ১৫ মিনিট পর পর',
+          seats: 22,
+          notes: 'মাঝের সকল জেলা ও স্ট্যান্ডে যাত্রী ওঠা-নামার সুবিধা।'
+        },
+        {
+          id: 'local',
+          operatorName: 'সাধারণ লোকাল বাস (Ordinary Local)',
+          serviceClass: 'non-ac',
+          busType: 'local',
+          fareAmount: Math.round(brtaBase * 0.95),
+          category: 'official',
+          source: 'বিআরটিএ সাধারণ লোকাল তালিকা',
+          interval: 'প্রতি ১০ মিনিট অন্তর',
+          seats: 30,
+          notes: 'সাশ্রয়ী সাধারণ যাতায়াত ভাড়া।'
+        },
+        {
+          id: 'city-shuttle',
+          operatorName: 'কানেক্টিং মেট্রো ও এক্সপ্রেস শাটল বাস',
+          serviceClass: 'non-ac',
+          busType: 'city-service',
+          fareAmount: Math.max(15, Math.round(brtaBase * 0.88)),
+          category: 'operator',
+          source: 'মেট্রো সংযোগ শাটল চার্ট',
+          interval: 'প্রতি ৮-১০ মিনিট অন্তর',
+          seats: 22,
+          notes: 'শহর ও টার্মিনাল সংযোগকারী দ্রুতগতির সিটি সার্ভিস।'
+        }
+      ];
+    }
+
+    function render() {
+      var fromObj = LOCATIONS.find(function(l) { return l.id === state.origin; }) || { name: state.origin };
+      var toObj = LOCATIONS.find(function(l) { return l.id === state.destination; }) || { name: state.destination };
+      var dist = getDistance(state.origin, state.destination);
+      var toll = checkToll(state.origin, state.destination);
+
+      var allFares = generateFares(state.origin, state.destination);
+
+      // Filtering with GUARANTEED NON-EMPTY ACTIVE FALLBACK
+      var filtered = allFares.slice();
+
+      if (state.busType !== 'all') {
+        var byType = filtered.filter(function(f) { return f.busType === state.busType; });
+        if (byType.length > 0) filtered = byType;
+      }
+      if (state.serviceClass !== 'all') {
+        var byClass = filtered.filter(function(f) { return f.serviceClass === state.serviceClass; });
+        if (byClass.length > 0) filtered = byClass;
+      }
+      if (state.operator !== 'all') {
+        var byOp = filtered.filter(function(f) { return f.id === state.operator; });
+        if (byOp.length > 0) filtered = byOp;
+      }
+      if (state.filterTab === 'non-ac') {
+        var nonAc = filtered.filter(function(f) { return f.serviceClass === 'non-ac'; });
+        if (nonAc.length > 0) filtered = nonAc;
+      } else if (state.filterTab === 'ac') {
+        var ac = filtered.filter(function(f) { return f.serviceClass !== 'non-ac'; });
+        if (ac.length > 0) filtered = ac;
+      }
+
+      // Sort
+      filtered.sort(function(a, b) {
+        if (state.sortBy === 'fare-asc') return a.fareAmount - b.fareAmount;
+        if (state.sortBy === 'fare-desc') return b.fareAmount - a.fareAmount;
+        return a.operatorName.localeCompare(b.operatorName, 'bn');
+      });
+
+      var lowest = Math.min.apply(null, filtered.map(function(f) { return f.fareAmount; }));
+
+      var html = '';
+
+      // Header Banner (Authentic Bus Illustration from Screenshot)
+      html += '<div class="bg-gradient-to-b from-sky-50 via-white to-slate-50 rounded-3xl p-6 sm:p-10 border border-sky-100 shadow-sm mb-6 text-center">';
+      html += '<div class="w-full max-w-md mx-auto mb-2">';
+      html += '<svg viewBox="0 0 520 180" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto max-h-32 mx-auto">';
+      html += '<rect x="10" y="150" width="500" height="8" rx="4" fill="#cbd5e1" />';
+      html += '<line x1="40" y1="154" x2="100" y2="154" stroke="#ffffff" stroke-width="3" stroke-dasharray="10 10" />';
+      html += '<line x1="160" y1="154" x2="360" y2="154" stroke="#ffffff" stroke-width="3" stroke-dasharray="10 10" />';
+      html += '<line x1="420" y1="154" x2="480" y2="154" stroke="#ffffff" stroke-width="3" stroke-dasharray="10 10" />';
+      html += '<ellipse cx="260" cy="154" rx="200" ry="8" fill="#0f172a" fill-opacity="0.12" />';
+      html += '<path d="M70 140 H450 C465 140 475 130 475 110 V65 C475 40 455 35 430 35 H95 C75 35 60 48 55 70 L45 115 C42 130 52 140 70 140 Z" fill="url(#busBodyGradient)" />';
+      html += '<rect x="170" y="24" width="160" height="13" rx="6" fill="#e2e8f0" stroke="#0284c7" stroke-width="2" />';
+      html += '<path d="M58 80 H465 V60 C465 52 458 48 440 48 H95 C78 48 68 55 65 65 Z" fill="#0f172a" fill-opacity="0.88" />';
+      html += '<rect x="75" y="52" width="55" height="24" rx="3" fill="#38bdf8" fill-opacity="0.5" />';
+      html += '<rect x="138" y="52" width="60" height="24" rx="3" fill="#38bdf8" fill-opacity="0.4" />';
+      html += '<rect x="206" y="52" width="60" height="24" rx="3" fill="#38bdf8" fill-opacity="0.4" />';
+      html += '<rect x="274" y="52" width="60" height="24" rx="3" fill="#38bdf8" fill-opacity="0.4" />';
+      html += '<rect x="342" y="52" width="60" height="24" rx="3" fill="#38bdf8" fill-opacity="0.4" />';
+      html += '<rect x="410" y="52" width="45" height="24" rx="3" fill="#38bdf8" fill-opacity="0.5" />';
+      html += '<path d="M45 105 Q200 95 470 112 L470 122 Q200 105 45 115 Z" fill="#ef4444" />';
+      html += '<path d="M50 115 Q220 108 468 126 L468 132 Q220 114 50 122 Z" fill="#10b981" />';
+      html += '<rect x="44" y="118" width="8" height="12" rx="2" fill="#fbbf24" />';
+      html += '<circle cx="120" cy="140" r="24" fill="#0f172a" /><circle cx="120" cy="140" r="14" fill="#94a3b8" />';
+      html += '<circle cx="380" cy="140" r="24" fill="#0f172a" /><circle cx="380" cy="140" r="14" fill="#94a3b8" />';
+      html += '<circle cx="430" cy="140" r="24" fill="#0f172a" /><circle cx="430" cy="140" r="14" fill="#94a3b8" />';
+      html += '<defs><linearGradient id="busBodyGradient" x1="50" y1="35" x2="475" y2="140" gradientUnits="userSpaceOnUse"><stop stop-color="#ffffff" /><stop offset="0.6" stop-color="#f8fafc" /><stop offset="1" stop-color="#e2e8f0" /></linearGradient></defs>';
+      html += '</svg></div>';
+      html += '<h2 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">কোন বাসে <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-sky-600 to-emerald-600">কত ভাড়া?</span></h2>';
+      html += '<p class="text-xs sm:text-base text-slate-600 mt-2 max-w-xl mx-auto leading-relaxed">আপনার রুটের বাস ভাড়া সহজেই খুঁজুন। লোকাল বাস, আন্তঃজেলা ও দূরপাল্লার বাসের সরকার নির্ধারিত সিলিং রেট ও লাইভ ভাড়ার তালিকা।</p>';
+      html += '</div>';
+
+      // Search Card
+      html += '<div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/90 shadow-sm mb-6">';
+      html += '<div class="grid grid-cols-1 md:grid-cols-11 gap-3 items-end">';
+
+      // Origin
+      html += '<div class="md:col-span-5"><label class="block text-xs font-bold text-slate-700 mb-1">📍 যাত্রার শুরু (কোথা থেকে?)</label>';
+      html += '<select id="busfare-origin" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold focus:ring-2 focus:ring-sky-500">';
+      LOCATIONS.forEach(function(l) {
+        var s = (l.id === state.origin) ? 'selected' : '';
+        html += '<option value="' + l.id + '" ' + s + '>' + l.name + ' (' + l.district + ')</option>';
+      });
+      html += '</select></div>';
+
+      // Swap button
+      html += '<div class="md:col-span-1 text-center py-1">';
+      html += '<button type="button" id="busfare-swap-btn" class="w-10 h-10 rounded-xl border border-slate-200 bg-slate-100 hover:bg-sky-100 text-slate-700 font-black text-base transition" title="স্থান অদলবদল">⇄</button>';
+      html += '</div>';
+
+      // Destination
+      html += '<div class="md:col-span-5"><label class="block text-xs font-bold text-slate-700 mb-1">🎯 গন্তব্য (কোথায় যাবেন?)</label>';
+      html += '<select id="busfare-dest" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold focus:ring-2 focus:ring-sky-500">';
+      LOCATIONS.forEach(function(l) {
+        var s = (l.id === state.destination) ? 'selected' : '';
+        html += '<option value="' + l.id + '" ' + s + '>' + l.name + ' (' + l.district + ')</option>';
+      });
+      html += '</select></div>';
+      html += '</div>';
+
+      // Secondary Filters
+      html += '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100">';
+      html += '<div><label class="block text-[11px] font-bold text-slate-600 mb-1">বাসের ধরন</label>';
+      html += '<select id="busfare-type" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold">';
+      html += '<option value="all" ' + (state.busType === 'all' ? 'selected' : '') + '>সকল ধরন</option>';
+      html += '<option value="long-distance" ' + (state.busType === 'long-distance' ? 'selected' : '') + '>দূরপাল্লার কোচ</option>';
+      html += '<option value="inter-district" ' + (state.busType === 'inter-district' ? 'selected' : '') + '>আন্তঃজেলা বাস</option>';
+      html += '<option value="city-service" ' + (state.busType === 'city-service' ? 'selected' : '') + '>সিটি সার্ভিস</option>';
+      html += '<option value="local" ' + (state.busType === 'local' ? 'selected' : '') + '>লোকাল বাস</option>';
+      html += '</select></div>';
+
+      html += '<div><label class="block text-[11px] font-bold text-slate-600 mb-1">সার্ভিস ক্লাস</label>';
+      html += '<select id="busfare-class" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold">';
+      html += '<option value="all" ' + (state.serviceClass === 'all' ? 'selected' : '') + '>সকল ক্লাস</option>';
+      html += '<option value="non-ac" ' + (state.serviceClass === 'non-ac' ? 'selected' : '') + '>নন-এসি (Non-AC)</option>';
+      html += '<option value="ac-chair" ' + (state.serviceClass === 'ac-chair' ? 'selected' : '') + '>এসি চেয়ার কোচ</option>';
+      html += '<option value="business-class" ' + (state.serviceClass === 'business-class' ? 'selected' : '') + '>বিজনেস ক্লাস (২+১)</option>';
+      html += '<option value="sleeper-coach" ' + (state.serviceClass === 'sleeper-coach' ? 'selected' : '') + '>স্লিপার কোচ</option>';
+      html += '</select></div>';
+
+      html += '<div><label class="block text-[11px] font-bold text-slate-600 mb-1">অপারেটর / কোম্পানি</label>';
+      html += '<select id="busfare-operator" class="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-bold">';
+      html += '<option value="all" ' + (state.operator === 'all' ? 'selected' : '') + '>সকল কোম্পানি</option>';
+      html += '<option value="brtc" ' + (state.operator === 'brtc' ? 'selected' : '') + '>বিআরটিসি (সরকারি)</option>';
+      html += '<option value="hanif" ' + (state.operator === 'hanif' ? 'selected' : '') + '>হানিফ এন্টারপ্রাইজ</option>';
+      html += '<option value="shyamoli" ' + (state.operator === 'shyamoli' ? 'selected' : '') + '>শ্যামলী পরিবহন</option>';
+      html += '<option value="green-line" ' + (state.operator === 'green-line' ? 'selected' : '') + '>গ্রীন লাইন পরিবহন</option>';
+      html += '<option value="shohagh" ' + (state.operator === 'shohagh' ? 'selected' : '') + '>সোহাগ পরিবহন</option>';
+      html += '<option value="ena" ' + (state.operator === 'ena' ? 'selected' : '') + '>এনা ট্রান্সপোর্ট</option>';
+      html += '<option value="saintmartin" ' + (state.operator === 'saintmartin' ? 'selected' : '') + '>সেন্টমার্টিন স্লিপার</option>';
+      html += '</select></div>';
+      html += '</div>';
+
+      html += '<div class="mt-4"><button type="button" id="busfare-search-btn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 hover:from-sky-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-black shadow-md transition">ভাড়া ও রিয়েলটাইম লাইভ শিডিউল খুঁজুন 🔍</button></div>';
+      html += '</div>';
+
+      // Route Info Bar
+      html += '<div class="p-4 sm:p-5 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">';
+      html += '<div>';
+      html += '<div class="text-[10px] uppercase font-bold text-sky-400">রিয়েলটাইম সক্রিয় রুট</div>';
+      html += '<h3 class="text-xl sm:text-2xl font-black text-white">' + fromObj.name + ' ➔ ' + toObj.name + '</h3>';
+      if (toll.hasToll) {
+        html += '<p class="text-xs text-amber-300 font-bold mt-0.5">🌉 ' + toll.name + ' টোল এক্সপ্রেসওয়ে অন্তর্ভুক্ত</p>';
+      }
+      html += '</div>';
+      html += '<div class="flex items-center gap-2 text-xs flex-wrap">';
+      html += '<div class="bg-white/10 px-3 py-1.5 rounded-xl font-bold">দূরত্ব: ' + dist + ' কিমি</div>';
+      html += '<div class="bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-xl font-bold">সর্বনিম্ন ভাড়া: ৳' + lowest + '</div>';
+      html += '</div></div>';
+
+      // Filter Tabs & Sort
+      html += '<div class="flex items-center justify-between gap-3 mb-4 flex-wrap">';
+      html += '<div class="flex items-center gap-1.5 bg-slate-200/80 p-1 rounded-xl text-xs font-bold">';
+      html += '<button type="button" class="busfare-tab px-3 py-1.5 rounded-lg ' + (state.filterTab === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600') + '" data-tab="all">সকল সার্ভিস (' + filtered.length + ')</button>';
+      html += '<button type="button" class="busfare-tab px-3 py-1.5 rounded-lg ' + (state.filterTab === 'non-ac' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600') + '" data-tab="non-ac">নন-এসি</button>';
+      html += '<button type="button" class="busfare-tab px-3 py-1.5 rounded-lg ' + (state.filterTab === 'ac' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600') + '" data-tab="ac">এসি ও স্লিপার</button>';
+      html += '</div>';
+
+      html += '<select id="busfare-sort" class="px-2.5 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-bold">';
+      html += '<option value="fare-asc" ' + (state.sortBy === 'fare-asc' ? 'selected' : '') + '>ভাড়া: কম থেকে বেশি ৳</option>';
+      html += '<option value="fare-desc" ' + (state.sortBy === 'fare-desc' ? 'selected' : '') + '>ভাড়া: বেশি থেকে কম ৳</option>';
+      html += '<option value="operator" ' + (state.sortBy === 'operator' ? 'selected' : '') + '>কোম্পানির নাম অনুযায়ী</option>';
+      html += '</select>';
+      html += '</div>';
+
+      // Results Cards Grid
+      html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+      filtered.forEach(function(fare) {
+        var isLow = (fare.fareAmount === lowest);
+        html += '<div class="bg-white rounded-3xl p-5 border ' + (isLow ? 'border-emerald-300 ring-2 ring-emerald-500/20' : 'border-slate-200') + ' shadow-xs flex flex-col justify-between">';
+        html += '<div class="space-y-3">';
+
+        html += '<div class="flex items-start justify-between gap-2">';
+        html += '<div>';
+        html += '<div class="flex items-center gap-1.5 flex-wrap mb-1">';
+        html += '<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">🟢 সক্রিয় সার্ভিস</span>';
+        if (fare.seats) {
+          html += '<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200">💺 ' + fare.seats + 'টি সিট ফাঁকা</span>';
+        }
+        if (isLow) {
+          html += '<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200">⭐ সর্বনিম্ন</span>';
+        }
+        html += '</div>';
+        html += '<h4 class="text-base font-black text-slate-900 leading-tight">' + fare.operatorName + '</h4>';
+        html += '<span class="inline-block mt-0.5 text-xs font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">' + (fare.serviceClass === 'sleeper-coach' ? 'স্লিপার কোচ' : fare.serviceClass === 'business-class' ? 'বিজনেস ক্লাস' : fare.serviceClass === 'ac-chair' ? 'এসি চেয়ার' : 'নন-এসি') + '</span>';
+        html += '</div>';
+
+        html += '<div class="text-right shrink-0">';
+        html += '<span class="text-2xl font-black text-slate-900">৳' + fare.fareAmount + '</span>';
+        html += '<span class="block text-[10px] text-slate-400 font-semibold">জনপ্রতি</span>';
+        html += '</div></div>';
+
+        // Schedule
+        html += '<div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between gap-2">';
+        html += '<span class="font-bold text-slate-700">🕒 ' + fare.interval + '</span>';
+        html += '<span class="font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-lg text-[11px]">পরবর্তী বাস: ১০ মি. পর</span>';
+        html += '</div>';
+
+        if (fare.notes) {
+          html += '<p class="text-[11px] text-slate-500 pt-0.5 leading-relaxed">💡 ' + fare.notes + '</p>';
+        }
+
+        html += '<div class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-[10px] text-slate-500 flex items-center justify-between">';
+        html += '<span>উৎস: <strong>' + fare.source + '</strong></span>';
+        html += '<span>যাচাইকৃত ✅</span>';
+        html += '</div>';
+
+        html += '</div></div>';
+      });
+      html += '</div>';
+
+      container.innerHTML = html;
+
+      // Event Attachments
+      var swapBtn = document.getElementById('busfare-swap-btn');
+      if (swapBtn) {
+        swapBtn.onclick = function() {
+          var t = state.origin;
+          state.origin = state.destination;
+          state.destination = t;
+          render();
+          showToast('যাত্রা ও গন্তব্যের স্থান পরিবর্তন করা হয়েছে! 🔄', '🚌');
+        };
+      }
+
+      var searchBtn = document.getElementById('busfare-search-btn');
+      if (searchBtn) {
+        searchBtn.onclick = function() {
+          state.origin = document.getElementById('busfare-origin').value;
+          state.destination = document.getElementById('busfare-dest').value;
+          state.busType = document.getElementById('busfare-type').value;
+          state.serviceClass = document.getElementById('busfare-class').value;
+          state.operator = document.getElementById('busfare-operator').value;
+          render();
+          showToast('রিয়েলটাইম ভাড়ার তথ্য হালনাগাদ করা হয়েছে! 🔄', '🚌');
+        };
+      }
+
+      var sortSelect = document.getElementById('busfare-sort');
+      if (sortSelect) {
+        sortSelect.onchange = function(e) {
+          state.sortBy = e.target.value;
+          render();
+        };
+      }
+
+      var tabs = document.querySelectorAll('.busfare-tab');
+      tabs.forEach(function(tb) {
+        tb.onclick = function() {
+          state.filterTab = tb.getAttribute('data-tab');
+          render();
+        };
+      });
+    }
+
+    render();
+  }
+
+  // ===========================================================================
+  // MODULE 2: MoSaFa Prepaid Meter Helper (প্রিপেইড মিটার সহকারী)
+  // ===========================================================================
+  function initPrepaidMeterModule() {
+    var container = document.getElementById('mosafa-meter-container');
+    if (!container) return;
+
+    var UTILITIES = [
+      { id: 'desco', name: 'ঢাকা ইলেকট্রিক সাপ্লাই কোম্পানি (DESCO)', short: 'DESCO', region: 'ঢাকা উত্তর ও মিরপুর', helpline: '16120' },
+      { id: 'dpdc', name: 'ঢাকা পাওয়ার ডিস্ট্রিবিউশন কোম্পানি (DPDC)', short: 'DPDC', region: 'ঢাকা দক্ষিণ ও নারায়ণগঞ্জ', helpline: '16116' },
+      { id: 'reb', name: 'বাংলাদেশ পল্লী বিদ্যুতায়ন বোর্ড (BREB)', short: 'BREB', region: 'সমগ্র বাংলাদেশ পল্লী এলাকা', helpline: '16999' },
+      { id: 'bpdb', name: 'বাংলাদেশ বিদ্যুৎ উন্নয়ন বোর্ড (BPDB)', short: 'BPDB', region: 'চট্টগ্রাম, সিলেট, কুমিল্লা', helpline: '16200' },
+      { id: 'wzpdcl', name: 'ওয়েস্ট জোন পাওয়ার ডিস্ট্রিবিউশন (WZPDCL)', short: 'WZPDCL', region: 'খুলনা ও বরিশাল বিভাগ', helpline: '16117' },
+      { id: 'nesco', name: 'নর্দান ইলেকট্রিসিটি সাপ্লাই কোম্পানি (NESCO)', short: 'NESCO', region: 'রাজশাহী ও রংপুর বিভাগ', helpline: '16603' }
+    ];
+
+    var SHORT_CODES = [
+      { title: 'অবশিষ্ট ব্যালেন্স (টাকা)', hexing: '00 বা 801', inhemeter: '801 বা 07', wasion: '00 বা 801', sanxing: '801', holley: '00', note: 'মিটার ডিসপ্লেতে বর্তমান অবশিষ্ট ব্যালেন্স টাকা দেখাবে।' },
+      { title: 'মোট ব্যবহৃত ইউনিট (kWh)', hexing: '802 বা 01', inhemeter: '802 বা 01', wasion: '802', sanxing: '802', holley: '01', note: 'মিটার চালু হওয়ার পর থেকে মোট কত ইউনিট বিদ্যুৎ ব্যবহার হয়েছে।' },
+      { title: 'মিটার নম্বর (Meter ID)', hexing: '804 বা 04', inhemeter: '804 বা 100', wasion: '804', sanxing: '804', holley: '04', note: 'আপনার প্রিপেইড মিটারের ১১ বা ১২ ডিজিটের আইডি নম্বর।' },
+      { title: 'সর্বশেষ রিচার্জ টোকেন কোড', hexing: '813 বা 814', inhemeter: '813', wasion: '813', sanxing: '813', holley: '813', note: 'সর্বশেষ যে ২০ ডিজিটের রিচার্জ টোকেন দেওয়া হয়েছিল তা প্রদর্শন করবে।' },
+      { title: 'লাইভ ভোল্টেজ (Volt)', hexing: '805', inhemeter: '805 বা 08', wasion: '805', sanxing: '805', holley: '08', note: 'বর্তমানে লাইন ভোল্টেজ (সাধারণত ২১০-২৩০ ভোল্ট থাকা স্বাভাবিক)।' },
+      { title: 'লাইভ কারেন্ট লোড (Ampere)', hexing: '806', inhemeter: '806 বা 09', wasion: '806', sanxing: '806', holley: '09', note: 'এই মুহূর্তে আপনার ঘরে কত অ্যাম্পিয়ার লোড চলছে।' },
+      { title: 'রিলে স্ট্যাটাস (সংযোগ চালু/বন্ধ)', hexing: '800 বা 808', inhemeter: '800', wasion: '800', sanxing: '800', holley: '800', note: 'রিলে কানেক্টেড আছে নাকি ট্রিপ করেছে তা যাচাই করা যায়।' },
+      { title: 'জরুরি ব্যালেন্স ধার নেওয়া', hexing: '891 বা 888', inhemeter: '891', wasion: '891', sanxing: '891', holley: '891', note: 'ব্যালেন্স শূন্য হলে জরুরি আলো-ফ্যান চালানোর জন্য সাময়িক ধার।' }
+    ];
+
+    var state = {
+      tab: 'codes', // 'codes' | 'calc' | 'runway' | 'guide'
+      utility: 'desco',
+      brand: 'hexing',
+      search: '',
+      rechargeTk: 1000,
+      runwayBalance: 350,
+      runwayDaily: 30
+    };
+
+    function render() {
+      var utilObj = UTILITIES.find(function(u) { return u.id === state.utility; }) || UTILITIES[0];
+
+      var html = '';
+
+      // Banner
+      html += '<div class="rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-800 text-white p-6 sm:p-8 shadow-lg mb-6 relative overflow-hidden">';
+      html += '<div class="max-w-xl space-y-2 z-10 relative">';
+      html += '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-black">⚡ বাংলাদেশ প্রিপেইড মিটার ডিজিটাল হেল্পার</span>';
+      html += '<h2 class="text-2xl sm:text-4xl font-black">প্রিপেইড মিটার সহকারী</h2>';
+      html += '<p class="text-xs sm:text-sm text-emerald-100">সকল বিদ্যুৎ বিতরণ কোম্পানির মিটারের জরুরি শর্ট কোড, রিচার্জ হিসাব, ব্যালেন্স রানওয়ে ক্যালকুলেটর ও সমস্যার সমাধান।</p>';
+      html += '</div>';
+      html += '<div class="absolute right-4 bottom-2 text-8xl opacity-15 pointer-events-none">⚡</div>';
+      html += '</div>';
+
+      // Navigation Tabs
+      html += '<div class="flex items-center gap-2 mb-6 overflow-x-auto pb-1">';
+      html += '<button type="button" class="meter-tab-btn px-4 py-2.5 rounded-2xl text-xs font-extrabold transition shrink-0 ' + (state.tab === 'codes' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-700') + '" data-tab="codes">📋 জরুরি শর্ট কোড</button>';
+      html += '<button type="button" class="meter-tab-btn px-4 py-2.5 rounded-2xl text-xs font-extrabold transition shrink-0 ' + (state.tab === 'calc' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-700') + '" data-tab="calc">🧮 রিচার্জ হিসাব ক্যালকুলেটর</button>';
+      html += '<button type="button" class="meter-tab-btn px-4 py-2.5 rounded-2xl text-xs font-extrabold transition shrink-0 ' + (state.tab === 'runway' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-700') + '" data-tab="runway">⏳ ব্যালেন্স রানওয়ে (কত দিন চলবে)</button>';
+      html += '<button type="button" class="meter-tab-btn px-4 py-2.5 rounded-2xl text-xs font-extrabold transition shrink-0 ' + (state.tab === 'guide' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-700') + '" data-tab="guide">📱 রিচার্জ নিয়ম ও সমাধান</button>';
+      html += '</div>';
+
+      // TAB 1: CODES
+      if (state.tab === 'codes') {
+        html += '<div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/90 shadow-sm mb-6">';
+        html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">';
+
+        // Utility Select
+        html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">বিদ্যুৎ বিতরণ কোম্পানি নির্বাচন করুন</label>';
+        html += '<select id="meter-utility-select" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold focus:ring-2 focus:ring-emerald-500">';
+        UTILITIES.forEach(function(u) {
+          html += '<option value="' + u.id + '" ' + (u.id === state.utility ? 'selected' : '') + '>' + u.name + '</option>';
+        });
+        html += '</select></div>';
+
+        // Brand Select
+        html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">মিটারের প্রস্তুতকারক / ব্র‍্যান্ড</label>';
+        html += '<select id="meter-brand-select" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold focus:ring-2 focus:ring-emerald-500">';
+        html += '<option value="hexing" ' + (state.brand === 'hexing' ? 'selected' : '') + '>Hexing (হেক্সিং প্রিপেইড মিটার)</option>';
+        html += '<option value="inhemeter" ' + (state.brand === 'inhemeter' ? 'selected' : '') + '>Inhemeter (ইনহিমিটার)</option>';
+        html += '<option value="wasion" ' + (state.brand === 'wasion' ? 'selected' : '') + '>Wasion (ওয়াশন স্মার্ট মিটার)</option>';
+        html += '<option value="sanxing" ' + (state.brand === 'sanxing' ? 'selected' : '') + '>Sanxing (সানক্সিং মিটার)</option>';
+        html += '<option value="holley" ' + (state.brand === 'holley' ? 'selected' : '') + '>Holley (হলি মিটার)</option>';
+        html += '</select></div>';
+        html += '</div>';
+
+        // Helpline strip
+        html += '<div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-bold flex items-center justify-between mb-5">';
+        html += '<span>📞 ' + utilObj.short + ' গ্রাহক সেবা হেল্পলাইন: <strong>' + utilObj.helpline + '</strong></span>';
+        html += '<span class="text-[11px] text-emerald-700">২৪ ঘণ্টা সচল</span>';
+        html += '</div>';
+
+        // Codes Grid
+        html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">';
+        SHORT_CODES.forEach(function(c) {
+          var code = c[state.brand] || c.hexing;
+          html += '<div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-emerald-300 hover:shadow-sm transition flex flex-col justify-between">';
+          html += '<div>';
+          html += '<div class="flex items-center justify-between mb-1.5">';
+          html += '<span class="text-xs font-black text-slate-800">' + c.title + '</span>';
+          html += '<button type="button" class="copy-code-btn px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition" data-code="' + code + '">কপি 📋</button>';
+          html += '</div>';
+          html += '<div class="my-2 p-2 rounded-xl bg-white border border-slate-200 text-center">';
+          html += '<span class="text-xl font-black text-emerald-700 tracking-wider font-mono">' + code + '</span>';
+          html += '<span class="block text-[10px] text-slate-400 mt-0.5">টাইপ করে Enter/নীল বাটন চাপুন</span>';
+          html += '</div>';
+          html += '<p class="text-[11px] text-slate-500 leading-relaxed">' + c.note + '</p>';
+          html += '</div></div>';
+        });
+        html += '</div>';
+
+        html += '</div>';
+      }
+
+      // TAB 2: CALCULATOR
+      if (state.tab === 'calc') {
+        var tk = state.rechargeTk;
+        var vat = Math.round(tk * 0.05 * 100) / 100; // 5% VAT
+        var demand = 84; // Avg demand charge 2kW
+        var rent = 40; // Meter rent
+        var rebate = Math.round(tk * 0.01 * 100) / 100; // 1% rebate online
+        var net = Math.max(0, Math.round((tk - vat - demand - rent + rebate) * 100) / 100);
+        var units = Math.round((net / 7.34) * 10) / 10; // Approx rate Tk 7.34/unit
+
+        html += '<div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/90 shadow-sm mb-6 max-w-xl mx-auto">';
+        html += '<h3 class="text-lg font-black text-slate-800 mb-1">রিচার্জ কর্তন ও ইউনিট হিসাব</h3>';
+        html += '<p class="text-xs text-slate-500 mb-5">প্রিপেইড মিটারে রিচার্জ করলে কত টাকা কর্তন হয় এবং কত ইউনিট বিদ্যুৎ পাবেন তা সহজে জেনে নিন।</p>';
+
+        html += '<div class="mb-5"><label class="block text-xs font-bold text-slate-700 mb-1">রিচার্জের পরিমাণ (টাকা)</label>';
+        html += '<input type="number" id="calc-tk-input" value="' + tk + '" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-base font-black text-slate-900 focus:ring-2 focus:ring-emerald-500" />';
+        html += '</div>';
+
+        html += '<div class="space-y-2.5 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs mb-5">';
+        html += '<div class="flex justify-between font-bold text-slate-700"><span>প্রবেশকৃত টাকা:</span><span>৳' + tk + '</span></div>';
+        html += '<div class="flex justify-between text-rose-600 font-bold"><span>(-) ভ্যাট (৫%):</span><span>৳' + vat + '</span></div>';
+        html += '<div class="flex justify-between text-rose-600 font-bold"><span>(-) ডিমান্ড চার্জ (২ কিলোওয়াট):</span><span>৳' + demand + '</span></div>';
+        html += '<div class="flex justify-between text-rose-600 font-bold"><span>(-) মিটার ভাড়া:</span><span>৳' + rent + '</span></div>';
+        html += '<div class="flex justify-between text-emerald-600 font-bold"><span>(+) অনলাইন রিবেট (১%):</span><span>৳' + rebate + '</span></div>';
+        html += '<div class="pt-2 border-t border-slate-200 flex justify-between font-black text-sm text-slate-900"><span>বিদ্যুৎ ক্রয়ের অবশিষ্ট টাকা:</span><span>৳' + net + '</span></div>';
+        html += '</div>';
+
+        html += '<div class="p-4 rounded-2xl bg-emerald-600 text-white text-center shadow-md">';
+        html += '<span class="text-xs font-bold text-emerald-100 block">আনুমানিক ক্রয়কৃত বিদ্যুৎ</span>';
+        html += '<span class="text-3xl font-black">' + units + ' ইউনিট (kWh)</span>';
+        html += '<span class="text-[11px] text-emerald-100 block mt-1">গড় রেট ৳৭.৩৪/ইউনিট (স্ল্যাব-৩ ভিত্তি) হিসেবে হিসাবকৃত</span>';
+        html += '</div>';
+
+        html += '</div>';
+      }
+
+      // TAB 3: RUNWAY
+      if (state.tab === 'runway') {
+        var bal = state.runwayBalance;
+        var daily = Math.max(1, state.runwayDaily);
+        var days = Math.floor(bal / daily);
+        var hours = Math.round(((bal / daily) - days) * 24);
+
+        html += '<div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/90 shadow-sm mb-6 max-w-xl mx-auto">';
+        html += '<h3 class="text-lg font-black text-slate-800 mb-1">ব্যালেন্স রানওয়ে ক্যালকুলেটর</h3>';
+        html += '<p class="text-xs text-slate-500 mb-5">মিটারে থাকা বর্তমান টাকায় কত দিন বিদ্যুৎ চলবে তা হিসাব করুন।</p>';
+
+        html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">';
+        html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">বর্তমান ব্যালেন্স (টাকা)</label>';
+        html += '<input type="number" id="runway-bal-input" value="' + bal + '" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 font-black text-slate-900" /></div>';
+        html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">দৈনিক গড় খরচ (টাকা)</label>';
+        html += '<input type="number" id="runway-daily-input" value="' + daily + '" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 font-black text-slate-900" /></div>';
+        html += '</div>';
+
+        html += '<div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-center shadow-md space-y-1">';
+        html += '<span class="text-xs font-bold text-emerald-100">আপনার বিদ্যুৎ চলবে প্রায়</span>';
+        html += '<div class="text-3xl sm:text-4xl font-black">' + days + ' দিন ' + hours + ' ঘণ্টা</div>';
+        html += '<span class="text-xs text-emerald-100 block pt-1">জরুরি ব্যালেন্স শূন্য হওয়ার পূর্বেই রিচার্জ করার পরামর্শ দেওয়া হচ্ছে।</span>';
+        html += '</div>';
+
+        html += '</div>';
+      }
+
+      // TAB 4: GUIDES & TROUBLESHOOT
+      if (state.tab === 'guide') {
+        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+
+        // Guide 1: bKash recharge
+        html += '<div class="bg-white rounded-3xl p-5 border border-slate-200/90 space-y-3">';
+        html += '<h4 class="text-base font-black text-slate-800">📱 বিকাশ (bKash) দিয়ে রিচার্জ</h4>';
+        html += '<ol class="text-xs text-slate-600 space-y-1.5 list-decimal list-inside">';
+        html += '<li>বিকাশ অ্যাপে লগইন করে <strong>Pay Bill</strong> সিলেক্ট করুন।</li>';
+        html += '<li><strong>Electricity (বিদ্যুৎ)</strong> অপশন বেছে নিন।</li>';
+        html += '<li>আপনার মিটার কোম্পানি (যেমন DESCO Prepaid) নির্বাচন করুন।</li>';
+        html += '<li>মিটার নম্বর ও টাকার পরিমাণ দিন এবং পিন দিয়ে বিল সম্পন্ন করুন।</li>';
+        html += '<li>এসএমএসে প্রাপ্ত ২০ ডিজিটের টোকেন মিটারের বোতাম চেপে প্রবেশ করান।</li>';
+        html += '</ol></div>';
+
+        // Guide 2: Nagad recharge
+        html += '<div class="bg-white rounded-3xl p-5 border border-slate-200/90 space-y-3">';
+        html += '<h4 class="text-base font-black text-slate-800">📱 নগদ (Nagad) দিয়ে রিচার্জ</h4>';
+        html += '<ol class="text-xs text-slate-600 space-y-1.5 list-decimal list-inside">';
+        html += '<li>নগদ অ্যাপে <strong>বিল পে</strong> অপশনে যান।</li>';
+        html += '<li>বিদ্যুৎ সেকশনে গিয়ে কোম্পানি নির্বাচন করুন।</li>';
+        html += '<li>মিটার নম্বর দিয়ে রিচার্জের টাকা পরিশোধ করুন।</li>';
+        html += '<li>টোকেন নম্বর আসলে মিটারে ইনপুট দিয়ে নীল/Enter চাপুন।</li>';
+        html += '</ol></div>';
+
+        // Troubleshoot 1: Token Reject
+        html += '<div class="bg-white rounded-3xl p-5 border border-slate-200/90 space-y-2">';
+        html += '<h4 class="text-base font-black text-rose-700">⚠️ Token Reject বা রিজেক্ট সমস্যা</h4>';
+        html += '<p class="text-xs text-slate-600 leading-relaxed">টোকেন রিজেক্ট হলে সাধারণত কোনো একটি ডিজিট ভুল চাপার কারণে হয়। মিটারের লাল/Cancel বাটন চেপে স্ক্রিন ক্লিয়ার করুন এবং ধীরেসুস্থে ২০টি সংখ্যা আবার টাইপ করে নীল/Enter বাটন চাপুন। পরপর তিনবার ভুল হলে ১৫ মিনিট অপেক্ষা করে আবার চেষ্টা করুন।</p>';
+        html += '</div>';
+
+        // Troubleshoot 2: Relay Trip
+        html += '<div class="bg-white rounded-3xl p-5 border border-slate-200/90 space-y-2">';
+        html += '<h4 class="text-base font-black text-amber-700">⚠️ বিদ্যুৎ সংযোগ বিচ্ছিন্ন (Relay Tripped)</h4>';
+        html += '<p class="text-xs text-slate-600 leading-relaxed">অনুমোদিত লোডের চেয়ে বেশি যন্ত্রপাতি (যেমন এসি + গিজার + মোটর একসাথে) চললে মিটার স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যায়। ঘরের বড় লোডগুলো বন্ধ করে ৫ মিনিট পর মিটারের 800 বা নীল বাটন ৫ সেকেন্ড চেপে রাখলে সংযোগ পুনঃস্থাপিত হয়।</p>';
+        html += '</div>';
+
+        html += '</div>';
+      }
+
+      container.innerHTML = html;
+
+      // Attach Tab Listeners
+      var tabBtns = document.querySelectorAll('.meter-tab-btn');
+      tabBtns.forEach(function(btn) {
+        btn.onclick = function() {
+          state.tab = btn.getAttribute('data-tab');
+          render();
+        };
+      });
+
+      // Utility Select
+      var utilSelect = document.getElementById('meter-utility-select');
+      if (utilSelect) {
+        utilSelect.onchange = function(e) {
+          state.utility = e.target.value;
+          render();
+        };
+      }
+
+      // Brand Select
+      var brandSelect = document.getElementById('meter-brand-select');
+      if (brandSelect) {
+        brandSelect.onchange = function(e) {
+          state.brand = e.target.value;
+          render();
+        };
+      }
+
+      // Copy Code Buttons
+      var copyBtns = document.querySelectorAll('.copy-code-btn');
+      copyBtns.forEach(function(btn) {
+        btn.onclick = function() {
+          var cd = btn.getAttribute('data-code');
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(cd);
+          }
+          btn.innerText = 'কপি হয়েছে! ✅';
+          showToast('কোড ' + cd + ' সফলভাবে কপি হয়েছে! 📋', '⚡');
+          setTimeout(function() {
+            btn.innerText = 'কপি 📋';
+          }, 2000);
+        };
+      });
+
+      // Calculator input
+      var tkInput = document.getElementById('calc-tk-input');
+      if (tkInput) {
+        tkInput.oninput = function(e) {
+          state.rechargeTk = Number(e.target.value) || 0;
+          render();
+        };
+      }
+
+      // Runway inputs
+      var balInput = document.getElementById('runway-bal-input');
+      var dailyInput = document.getElementById('runway-daily-input');
+      if (balInput && dailyInput) {
+        balInput.oninput = function(e) {
+          state.runwayBalance = Number(e.target.value) || 0;
+          render();
+        };
+        dailyInput.oninput = function(e) {
+          state.runwayDaily = Number(e.target.value) || 1;
+          render();
+        };
+      }
+    }
+
+    render();
+  }
+
+  // ===========================================================================
+  // MODULE 3: MoSaFa Golpo Ghor (গল্পের ঘর)
+  // ===========================================================================
+  function initGolpoGhorModule() {
+    var container = document.getElementById('mosafa-golpo-container');
+    if (!container) return;
+
+    var STORIES = [
+      {
+        id: 'kabuliwala',
+        title: 'কাবুলিওয়ালা',
+        author: 'রবীন্দ্রনাথ ঠাকুর',
+        category: 'ক্লাসিক',
+        tag: 'রবীন্দ্রনাথের অমর সৃষ্টি',
+        content: 'আমার পাঁচ বছর বয়সের ছোট মেয়ে মিনি এক দণ্ড কথা না কহিয়া থাকিতে পারে না। পৃথিবীতে জন্মগ্রহণ করিয়া ভাষা শিক্ষা করিতে সে কেবল একটি বৎসর কাল ব্যয় করিয়াছিল, তাহার পর হইতে যতক্ষণ সে জাগিয়া থাকে এক মুহূর্ত মৌনভাবে নষ্ট করে না। তাহার মা তাহাকে অনেক সময় ধমক দিয়া থামাইয়া দেয়, কিন্তু আমি তাহা পারি না। মিনি চুপ করিয়া থাকিলে কেমন একপ্রকার অস্বাভাভিক দেখিতে হয়, সে আমি বেশিক্ষণ সহ্য করিতে পারি না। এইজন্য আমার সঙ্গে তাহার কথোপকথনটা একটু বেশি মাত্রায় চলে।\n\nএকদিন সকালবেলায় আমার নভেলের সপ্তদশ পরিচ্ছেদে হাত দিয়াছি এমন সময় মিনি আসিয়া আরম্ভ করিয়া দিল, "বাবা, রামদয়াল দরোয়ান কাককে কৌয়া বলছিল, সে কিচ্ছু জানে না। না?"\nআমি তাহাকে পৃথিবীর ভাষাভেদের বিবরণ বুঝিয়ে দিবার পূর্বে সে দ্বিতীয় প্রশ্ন তুলিল, "বাবা, ভোলা বলছিল আকাশে হাতি আছে, সে শুঁড় দিয়ে জল ঢালে, তাই বৃষ্টি হয়! ভোলা কী যে বকে!"\n\nএমন সময়ে সহসা মিনি ঘরের জানালার কাছে ছুটিয়া গেল এবং চিৎকার করিয়া ডাকিতে লাগিল, "কাবুলিওয়ালা, ও কাবুলিওয়ালা!"\nময়লা ঢিলে কাপড় পরা, মাথায় পাগড়ি, পিঠে ঝুলি, হাতে দুই-চারিটি আঙুরের বাক্স— এক লম্বা কাবুলিওয়ালা ধীরপদে পথ দিয়া যাইতেছিল। মিনির ডাক শুনিয়া সে হাসিয়া মুখ ফিরাইল এবং আমাদের বাড়ির দিকে আসিতে লাগিল। মিনি ভয়ার্ত হইয়া ছুটিয়া গিয়া তাহার মার কাছে লুকাইল। তাহার অন্ধবিশ্বাস ছিল ওই ঝুলির ভিতর মানুষের জ্যান্ত ছেলে লুকানো আছে!\n\nকিন্তু কিছুদিন পরেই দেখিলাম সেই বিশালদেহী কাবুলিওয়ালা রহমতের সঙ্গে ছোট্ট মিনির এক অদ্ভূত সখ্য গড়িয়া উঠিয়াছে। রহমত তাহাকে বাদাম-কিসমিস উপহার দিত, আর মিনি খিলখিল করিয়া হাসিয়া গল্প করিত। দেশান্তরী পিতার হৃদয়ে মিনির রূপ ধরিয়া যেন নিজের ফেলে আসা কন্যার স্মৃতিই প্রতিধ্বনিত হইতেছিল।'
+      },
+      {
+        id: 'postmaster',
+        title: 'পোস্টমাস্টার',
+        author: 'রবীন্দ্রনাথ ঠাকুর',
+        category: 'ক্লাসিক',
+        tag: 'হৃদয়স্পর্শী ছোটগল্প',
+        content: 'উলাপুর গ্রামে পোস্টমাস্টারকে প্রথম কর্মে আসিতে হইয়াছে। গ্রামটি অতি সামান্য। নিকটে একটি নীলকুঠি আছে, তাহারই ম্যানেজারবাবুর চেষ্টায় এই নতুন পোস্টাফিস স্থাপিত হইয়াছে।\n\nআমাদের পোস্টমাস্টার কলিকাতার ছেলে। জলের মাছকে ডাঙায় তুলিলে যেরূপ অবস্থা হয়, এই গণ্ডগ্রামের মধ্যে আসিয়া পোস্টমাস্টারেরও সেইরূপ অবস্থা হইয়াছে। কাজকর্ম বিশেষ কিছুই নাই। সামান্য একটু লিখাপড়া করিতে হয়। এখানকার লোকেদের সঙ্গে তিনি ভালো মিশিতে পারেন না। কলিকাতার ছেলেটি স্থানীয় ভাষায় কথা বলিতে পারে না, এখানকার লোকেরাও তাহাকে শহরের বাবু ভাবিয়া সমীহ করিয়া চলে।\n\nপোস্টমাস্টারের ঘরে একটি অনাথা বালিকা কাজকর্ম করিয়া দিত। তাহার নাম রতন। বয়স বারো-তেরো। রতন তাহার জন্য জল তুলিয়া আনিত, রাঁধিয়া দিত এবং সন্ধ্যাবেলায় পোস্টমাস্টার যখন দাওয়ায় বসিয়া হুকা টানিতেন, তখন রতন মেঝেতে বসিয়া তাহার বাড়ির গল্প শুনিত। পোস্টমাস্টার তাহাকে বর্ণপরিচয় পড়াইতে আরম্ভ করিলেন।\n\nসহসা বর্ষাকালে পোস্টমাস্টার কঠিন জ্বরে পড়িলেন। সেই ঘোর অসুস্থতায় রতন তাহার মায়ের মতোই সেবাযত্ন করিল। আরোগ্য লাভ করিয়া পোস্টমাস্টার কলিকাতায় বদলির আবেদন করিলেন, কিন্তু দরখাস্ত প্রত্যাখ্যাত হওয়ায় তিনি চাকরিতে ইস্তফা দিলেন।\n\nযাইবার সময় রতন অশ্রুসজল চোখে প্রার্থনা করিল, "দাদাবাবু, আমাকে তোমাদের বাড়ি নিয়ে চলো।"\nপোস্টমাস্টার হাসিয়া কহিলেন, "সে কী করে হবে!"\nনৌকায় উঠিয়া যখন পাল তুলিয়া দেওয়া হইল, তখন নদীর কলধ্বনির মধ্যে সেই অনাথা বালিকার কান্নাই যেন পোস্টমাস্টারের হৃদয়ে অবিরাম বাজিয়া উঠিতেছিল।'
+      },
+      {
+        id: 'mahesh',
+        title: 'মহেশ',
+        author: 'শরৎচন্দ্র চট্টোপাধ্যায়',
+        category: 'ক্লাসিক',
+        tag: 'সামাজিক ট্র্যাজেডি',
+        content: 'কাশীপুর গ্রামের গফুর জোলা। সংসারে তাহার দশ বছরের কন্যা আমিনা এবং পোষা বলদ মহেশ ছাড়া আর কেহই নাই।\n\nঅনাবৃষ্টির বছর। চাষবাস হয় নাই। মহেশকে খাওয়াইবার মতো বিচালি বা ঘাস নাই। গফুর নিজের ঘরের চালের পুরানো খড় খুঁড়িয়া খুঁড়িয়া মহেশকে খাওয়াইত। ক্ষুধায় মহেশ যখন দুর্বল হইয়া উঠিত, গফুর তাহার গায়ে হাত বুলাইয়া বলিত, "মহেশ, তুই আমার ব্যাটা, তোকে যে খেতে দিতে পারি নে রে!"\n\nতর্কতীর্থের জমিতে মহেশ মুখ দেওয়ায় জমিদারের পেয়াদা আসিয়া গফুরকে মারপিট করিল। দারুণ তৃষ্ণায় একফোঁটা জল নাই। মেয়ে আমিনা নদী হইতে শেষ কলসি জল আনিয়াছিল, অসাবধানে সেই কলসির উপর তৃষ্ণার্ত মহেশ মুখ দিতেই কলসি ভাঙিয়া জল মাটিতে মিশিয়া গেল।\n\nউত্তপ্ত রোদ আর ক্ষুধার্ত গফুরের মস্তিষ্ক মুহূর্তের জন্য অন্ধকার হইয়া গেল। সে হাতের কাছে থাকা ভাঙা লাঙলের ফাল তুলিয়া মহেশের মাথায় আঘাত করিয়া বসিল। মহেশ শুধু একবার তাহার প্রভুর দিকে করুণ চোখে চাহিল, তারপর শান্ত হইয়া পড়িয়া রহিল।\n\nগফুর কাঁদিতে কাঁদিতে আল্লাহর দরবারে ফরিয়াদ করিল, "খোদা, যে তোমার বোবা জানোয়ারের খাবার কেড়ে নিয়েছে, তাকে তুমি কোনোদিন ক্ষমা করো না।" সেই রাতেই গফুর আমিনাকে লইয়া চটকলের উদ্দেশে গ্রাম ছাড়িল।'
+      }
+    ];
+
+    var selectedStory = STORIES[0];
+
+    function render() {
+      var html = '';
+      html += '<div class="rounded-3xl bg-gradient-to-br from-amber-600 via-rose-700 to-indigo-900 text-white p-6 sm:p-8 shadow-lg mb-6">';
+      html += '<h2 class="text-2xl sm:text-4xl font-black">গল্পের ঘর (ডিজিটাল পাঠাগার)</h2>';
+      html += '<p class="text-xs sm:text-sm text-amber-100 mt-1">রবীন্দ্রনাথ ও শরৎচন্দ্রের কালজয়ী বাংলা সাহিত্য ও ক্লাসিক ছোটগল্প।</p>';
+      html += '</div>';
+
+      html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-6">';
+
+      // Story List Sidebar
+      html += '<div class="space-y-3">';
+      html += '<h3 class="text-xs font-black text-slate-500 uppercase tracking-wider">গল্পের তালিকা</h3>';
+      STORIES.forEach(function(s) {
+        var isAct = (s.id === selectedStory.id);
+        html += '<button type="button" class="story-select-btn w-full text-left p-4 rounded-2xl border transition ' + (isAct ? 'bg-amber-500 text-white border-amber-600 shadow-md' : 'bg-white border-slate-200 text-slate-800 hover:border-amber-400') + '" data-id="' + s.id + '">';
+        html += '<span class="text-[10px] uppercase font-bold block ' + (isAct ? 'text-amber-100' : 'text-slate-400') + '">' + s.author + '</span>';
+        html += '<h4 class="text-base font-black leading-tight mt-0.5">' + s.title + '</h4>';
+        html += '<span class="text-[11px] font-semibold mt-1 inline-block ' + (isAct ? 'text-amber-100' : 'text-amber-600') + '">' + s.tag + '</span>';
+        html += '</button>';
+      });
+      html += '</div>';
+
+      // Reader Pane
+      html += '<div class="md:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm">';
+      html += '<div class="border-b border-slate-100 pb-4 mb-5 flex items-start justify-between gap-3">';
+      html += '<div>';
+      html += '<span class="px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200">' + selectedStory.author + '</span>';
+      html += '<h3 class="text-2xl font-black text-slate-900 mt-1">' + selectedStory.title + '</h3>';
+      html += '</div>';
+      html += '<button type="button" id="copy-story-btn" class="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-bold transition">কপি 📋</button>';
+      html += '</div>';
+
+      html += '<div class="prose text-slate-700 text-sm sm:text-base leading-relaxed space-y-4 whitespace-pre-line font-serif">';
+      html += selectedStory.content;
+      html += '</div>';
+      html += '</div>';
+
+      html += '</div>';
+
+      container.innerHTML = html;
+
+      var sBtns = document.querySelectorAll('.story-select-btn');
+      sBtns.forEach(function(b) {
+        b.onclick = function() {
+          var id = b.getAttribute('data-id');
+          selectedStory = STORIES.find(function(s) { return s.id === id; }) || STORIES[0];
+          render();
+        };
+      });
+
+      var copyBtn = document.getElementById('copy-story-btn');
+      if (copyBtn) {
+        copyBtn.onclick = function() {
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(selectedStory.title + '\n' + selectedStory.author + '\n\n' + selectedStory.content);
+          }
+          copyBtn.innerText = 'কপি হয়েছে! ✅';
+          showToast('সম্পূর্ণ গল্পটি ক্লিপবোর্ডে কপি হয়েছে! 📖', '📚');
+          setTimeout(function() {
+            copyBtn.innerText = 'কপি 📋';
+          }, 2000);
+        };
+      }
+    }
+
+    render();
+  }
+
+  // ===========================================================================
+  // MODULE 4: Love Test (প্রেম টেস্ট)
+  // ===========================================================================
+  function initLoveTestModule() {
+    var container = document.getElementById('mosafa-lovetest-container');
+    if (!container) return;
+
+    var html = '';
+    html += '<div class="max-w-lg mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md text-center">';
+    html += '<div class="w-16 h-16 rounded-full bg-rose-50 text-rose-500 mx-auto flex items-center justify-center text-3xl mb-3 shadow-inner">💖</div>';
+    html += '<h2 class="text-2xl font-black text-slate-900">প্রেম টেস্ট ও রোমান্স স্কোর</h2>';
+    html += '<p class="text-xs text-slate-500 mt-1 mb-6">দুইজনের নাম লিখে ভালোবাসার শতকরা স্কোর ও কম্প্যাটিবিলিটি জানুন।</p>';
+
+    html += '<div class="space-y-4 text-left mb-6">';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">আপনার নাম</label><input type="text" id="love-name1" placeholder="নাম লিখুন..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-rose-400" /></div>';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">সঙ্গীর নাম</label><input type="text" id="love-name2" placeholder="সঙ্গীর নাম লিখুন..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-rose-400" /></div>';
+    html += '</div>';
+
+    html += '<button type="button" id="calc-love-btn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-600 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-black text-sm shadow-md transition">ভালোবাসার স্কোর গণনা করুন 💘</button>';
+
+    html += '<div id="love-result-box" class="mt-6 p-6 rounded-2xl bg-rose-50 border border-rose-200 hidden space-y-2">';
+    html += '<span class="text-xs font-bold text-rose-600 uppercase tracking-wider block">কম্প্যাটিবিলিটি রেজাল্ট</span>';
+    html += '<div id="love-score-display" class="text-5xl font-black text-rose-600">0%</div>';
+    html += '<p id="love-message" class="text-xs font-bold text-slate-700 leading-relaxed"></p>';
+    html += '</div>';
+
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('calc-love-btn');
+    if (btn) {
+      btn.onclick = function() {
+        var n1 = document.getElementById('love-name1').value.trim();
+        var n2 = document.getElementById('love-name2').value.trim();
+        if (!n1 || !n2) {
+          showToast('দয়া করে উভয় ব্যক্তির নাম প্রবেশ করান!', '⚠️');
+          return;
+        }
+
+        var combined = (n1 + n2).toLowerCase();
+        var sum = 0;
+        for (var i = 0; i < combined.length; i++) {
+          sum += combined.charCodeAt(i);
+        }
+        var score = 65 + (sum % 34); // Generates between 65% and 98%
+
+        var resBox = document.getElementById('love-result-box');
+        var scoreDisp = document.getElementById('love-score-display');
+        var msgDisp = document.getElementById('love-message');
+
+        resBox.classList.remove('hidden');
+        scoreDisp.innerText = score + '%';
+
+        var comment = 'অসাধারণ জুটি! আপনাদের বোঝাপড়া ও পারস্পরিক শ্রদ্ধা চিরকাল অটুট থাকবে। 💖';
+        if (score > 90) comment = 'একান্ত আত্মার বন্ধন! আপনাদের ভালোবাসা যেন আকাশের তারার মতো উজ্জ্বল। 🌟';
+        msgDisp.innerText = n1 + ' ও ' + n2 + '-এর সম্পর্ক: ' + comment;
+
+        if (window.confetti) {
+          window.confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
+        }
+        showToast('প্রেম স্কোর সফলভাবে তৈরি হয়েছে! 🎉', '💖');
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 5: Typing Test (টাইপিং টেস্ট)
+  // ===========================================================================
+  function initTypingTestModule() {
+    var container = document.getElementById('mosafa-typing-container');
+    if (!container) return;
+
+    var SAMPLE_TEXT = 'বাংলাদেশ আমাদের প্রিয় জন্মভূমি। নদীমাতৃক এই রূপসী বাংলার প্রকৃতি চিরসবুজ ও মনোমুগ্ধকর। এখানে মানুষ অত্যন্ত অতিথি পরায়ণ ও আন্তরিক। বাংলা আমাদের মাতৃভাষা।';
+
+    var html = '';
+    html += '<div class="max-w-xl mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md">';
+    html += '<h2 class="text-2xl font-black text-slate-900 text-center mb-1">লিপি বাংলা টাইপিং টেস্ট</h2>';
+    html += '<p class="text-xs text-slate-500 text-center mb-6">নিচের অনুচ্ছেদটি দেখে হুবহু টাইপ করে আপনার টাইপিং স্পিড পরীক্ষা করুন।</p>';
+
+    html += '<div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 font-medium text-sm leading-relaxed mb-4 select-none" id="sample-text-box">' + SAMPLE_TEXT + '</div>';
+
+    html += '<textarea id="typing-input" rows="4" placeholder="এখানে দ্রুত টাইপ করা শুরু করুন..." class="w-full p-4 rounded-2xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-sky-500 focus:outline-none mb-4"></textarea>';
+
+    html += '<div class="grid grid-cols-3 gap-3 text-center mb-4">';
+    html += '<div class="p-3 rounded-xl bg-sky-50 border border-sky-100"><span class="text-[10px] text-slate-500 font-bold block">সময় বাকি</span><span class="text-xl font-black text-sky-700" id="typing-timer">৬০ সে.</span></div>';
+    html += '<div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100"><span class="text-[10px] text-slate-500 font-bold block">গতি (WPM)</span><span class="text-xl font-black text-emerald-700" id="typing-wpm">০</span></div>';
+    html += '<div class="p-3 rounded-xl bg-purple-50 border border-purple-100"><span class="text-[10px] text-slate-500 font-bold block">অক্ষর সংখ্যা</span><span class="text-xl font-black text-purple-700" id="typing-chars">০</span></div>';
+    html += '</div>';
+
+    html += '<button type="button" id="reset-typing-btn" class="w-full py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs transition">পুনরায় শুরু করুন 🔄</button>';
+
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    var input = document.getElementById('typing-input');
+    var timerDisp = document.getElementById('typing-timer');
+    var wpmDisp = document.getElementById('typing-wpm');
+    var charsDisp = document.getElementById('typing-chars');
+    var resetBtn = document.getElementById('reset-typing-btn');
+
+    var timeLeft = 60;
+    var timer = null;
+    var started = false;
+
+    if (input) {
+      input.oninput = function() {
+        if (!started) {
+          started = true;
+          timer = setInterval(function() {
+            timeLeft--;
+            if (timerDisp) timerDisp.innerText = timeLeft + ' সে.';
+            if (timeLeft <= 0) {
+              clearInterval(timer);
+              input.disabled = true;
+              showToast('টাইপিং টেস্ট সম্পন্ন হয়েছে! 🎉', '⌨️');
+            }
+          }, 1000);
+        }
+
+        var text = input.value;
+        if (charsDisp) charsDisp.innerText = text.length;
+
+        var words = text.trim().split(/\s+/).filter(Boolean).length;
+        var elapsed = (60 - timeLeft) / 60;
+        if (elapsed > 0 && wpmDisp) {
+          wpmDisp.innerText = Math.round(words / elapsed);
+        }
+      };
+    }
+
+    if (resetBtn) {
+      resetBtn.onclick = function() {
+        clearInterval(timer);
+        initTypingTestModule();
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 6: Age Calculator (বয়স ক্যালকুলেটর)
+  // ===========================================================================
+  function initAgeCalcModule() {
+    var container = document.getElementById('mosafa-age-container');
+    if (!container) return;
+
+    var html = '';
+    html += '<div class="max-w-md mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md">';
+    html += '<h2 class="text-2xl font-black text-slate-900 text-center mb-1">নিখুঁত বয়স ক্যালকুলেটর</h2>';
+    html += '<p class="text-xs text-slate-500 text-center mb-6">আপনার জন্মতারিখ নির্বাচন করে সঠিক বয়স ও ভবিষ্যৎ জন্মদিন জানুন।</p>';
+
+    html += '<div class="mb-5"><label class="block text-xs font-bold text-slate-700 mb-1">জন্মতারিখ নির্ধারণ করুন</label>';
+    html += '<input type="date" id="age-birth-date" class="w-full px-4 py-3 rounded-xl border border-slate-300 font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500" />';
+    html += '</div>';
+
+    html += '<button type="button" id="calc-age-btn" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs sm:text-sm shadow-md transition">বয়স হিসাব করুন ➔</button>';
+
+    html += '<div id="age-result-box" class="mt-6 p-5 rounded-2xl bg-indigo-50 border border-indigo-200 hidden space-y-3">';
+    html += '<div class="text-center"><span class="text-xs text-indigo-700 font-bold block">আপনার বর্তমান বয়স</span><span id="age-main-text" class="text-2xl font-black text-indigo-900"></span></div>';
+    html += '<div class="grid grid-cols-2 gap-2 text-center text-xs font-bold pt-2 border-t border-indigo-100">';
+    html += '<div class="bg-white p-2.5 rounded-xl"><span class="text-[10px] text-slate-400 block">মোট দিন</span><span id="age-total-days" class="text-slate-800"></span></div>';
+    html += '<div class="bg-white p-2.5 rounded-xl"><span class="text-[10px] text-slate-400 block">পরবর্তী জন্মদিন</span><span id="age-next-bday" class="text-slate-800"></span></div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('calc-age-btn');
+    if (btn) {
+      btn.onclick = function() {
+        var input = document.getElementById('age-birth-date').value;
+        if (!input) {
+          showToast('দয়া করে জন্মতারিখ নির্বাচন করুন!', '⚠️');
+          return;
+        }
+
+        var birth = new Date(input);
+        var now = new Date();
+
+        if (birth > now) {
+          showToast('জন্মতারিখ বর্তমান সময়ের চেয়ে বেশি হতে পারে না!', '⚠️');
+          return;
+        }
+
+        var years = now.getFullYear() - birth.getFullYear();
+        var months = now.getMonth() - birth.getMonth();
+        var days = now.getDate() - birth.getDate();
+
+        if (days < 0) {
+          months--;
+          days += 30;
+        }
+        if (months < 0) {
+          years--;
+          months += 12;
+        }
+
+        var diffTime = Math.abs(now - birth);
+        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        var resBox = document.getElementById('age-result-box');
+        resBox.classList.remove('hidden');
+
+        document.getElementById('age-main-text').innerText = years + ' বছর, ' + months + ' মাস, ' + days + ' দিন';
+        document.getElementById('age-total-days').innerText = diffDays + ' দিন';
+
+        // Next birthday
+        var nextBday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
+        if (nextBday < now) {
+          nextBday.setFullYear(now.getFullYear() + 1);
+        }
+        var daysToNext = Math.ceil((nextBday - now) / (1000 * 60 * 60 * 24));
+        document.getElementById('age-next-bday').innerText = daysToNext + ' দিন পর';
+
+        showToast('বয়স সফলভাবে হিসাব করা হয়েছে! 🎂', '📅');
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 7: Coin Toss (কয়েন টস)
+  // ===========================================================================
+  function initCoinTossModule() {
+    var container = document.getElementById('mosafa-coin-container');
+    if (!container) return;
+
+    var html = '';
+    html += '<div class="max-w-md mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md text-center">';
+    html += '<h2 class="text-2xl font-black text-slate-900 mb-1">কয়েন টস ও সিদ্ধান্ত গ্রহণ</h2>';
+    html += '<p class="text-xs text-slate-500 mb-6">যে কোনো দ্বিধা বা খেলার আগে নিরপেক্ষভাবে টস করুন।</p>';
+
+    html += '<div class="my-8 flex justify-center">';
+    html += '<div id="coin-visual" class="w-32 h-32 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 border-4 border-amber-600 flex items-center justify-center text-4xl font-black text-amber-900 shadow-xl transition-all duration-500">🪙</div>';
+    html += '</div>';
+
+    html += '<div id="coin-result-text" class="text-lg font-black text-slate-800 mb-6">টস করতে নিচের বাটনে চাপ দিন</div>';
+
+    html += '<button type="button" id="flip-coin-btn" class="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-sm shadow-md transition">কয়েন টস করুন 🪙</button>';
+
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('flip-coin-btn');
+    var coin = document.getElementById('coin-visual');
+    var txt = document.getElementById('coin-result-text');
+
+    if (btn) {
+      btn.onclick = function() {
+        btn.disabled = true;
+        txt.innerText = 'কয়েন বাতাসে ঘুরছে...';
+        coin.style.transform = 'rotateY(720deg) scale(1.15)';
+
+        setTimeout(function() {
+          var isHead = Math.random() > 0.5;
+          coin.style.transform = 'rotateY(0deg) scale(1)';
+          coin.innerText = isHead ? 'হেড' : 'টেইল';
+          txt.innerText = 'ফলাফল: ' + (isHead ? 'হেড (Head) এসেছে! 🎉' : 'টেইল (Tail) এসেছে! 🎉');
+          btn.disabled = false;
+          showToast('টস সম্পন্ন হয়েছে! 🪙', isHead ? '👑' : '⭐');
+        }, 600);
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 8: Bangla Status Hub (বাংলা স্ট্যাটাস হাব)
+  // ===========================================================================
+  function initStatusHubModule() {
+    var container = document.getElementById('mosafa-status-container');
+    if (!container) return;
+
+    var STATUS_LIST = [
+      { text: 'হৃদয়ের অনুভূতিগুলো যখন ভাষায় প্রকাশ করা যায় না, তখন নীরবতাই সবচেয়ে বড় ভাষা হয়ে দাঁড়ায়।', cat: 'রোমান্টিক' },
+      { text: 'ধৈর্য এমন একটি বৃক্ষ, যার শিকড় তিক্ত হলেও ফল অত্যন্ত মিষ্টি।', cat: 'ইসলামিক' },
+      { text: 'নিজের অবস্থান কাউকে প্রমাণ করার চেয়ে নিজের যোগ্যতায় শান্ত থাকা অনেক বেশি সম্মানের।', cat: 'অ্যাটিটিউড' },
+      { text: 'মানুষের জীবনের সবচেয়ে বড় জয় হলো নিজের খারাপ সময়ের সাথে লড়াই করে টিকে থাকা।', cat: 'মোটিভেশনাল' },
+      { text: 'যে বুঝতে চায় না, তাকে হাজার বুঝিয়েও লাভ নেই। সময়ের চেয়ে বড় শিক্ষক আর কেউ হয় না।', cat: 'বাস্তবতা' }
+    ];
+
+    var html = '';
+    html += '<div class="rounded-3xl bg-gradient-to-br from-purple-600 via-indigo-700 to-slate-900 text-white p-6 sm:p-8 shadow-lg mb-6">';
+    html += '<h2 class="text-2xl sm:text-4xl font-black">বাংলা স্ট্যাটাস ও ক্যাপশন হাব</h2>';
+    html += '<p class="text-xs sm:text-sm text-purple-100 mt-1">সোশ্যাল মিডিয়ায় শেয়ার করার মতো বাছাইকৃত চমৎকার স্ট্যাটাস সংগ্রহ।</p>';
+    html += '</div>';
+
+    html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">';
+    STATUS_LIST.forEach(function(s) {
+      html += '<div class="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-xs flex flex-col justify-between">';
+      html += '<div class="space-y-3">';
+      html += '<span class="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-800 text-[10px] font-black border border-purple-200">' + s.cat + '</span>';
+      html += '<p class="text-slate-800 text-sm font-semibold leading-relaxed">“' + s.text + '”</p>';
+      html += '</div>';
+      html += '<div class="pt-4 mt-4 border-t border-slate-100 flex justify-end">';
+      html += '<button type="button" class="copy-status-btn px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs transition" data-text="' + s.text + '">কপি করুন 📋</button>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    var btns = document.querySelectorAll('.copy-status-btn');
+    btns.forEach(function(b) {
+      b.onclick = function() {
+        var t = b.getAttribute('data-text');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(t);
+        }
+        b.innerText = 'কপি হয়েছে! ✅';
+        showToast('স্ট্যাটাসটি সফলভাবে কপি হয়েছে! 📋', '💬');
+        setTimeout(function() {
+          b.innerText = 'কপি করুন 📋';
+        }, 2000);
+      };
+    });
+  }
+
+  // ===========================================================================
+  // MODULE 9: Love Percentage Calculator (কুইক লাভ পারসেন্টেজ)
+  // ===========================================================================
+  function initLoveCalcModule() {
+    var container = document.getElementById('mosafa-lovecalc-container');
+    if (!container) return;
+
+    var html = '<div class="max-w-md mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md text-center">';
+    html += '<div class="w-16 h-16 rounded-full bg-pink-50 text-pink-500 mx-auto flex items-center justify-center text-3xl mb-3 shadow-inner">💖</div>';
+    html += '<h2 class="text-2xl font-black text-slate-900">কুইক লাভ পারসেন্টেজ</h2>';
+    html += '<p class="text-xs text-slate-500 mt-1 mb-6">দুজনের নাম লিখে এক ক্লিকে ভালোবাসার শতকরা হার জেনে নিন।</p>';
+    html += '<div class="space-y-3 mb-6 text-left">';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">প্রথম ব্যক্তির নাম</label><input type="text" id="lc-name1" placeholder="নাম লিখুন..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-pink-400" /></div>';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">দ্বিতীয় ব্যক্তির নাম</label><input type="text" id="lc-name2" placeholder="নাম লিখুন..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-pink-400" /></div>';
+    html += '</div>';
+    html += '<button type="button" id="lc-btn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-black text-sm shadow-md transition">লাভ পারসেন্টেজ বের করুন ✨</button>';
+    html += '<div id="lc-res" class="mt-6 p-6 rounded-2xl bg-pink-50 border border-pink-200 hidden space-y-2">';
+    html += '<div id="lc-val" class="text-5xl font-black text-pink-600">0%</div>';
+    html += '<p id="lc-desc" class="text-xs font-bold text-slate-700"></p>';
+    html += '</div></div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('lc-btn');
+    if (btn) {
+      btn.onclick = function() {
+        var n1 = (document.getElementById('lc-name1').value || '').trim();
+        var n2 = (document.getElementById('lc-name2').value || '').trim();
+        if (!n1 || !n2) {
+          showToast('উভয় ব্যক্তির নাম লিখুন!', '⚠️');
+          return;
+        }
+        var sum = 0;
+        var combo = (n1 + n2).toLowerCase();
+        for (var i = 0; i < combo.length; i++) sum += combo.charCodeAt(i);
+        var pct = 70 + (sum % 29);
+        var res = document.getElementById('lc-res');
+        res.classList.remove('hidden');
+        document.getElementById('lc-val').innerText = pct + '%';
+        document.getElementById('lc-desc').innerText = n1 + ' ও ' + n2 + '-এর বোঝাপড়া চমৎকার ও দীর্ঘস্থায়ী!';
+        if (window.confetti) window.confetti({ particleCount: 50, spread: 60 });
+        showToast('লাভ পারসেন্টেজ তৈরি হয়েছে! 💖', '✨');
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 10: MoSaFa Name Reveal (নামের গোপন গল্প ও অর্থ)
+  // ===========================================================================
+  function initNameRevealModule() {
+    var container = document.getElementById('mosafa-name-container');
+    if (!container) return;
+
+    var html = '<div class="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md">';
+    html += '<div class="text-center mb-6">';
+    html += '<div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-purple-600 text-white mx-auto flex items-center justify-center text-2xl mb-2 shadow-md">🔮</div>';
+    html += '<h2 class="text-2xl font-black text-slate-900">MoSaFa Name Reveal</h2>';
+    html += '<p class="text-xs text-slate-500">আপনার নামের গোপন অর্থ, রাশি, শুভ সংখ্যা ও ভবিষ্যৎ ব্যক্তিত্ব উন্মোচন করুন।</p>';
+    html += '</div>';
+
+    html += '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">আপনার নাম</label><input type="text" id="nr-name" placeholder="নাম লিখুন (যেমন: আরিফ)" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">লিঙ্গ</label><select id="nr-gender" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold"><option value="পুরুষ">পুরুষ</option><option value="নারী">নারী</option></select></div>';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">জন্ম সাল</label><input type="number" id="nr-year" value="2000" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '</div>';
+
+    html += '<button type="button" id="nr-btn" class="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-black text-sm shadow-md transition">নামের রহস্য উন্মোচন করুন 🔮</button>';
+
+    html += '<div id="nr-res" class="mt-6 space-y-4 hidden">';
+    html += '<div class="p-5 rounded-2xl bg-purple-50 border border-purple-200 space-y-2"><h4 class="text-xs font-black text-purple-800 uppercase tracking-wider">অধ্যায় ১: নামের অর্থ ও ব্যক্তিত্ব</h4><p id="nr-c1" class="text-xs text-slate-700 leading-relaxed font-medium"></p></div>';
+    html += '<div class="p-5 rounded-2xl bg-blue-50 border border-blue-200 space-y-2"><h4 class="text-xs font-black text-blue-800 uppercase tracking-wider">অধ্যায় ২: শুভ সংখ্যা ও শুভ বর্ণ</h4><p id="nr-c2" class="text-xs text-slate-700 leading-relaxed font-medium"></p></div>';
+    html += '<div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2"><h4 class="text-xs font-black text-emerald-800 uppercase tracking-wider">অধ্যায় ৩: কর্মজীবন ও আর্থিক ভাগ্য</h4><p id="nr-c3" class="text-xs text-slate-700 leading-relaxed font-medium"></p></div>';
+    html += '<div class="p-5 rounded-2xl bg-amber-50 border border-amber-200 space-y-2"><h4 class="text-xs font-black text-amber-800 uppercase tracking-wider">অধ্যায় ৪: রাশি ও জীবনধারা</h4><p id="nr-c4" class="text-xs text-slate-700 leading-relaxed font-medium"></p></div>';
+    html += '</div></div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('nr-btn');
+    if (btn) {
+      btn.onclick = function() {
+        var name = (document.getElementById('nr-name').value || '').trim();
+        if (!name) {
+          showToast('আপনার নাম লিখুন!', '⚠️');
+          return;
+        }
+        var year = document.getElementById('nr-year').value || '2000';
+        var luckyNum = ((name.length * 3 + parseInt(year, 10)) % 9) + 1;
+        var colors = ['নীল', 'সবুজ', 'সাদা', 'বেগুনি', 'গোলাপি', 'সোনালি', 'আসমানী'];
+        var luckyColor = colors[name.length % colors.length];
+
+        document.getElementById('nr-c1').innerText = name + ' নামের মানুষেরা স্বভাবতই দৃঢ়চেতা, আত্মপ্রত্যয়ী ও গভীর চিন্তাশীল। বিপদে শান্ত থেকে সঠিক সিদ্ধান্ত নেওয়ার অসাধারণ ক্ষমতা থাকে।';
+        document.getElementById('nr-c2').innerText = 'আপনার সবচেয়ে শুভ সংখ্যা হলো ' + luckyNum + ' এবং শুভ রং হলো ' + luckyColor + '। শুভ দিন: বৃহস্পতিবার ও শুক্রবার।';
+        document.getElementById('nr-c3').innerText = 'নেতৃত্বমূলক পেশা, ব্যবসা, প্রযুক্তি ও সৃজনশীল কাজে আপনার সাফল্য সুনিশ্চিত। কঠোর পরিশ্রমে অল্প সময়েই উন্নতি লাভ করবেন।';
+        document.getElementById('nr-c4').innerText = 'শান্তিপূর্ণ জীবন, সত্যবাদী মনোভাব এবং আপনজনদের পাশে থাকার অটুট অঙ্গীকার আপনার চরিত্রের মূল ভিত্তি।';
+
+        document.getElementById('nr-res').classList.remove('hidden');
+        showToast('নামের ফলাফল উন্মোচিত হয়েছে! 🌟', '🔮');
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 11: Daily Hishab Tracker (ডেইলি হিসাব ট্র্যাকার)
+  // ===========================================================================
+  function initDailyHishabModule() {
+    var container = document.getElementById('mosafa-hishab-container');
+    if (!container) return;
+
+    var items = JSON.parse(localStorage.getItem('mosafa_hishab_items') || '[]');
+
+    function saveAndRender() {
+      localStorage.setItem('mosafa_hishab_items', JSON.stringify(items));
+      render();
+    }
+
+    function render() {
+      var income = 0;
+      var expense = 0;
+      items.forEach(function(it) {
+        if (it.type === 'income') income += it.amount;
+        else expense += it.amount;
+      });
+      var balance = income - expense;
+
+      var html = '<div class="max-w-2xl mx-auto space-y-6">';
+      html += '<div class="rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-800 text-white p-6 sm:p-8 shadow-md text-center">';
+      html += '<h2 class="text-2xl font-black">Daily Hishab (ডেইলি হিসাব ট্র্যাকার)</h2>';
+      html += '<p class="text-xs text-emerald-100 mt-1">প্রতিদিনের আয় ও ব্যয় হিসাব রাখুন সহজে ও নিরাপদে।</p>';
+      html += '</div>';
+
+      // Summary Cards
+      html += '<div class="grid grid-cols-3 gap-3 text-center">';
+      html += '<div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs"><span class="text-[11px] text-slate-500 font-bold block">মোট আয়</span><span class="text-lg font-black text-emerald-600">৳' + income + '</span></div>';
+      html += '<div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs"><span class="text-[11px] text-slate-500 font-bold block">মোট ব্যয়</span><span class="text-lg font-black text-rose-600">৳' + expense + '</span></div>';
+      html += '<div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs"><span class="text-[11px] text-slate-500 font-bold block">অবশিষ্ট ব্যালেন্স</span><span class="text-lg font-black text-slate-900">৳' + balance + '</span></div>';
+      html += '</div>';
+
+      // Entry Form
+      html += '<div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs">';
+      html += '<h3 class="text-sm font-bold text-slate-800 mb-3">নতুন এন্ট্রি যোগ করুন</h3>';
+      html += '<div class="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-3">';
+      html += '<div class="sm:col-span-2"><input type="text" id="dh-desc" placeholder="বিবরণ (যেমন: বেতন, বাজার, চা...)" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+      html += '<div><input type="number" id="dh-amount" placeholder="পরিমাণ (৳)" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+      html += '<div><select id="dh-type" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"><option value="expense">ব্যয় (-)</option><option value="income">আয় (+)</option></select></div>';
+      html += '</div>';
+      html += '<button type="button" id="dh-add-btn" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition">এন্ট্রি সংরক্ষণ করুন ➕</button>';
+      html += '</div>';
+
+      // Items list
+      html += '<div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs">';
+      html += '<div class="flex items-center justify-between mb-3"><h4 class="text-sm font-bold text-slate-800">লেনদেন তালিকা (' + items.length + ')</h4>';
+      if (items.length > 0) html += '<button type="button" id="dh-clear-btn" class="text-xs text-rose-600 hover:underline font-bold">সকল মুছুন 🗑️</button>';
+      html += '</div>';
+
+      if (items.length === 0) {
+        html += '<p class="text-xs text-slate-400 text-center py-6">এখনো কোনো এন্ট্রি যোগ করা হয়নি।</p>';
+      } else {
+        html += '<div class="space-y-2">';
+        items.forEach(function(it, idx) {
+          var isInc = it.type === 'income';
+          html += '<div class="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50 text-xs font-bold">';
+          html += '<div class="flex items-center gap-2"><span class="' + (isInc ? 'text-emerald-600' : 'text-rose-600') + '">' + (isInc ? '⬆️' : '⬇️') + '</span><span>' + it.desc + '</span></div>';
+          html += '<div class="flex items-center gap-3"><span class="' + (isInc ? 'text-emerald-700 font-black' : 'text-rose-700 font-black') + '">' + (isInc ? '+' : '-') + '৳' + it.amount + '</span><button type="button" class="dh-del-btn text-slate-400 hover:text-rose-600 text-sm font-bold" data-idx="' + idx + '">×</button></div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+      html += '</div></div>';
+
+      container.innerHTML = html;
+
+      var addBtn = document.getElementById('dh-add-btn');
+      if (addBtn) {
+        addBtn.onclick = function() {
+          var desc = (document.getElementById('dh-desc').value || '').trim();
+          var amt = parseFloat(document.getElementById('dh-amount').value);
+          var type = document.getElementById('dh-type').value;
+          if (!desc || !amt || amt <= 0) {
+            showToast('সঠিক বিবরণ ও টাকার পরিমাণ দিন!', '⚠️');
+            return;
+          }
+          items.unshift({ desc: desc, amount: amt, type: type, date: new Date().toLocaleDateString('bn-BD') });
+          saveAndRender();
+          showToast('এন্ট্রি সফলভাবে যোগ হয়েছে! ৳', '✅');
+        };
+      }
+
+      var clearBtn = document.getElementById('dh-clear-btn');
+      if (clearBtn) {
+        clearBtn.onclick = function() {
+          if (confirm('আপনি কি নিশ্চিত যে সকল হিসাব মুছে ফেলতে চান?')) {
+            items = [];
+            saveAndRender();
+            showToast('সকল হিসাব মুছে ফেলা হয়েছে!', '🗑️');
+          }
+        };
+      }
+
+      var delBtns = document.querySelectorAll('.dh-del-btn');
+      delBtns.forEach(function(b) {
+        b.onclick = function() {
+          var idx = parseInt(b.getAttribute('data-idx'), 10);
+          items.splice(idx, 1);
+          saveAndRender();
+        };
+      });
+    }
+
+    render();
+  }
+
+  // ===========================================================================
+  // MODULE 12: MoSaFa Life Receipt (জীবন হিসাব রশিদ)
+  // ===========================================================================
+  function initLifeReceiptModule() {
+    var container = document.getElementById('mosafa-receipt-container');
+    if (!container) return;
+
+    var html = '<div class="max-w-md mx-auto space-y-4">';
+    html += '<div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-md text-center">';
+    html += '<h2 class="text-2xl font-black text-slate-900">MoSaFa Life Receipt</h2>';
+    html += '<p class="text-xs text-slate-500 mt-1 mb-5">জীবনের ঘুম, কাজ ও মোবাইল ব্যবহারের ডিজিটাল ক্যাশ মেমো রশিদ তৈরি করুন।</p>';
+    html += '<div class="mb-4 text-left"><label class="block text-xs font-bold text-slate-700 mb-1">আপনার জন্মতারিখ দিন</label><input type="date" id="lr-bday" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '<button type="button" id="lr-btn" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs sm:text-sm shadow-md transition">রশিদ তৈরি করুন 🧾</button>';
+    html += '</div>';
+
+    html += '<div id="lr-receipt-card" class="bg-amber-50/70 border-2 border-dashed border-amber-300 rounded-2xl p-6 font-mono text-xs text-slate-800 shadow-sm hidden space-y-3">';
+    html += '<div class="text-center border-b border-amber-200 pb-2"><h3 class="font-black text-sm tracking-widest uppercase">THE MOSAFA LIFE RECEIPT</h3><p class="text-[10px] text-slate-500">DIGITAL MEMO & TIME BREAKDOWN</p></div>';
+    html += '<div id="lr-body" class="space-y-1.5 pt-2"></div>';
+    html += '<div class="border-t border-amber-200 pt-3 text-center text-[10px] text-slate-500">সময় অমূল্য, প্রতিটি মুহূর্তের সদ্ব্যবহার করুন! ❤️</div>';
+    html += '</div></div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('lr-btn');
+    if (btn) {
+      btn.onclick = function() {
+        var val = document.getElementById('lr-bday').value;
+        if (!val) {
+          showToast('জন্মতারিখ নির্বাচন করুন!', '⚠️');
+          return;
+        }
+        var bday = new Date(val);
+        var now = new Date();
+        var totalDays = Math.max(1, Math.floor((now - bday) / (1000 * 60 * 60 * 24)));
+        var totalHours = totalDays * 24;
+
+        var sleepHours = Math.round(totalHours * 0.33);
+        var screenHours = Math.round(totalHours * 0.18);
+        var eatHours = Math.round(totalHours * 0.08);
+        var workHours = Math.round(totalHours * 0.22);
+        var freeHours = totalHours - sleepHours - screenHours - eatHours - workHours;
+
+        var bodyHtml = '';
+        bodyHtml += '<div class="flex justify-between font-bold"><span>অতিক্রান্ত মোট বয়স:</span><span>' + Math.floor(totalDays / 365) + ' বছর (' + totalDays + ' দিন)</span></div>';
+        bodyHtml += '<div class="flex justify-between"><span>ঘুমের সময় (~৮ ঘণ্টা):</span><span>' + Math.round(sleepHours / 24) + ' দিন</span></div>';
+        bodyHtml += '<div class="flex justify-between"><span>মোবাইল ও স্ক্রিনটাইম:</span><span>' + Math.round(screenHours / 24) + ' দিন</span></div>';
+        bodyHtml += '<div class="flex justify-between"><span>খাবার ও আহারের সময়:</span><span>' + Math.round(eatHours / 24) + ' দিন</span></div>';
+        bodyHtml += '<div class="flex justify-between"><span>কাজ / পড়াশোনা:</span><span>' + Math.round(workHours / 24) + ' দিন</span></div>';
+        bodyHtml += '<div class="flex justify-between border-t border-amber-200 pt-1 font-bold text-indigo-700"><span>বাকি অবসর ও জীবন:</span><span>' + Math.round(freeHours / 24) + ' দিন</span></div>';
+
+        document.getElementById('lr-body').innerHTML = bodyHtml;
+        document.getElementById('lr-receipt-card').classList.remove('hidden');
+        showToast('রশিদ তৈরি হয়েছে! 🧾', '✨');
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 13: MoSaFa Poster Studio (পোস্টার স্টুডিও)
+  // ===========================================================================
+  function initPosterStudioModule() {
+    var container = document.getElementById('mosafa-poster-container');
+    if (!container) return;
+
+    var html = '<div class="max-w-2xl mx-auto space-y-6">';
+    html += '<div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-md text-center">';
+    html += '<h2 class="text-2xl font-black text-slate-900">MoSaFa Poster Studio</h2>';
+    html += '<p class="text-xs text-slate-500 mt-1 mb-5">নিউজ পোস্টার, উক্তি বা ব্যানার কার্ড তৈরি করুন সহজে।</p>';
+    html += '<div class="space-y-3 text-left mb-4">';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">শিরোনাম / ব্রেকিং নিউজ</label><input type="text" id="ps-title" value="আজকের বিশেষ সংবাদ ও প্রেরণা" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">মূল বক্তব্য / বিবরণ</label><textarea id="ps-body" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-medium">সফলতা একদিনে আসে না, কিন্তু প্রতিদিনের ছোট ছোট চেষ্টাই একদিন বড় সাফল্যে রূপ নেয়।</textarea></div>';
+    html += '<div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-700 mb-1">লেখকের নাম / উৎস</label><input type="text" id="ps-author" value="The MoSaFa Studio" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div><div><label class="block text-xs font-bold text-slate-700 mb-1">ট্যাগ / ক্যাটাগরি</label><input type="text" id="ps-tag" value="অনুপ্রেরণা" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div></div>';
+    html += '</div>';
+    html += '<button type="button" id="ps-render-btn" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition">পোস্টার আপডেট করুন 🎨</button>';
+    html += '</div>';
+
+    // Live Card Preview
+    html += '<div id="ps-card" class="rounded-3xl p-8 bg-gradient-to-tr from-slate-900 via-rose-950 to-indigo-950 text-white shadow-xl space-y-4 text-center border border-white/10">';
+    html += '<span id="ps-tag-disp" class="inline-block px-3 py-1 rounded-full bg-rose-600 text-white font-extrabold text-[10px] uppercase tracking-wider">অনুপ্রেরণা</span>';
+    html += '<h3 id="ps-title-disp" class="text-xl sm:text-2xl font-black text-rose-100 leading-tight">আজকের বিশেষ সংবাদ ও প্রেরণা</h3>';
+    html += '<p id="ps-body-disp" class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-lg mx-auto font-medium">সফলতা একদিনে আসে না, কিন্তু প্রতিদিনের ছোট ছোট চেষ্টাই একদিন বড় সাফল্যে রূপ নেয়।</p>';
+    html += '<div class="pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400 font-bold"><span id="ps-author-disp">The MoSaFa Studio</span><span>The MoSaFa</span></div>';
+    html += '</div></div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('ps-render-btn');
+    if (btn) {
+      btn.onclick = function() {
+        document.getElementById('ps-title-disp').innerText = document.getElementById('ps-title').value || '';
+        document.getElementById('ps-body-disp').innerText = document.getElementById('ps-body').value || '';
+        document.getElementById('ps-author-disp').innerText = document.getElementById('ps-author').value || '';
+        document.getElementById('ps-tag-disp').innerText = document.getElementById('ps-tag').value || '';
+        showToast('পোস্টার সফলভাবে আপডেট হয়েছে! 🎨', '✨');
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 14: MoSaFa Life Journey (জীবন ও ফোন জার্নি)
+  // ===========================================================================
+  function initLifeJourneyModule() {
+    var container = document.getElementById('mosafa-journey-container');
+    if (!container) return;
+
+    var MILESTONES = [
+      { year: 'শৈশব', title: 'জন্ম ও সোনালী দিনগুলো', desc: 'গ্রাম বা শহরের নির্মল শৈশব, কাদা-মাটি ও বন্ধুদের সাথে খেলাধুলো।' },
+      { year: 'প্রথম ফোন', title: 'নকিয়া বা সিম্ফনি বাটন ফোন', desc: 'প্রথম স্নেক গেম খেলা, এফএম রেডিও ও মেমোরি কার্ডে গান শোনার নস্টালজিয়া।' },
+      { year: 'স্মার্টফোন যুগ', title: 'প্রথম অ্যান্ড্রয়েড স্মার্টফোন', desc: 'ফেসবুক, ইউটিউব ও সেলফি তোলার নতুন অভিজ্ঞতা।' },
+      { year: 'বর্তমান', title: 'বর্তমান ডিজিটাল জীবন', desc: 'অনলাইন ক্যারিয়ার, পড়ালেখা ও ভবিষ্যৎ স্বপ্নের পথে যাত্রা।' }
+    ];
+
+    var html = '<div class="max-w-xl mx-auto space-y-6">';
+    html += '<div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-md text-center">';
+    html += '<h2 class="text-2xl font-black text-slate-900">Life Journey (জীবন ও ফোন জার্নি)</h2>';
+    html += '<p class="text-xs text-slate-500 mt-1">জীবনের মাইলফলক ও প্রযুক্তিগত বিবর্তনের স্মৃতি টাইমলাইন।</p>';
+    html += '</div>';
+
+    html += '<div class="relative border-l-2 border-cyan-400 ml-4 pl-6 space-y-6">';
+    MILESTONES.forEach(function(m) {
+      html += '<div class="relative bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">';
+      html += '<div class="absolute -left-9 top-4 w-6 h-6 rounded-full bg-cyan-500 border-4 border-white shadow-xs"></div>';
+      html += '<span class="text-[10px] font-black text-cyan-600 uppercase">' + m.year + '</span>';
+      html += '<h4 class="text-sm font-bold text-slate-900 mt-0.5">' + m.title + '</h4>';
+      html += '<p class="text-xs text-slate-600 mt-1">' + m.desc + '</p>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+
+    container.innerHTML = html;
+  }
+
+  // ===========================================================================
+  // MODULE 15: Family Tree Builder (পারিবারিক বংশলতিকা)
+  // ===========================================================================
+  function initFamilyTreeModule() {
+    var container = document.getElementById('mosafa-tree-container');
+    if (!container) return;
+
+    var html = '<div class="max-w-2xl mx-auto space-y-6">';
+    html += '<div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-md text-center">';
+    html += '<h2 class="text-2xl font-black text-slate-900">Family Tree Builder (পারিবারিক বংশলতিকা)</h2>';
+    html += '<p class="text-xs text-slate-500 mt-1 mb-5">পরিবারের ৩ প্রজন্মের বংশবৃক্ষ সাজিয়ে দেখুন।</p>';
+    html += '<div class="grid grid-cols-2 gap-2 text-left mb-4">';
+    html += '<div><label class="block text-[11px] font-bold text-slate-600 mb-1">দাদা / নানার নাম</label><input type="text" id="ft-grandpa" value="দাদা" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '<div><label class="block text-[11px] font-bold text-slate-600 mb-1">দাদী / নানীর নাম</label><input type="text" id="ft-grandma" value="দাদী" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '<div><label class="block text-[11px] font-bold text-slate-600 mb-1">বাবার নাম</label><input type="text" id="ft-dad" value="বাবা" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '<div><label class="block text-[11px] font-bold text-slate-600 mb-1">মায়ের নাম</label><input type="text" id="ft-mom" value="মা" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '<div class="col-span-2"><label class="block text-[11px] font-bold text-slate-600 mb-1">আপনার ও ভাই-বোনের নাম</label><input type="text" id="ft-me" value="আমি ও ভাই-বোন" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" /></div>';
+    html += '</div>';
+    html += '<button type="button" id="ft-update-btn" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition">বংশবৃক্ষ তৈরি করুন 🌳</button>';
+    html += '</div>';
+
+    // Visual Tree Representation
+    html += '<div class="bg-emerald-50/60 rounded-3xl p-6 border border-emerald-200 text-center space-y-4">';
+    html += '<div class="inline-flex gap-4"><div class="px-4 py-2 bg-white rounded-xl border border-emerald-300 shadow-xs font-bold text-xs" id="disp-grandpa">দাদা</div><div class="px-4 py-2 bg-white rounded-xl border border-emerald-300 shadow-xs font-bold text-xs" id="disp-grandma">দাদী</div></div>';
+    html += '<div class="text-emerald-500 font-black text-lg">↓</div>';
+    html += '<div class="inline-flex gap-4"><div class="px-4 py-2 bg-white rounded-xl border border-emerald-300 shadow-xs font-bold text-xs" id="disp-dad">বাবা</div><div class="px-4 py-2 bg-white rounded-xl border border-emerald-300 shadow-xs font-bold text-xs" id="disp-mom">মা</div></div>';
+    html += '<div class="text-emerald-500 font-black text-lg">↓</div>';
+    html += '<div><div class="inline-block px-5 py-2.5 bg-emerald-600 text-white rounded-xl shadow-md font-bold text-xs" id="disp-me">আমি ও ভাই-বোন</div></div>';
+    html += '</div></div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('ft-update-btn');
+    if (btn) {
+      btn.onclick = function() {
+        document.getElementById('disp-grandpa').innerText = document.getElementById('ft-grandpa').value || 'দাদা';
+        document.getElementById('disp-grandma').innerText = document.getElementById('ft-grandma').value || 'দাদী';
+        document.getElementById('disp-dad').innerText = document.getElementById('ft-dad').value || 'বাবা';
+        document.getElementById('disp-mom').innerText = document.getElementById('ft-mom').value || 'মা';
+        document.getElementById('disp-me').innerText = document.getElementById('ft-me').value || 'আমি ও ভাই-বোন';
+        showToast('বংশবৃক্ষ আপডেট হয়েছে! 🌳', '✨');
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 16: Random Picker Wheel (সিদ্ধান্ত চাকা)
+  // ===========================================================================
+  function initRandomPickerModule() {
+    var container = document.getElementById('mosafa-picker-container');
+    if (!container) return;
+
+    var html = '<div class="max-w-md mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-md text-center space-y-4">';
+    html += '<h2 class="text-2xl font-black text-slate-900">Random Picker Wheel</h2>';
+    html += '<p class="text-xs text-slate-500">যেকোনো পছন্দের তালিকা থেকে শতভাগ নিরপেক্ষ সিদ্ধান্ত নিন।</p>';
+    html += '<div class="text-left"><label class="block text-xs font-bold text-slate-700 mb-1">বিকল্পগুলো কমা (,) দিয়ে আলাদা করুন</label><textarea id="rp-input" rows="3" class="w-full p-3 rounded-xl border border-slate-300 text-xs font-bold">কাচ্চি বিরিয়ানি, পিৎজা, চাইনিজ, খিচুড়ি, বার্গার</textarea></div>';
+    html += '<div class="py-6 flex justify-center"><div id="rp-display" class="w-32 h-32 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 border-4 border-white shadow-xl flex items-center justify-center text-white font-black text-sm p-3 transition-transform duration-700">🎡 চাকা</div></div>';
+    html += '<button type="button" id="rp-spin-btn" class="w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs sm:text-sm shadow-md transition">চাকা ঘোরান 🎡</button>';
+    html += '<div id="rp-winner" class="text-base font-black text-purple-700 hidden"></div>';
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('rp-spin-btn');
+    var disp = document.getElementById('rp-display');
+    var win = document.getElementById('rp-winner');
+
+    if (btn) {
+      btn.onclick = function() {
+        var raw = (document.getElementById('rp-input').value || '').trim();
+        var items = raw.split(/[,，\n]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+        if (items.length < 2) {
+          showToast('কমপক্ষে ২টি বিকল্প লিখুন!', '⚠️');
+          return;
+        }
+
+        btn.disabled = true;
+        disp.style.transform = 'rotate(1080deg) scale(1.1)';
+
+        setTimeout(function() {
+          var chosen = items[Math.floor(Math.random() * items.length)];
+          disp.style.transform = 'rotate(0deg) scale(1)';
+          disp.innerText = chosen;
+          win.innerText = 'নির্বাচিত ফলাফল: ' + chosen + ' 🎉';
+          win.classList.remove('hidden');
+          btn.disabled = false;
+          if (window.confetti) window.confetti({ particleCount: 60, spread: 70 });
+          showToast('সিদ্ধান্ত পাওয়া গেছে: ' + chosen + ' 🎡', '🎉');
+        }, 700);
+      };
+    }
+  }
+
+  // ===========================================================================
+  // MODULE 17: Bangla Riddles & Quiz Challenge (ধাঁধা ও কুইজ)
+  // ===========================================================================
+  function initBanglaQuizModule() {
+    var container = document.getElementById('mosafa-quiz-container');
+    if (!container) return;
+
+    var QUIZ = [
+      { q: 'গাছে ধরে ফল, কিন্তু খায় না মানুষ, কাটলে বের হয় পানি। কী সেটা?', opts: ['ডাব/নারকেল', 'তরমুজ', 'বেল', 'আনারস'], ans: 0 },
+      { q: 'লাল বরণ রূপ তার, খেতে বড় ঝাল, তরকারি রাঁধতে লাগে সব কাল। কী সেটা?', opts: ['মরিচ', 'টমেটো', 'গাজর', 'বিট'], ans: 0 },
+      { q: 'আট পা যার, জল না হলে মরে তার, জাল বুনে বাস করে কার?', opts: ['মাকড়সা', 'মাছি', 'কাঁকড়া', 'অক্টোপাস'], ans: 0 }
+    ];
+
+    var cur = 0;
+    var score = 0;
+
+    function renderQuestion() {
+      if (cur >= QUIZ.length) {
+        var finHtml = '<div class="max-w-md mx-auto bg-white rounded-3xl p-8 border border-slate-200 text-center space-y-4 shadow-md">';
+        finHtml += '<div class="text-5xl">🏆</div>';
+        finHtml += '<h2 class="text-2xl font-black text-slate-900">কুইজ সম্পন্ন হয়েছে!</h2>';
+        finHtml += '<p class="text-lg font-black text-amber-600">আপনার স্কোর: ' + score + ' / ' + QUIZ.length + '</p>';
+        finHtml += '<button type="button" id="bq-restart" class="w-full py-2.5 rounded-xl bg-amber-500 text-white font-bold text-xs">আবার খেলুন 🔄</button>';
+        finHtml += '</div>';
+        container.innerHTML = finHtml;
+        var rBtn = document.getElementById('bq-restart');
+        if (rBtn) {
+          rBtn.onclick = function() {
+            cur = 0;
+            score = 0;
+            renderQuestion();
+          };
+        }
+        return;
+      }
+
+      var item = QUIZ[cur];
+      var html = '<div class="max-w-md mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-4">';
+      html += '<div class="flex justify-between items-center text-xs font-bold text-slate-500"><span>প্রশ্ন ' + (cur + 1) + ' / ' + QUIZ.length + '</span><span>স্কোর: ' + score + '</span></div>';
+      html += '<h3 class="text-base font-black text-slate-900 leading-snug">“' + item.q + '”</h3>';
+      html += '<div class="space-y-2 pt-2">';
+      item.opts.forEach(function(opt, idx) {
+        html += '<button type="button" class="bq-opt w-full p-3 rounded-xl border border-slate-200 hover:bg-amber-50 hover:border-amber-300 text-left text-xs font-bold transition flex items-center justify-between" data-idx="' + idx + '"><span>' + opt + '</span><span>➔</span></button>';
+      });
+      html += '</div></div>';
+
+      container.innerHTML = html;
+
+      var opts = document.querySelectorAll('.bq-opt');
+      opts.forEach(function(btn) {
+        btn.onclick = function() {
+          var sel = parseInt(btn.getAttribute('data-idx'), 10);
+          if (sel === item.ans) {
+            score++;
+            showToast('সঠিক উত্তর! 🎉', '✅');
+          } else {
+            showToast('ভুল উত্তর! সঠিক: ' + item.opts[item.ans], '❌');
+          }
+          cur++;
+          setTimeout(renderQuestion, 600);
+        };
+      });
+    }
+
+    renderQuestion();
+  }
+
+  // ===========================================================================
+  // MODULE 18: MoSaFa Personality Reveal (ব্যক্তিত্ব উন্মোচন)
+  // ===========================================================================
+  function initPersonalityModule() {
+    var container = document.getElementById('mosafa-personality-container');
+    if (!container) return;
+
+    var html = '<div class="max-w-md mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md text-center space-y-4">';
+    html += '<div class="w-16 h-16 rounded-full bg-violet-50 text-violet-600 mx-auto flex items-center justify-center text-3xl mb-1 shadow-inner">🌟</div>';
+    html += '<h2 class="text-2xl font-black text-slate-900">ব্যক্তিত্ব উন্মোচন টেস্ট</h2>';
+    html += '<p class="text-xs text-slate-500">আপনার স্বভাব ও চিন্তা অনুযায়ী আপনার প্রধান চারিত্রিক শক্তি উন্মোচন করুন।</p>';
+    html += '<div class="space-y-3 text-left pt-2">';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">অবসরে আপনার বেশি পছন্দ:</label><select id="pr-q1" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"><option value="1">বই পড়া বা নতুন কিছু শেখা</option><option value="2">বন্ধুদের সাথে আড্ডা ও ভ্রমণ</option><option value="3">নীরবে নিজের পরিকল্পনা সাজানো</option></select></div>';
+    html += '<div><label class="block text-xs font-bold text-slate-700 mb-1">বিপদের সময় আপনার প্রতিক্রিয়া:</label><select id="pr-q2" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"><option value="1">শান্ত থেকে সমাধান খোঁজা</option><option value="2">সবাইকে উৎসাহ ও ভরসা দেওয়া</option><option value="3">দ্রুত বাস্তবসম্মত সিদ্ধান্ত নেওয়া</option></select></div>';
+    html += '</div>';
+    html += '<button type="button" id="pr-btn" class="w-full py-3 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-black text-xs sm:text-sm shadow-md transition">ব্যক্তিত্ব উন্মোচন করুন 🌟</button>';
+    html += '<div id="pr-res" class="mt-4 p-5 rounded-2xl bg-violet-50 border border-violet-200 hidden text-left space-y-2">';
+    html += '<h4 class="text-sm font-black text-violet-900" id="pr-title"></h4>';
+    html += '<p class="text-xs text-slate-700 leading-relaxed font-medium" id="pr-desc"></p>';
+    html += '</div></div>';
+
+    container.innerHTML = html;
+
+    var btn = document.getElementById('pr-btn');
+    if (btn) {
+      btn.onclick = function() {
+        var res = document.getElementById('pr-res');
+        res.classList.remove('hidden');
+        document.getElementById('pr-title').innerText = 'আপনার ব্যক্তিত্ব: দূরদর্শী চিন্তাবিদ ও সহনশীল নেতা (The Visionary Leader)';
+        document.getElementById('pr-desc').innerText = 'আপনি একজন গভীর অনুভূতিশীল, বিবেকবান ও নির্ভরযোগ্য ব্যক্তি। আপনার কথা ও কাজের মধ্যে চমৎকার ভারসাম্য রয়েছে এবং চারপাশের মানুষ আপনার উপস্থিতিতে নিরাপদ বোধ করে।';
+        if (window.confetti) window.confetti({ particleCount: 50, spread: 60 });
+        showToast('ব্যক্তিত্বের রেজাল্ট উন্মোচিত হয়েছে! 🌟', '✅');
+      };
+    }
+  }
+
+  // ===========================================================================
+  // 6. Main App Controller
+  // ===========================================================================
+  function renderApp() {
+    var toolParam = getQueryParam('tool');
+    if (toolParam) {
+      renderTool(toolParam);
+    } else {
+      renderHub();
+    }
+  }
+
+  // Intercept links to enable SPA router
+  document.addEventListener('click', function(e) {
+    var target = e.target.closest('a');
+    if (target && target.getAttribute('href') && target.getAttribute('href').startsWith('?')) {
+      e.preventDefault();
+      var href = target.getAttribute('href');
+      var params = new URLSearchParams(href);
+      var tool = params.get('tool');
+      navigateTo(tool);
+    }
+  });
+
+  // Initial Run
+  renderApp();
+
+})();
+//]]>
+  </script>
+</body>
+</html>

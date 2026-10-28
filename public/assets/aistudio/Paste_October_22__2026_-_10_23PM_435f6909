@@ -1,0 +1,791 @@
+# Google AI Studio Master Prompt — The MoSaFa CV Maker
+
+## Project Goal
+
+Build a premium-quality, highly attractive, multilingual CV and Resume Builder called **“The MoSaFa CV Maker”**, integrated into my existing Blogger-hosted website, **The MoSaFa**.
+
+The tool should help students, fresh graduates, experienced professionals, office workers, skilled workers, and international job seekers create professional, ATS-friendly CVs and resumes.
+
+The platform must contain exactly **100 professionally designed templates across 10 categories**, with 20 completely free templates and 80 premium templates priced at **৳10 per template**.
+
+The final product must be functional, mobile-friendly, fast, accessible, visually attractive, and suitable for real-world job applications.
+
+---
+
+# 1. Critical Existing Website Integration
+
+My current website is a Blogger-hosted Single Page Application (SPA).
+
+- New tool route: `?tool=cv-maker`
+- Tool name: The MoSaFa CV Maker
+- Main brand: The MoSaFa
+- Primary audience: Bangladesh and international job seekers.
+- Preserve every existing tool, URL, design, navigation item, and feature.
+- Do not rebuild the website from scratch.
+- Do not replace the existing SPA with an unrelated standalone application.
+- Add only the CV Maker module, its route, and one new tool-gallery card.
+- Inspect the existing source code before editing.
+- Match the site's existing design system and responsive behavior.
+- Scope CSS and JavaScript to this tool to prevent conflicts.
+- Ensure the tool works when opened directly through `?tool=cv-maker` and when the page is refreshed.
+- Avoid requiring Vite, React build commands, npm, or Node.js for the Blogger frontend unless the existing architecture already supports them.
+- Do not remove or rename existing tools.
+
+If a backend is required for payment verification, create a clearly separated backend integration design. Do not pretend that frontend-only JavaScript can securely verify payments.
+
+# 2. The 100-Template System
+
+Create exactly 10 template categories with 10 templates in each category.
+
+**Total: 100 templates.**
+
+- Templates 01–20: Free.
+- Templates 21–100: Premium.
+- Premium price: ৳10 per template.
+- Currency: BDT.
+- Each premium template must be purchased or unlocked individually.
+- No mandatory subscription.
+- No recurring payment.
+- No fake discount timers or misleading pricing.
+- Clearly display the Free or Premium status on every template card.
+
+The template gallery must show the total number of templates, free templates, premium templates, and each template's price.
+
+## Category 1: Modern Professional CV — 10 templates
+
+1. Modern Executive.
+2. Clean Professional.
+3. Corporate Blue.
+4. Minimalist Pro.
+5. Elegant Two-Column.
+6. Executive Black.
+7. Modern Gradient.
+8. Professional Sidebar.
+9. Contemporary Business.
+10. Premium Career Profile.
+
+## Category 2: ATS-Friendly CV — 10 templates
+
+11. ATS Classic.
+12. ATS Modern.
+13. ATS Minimal.
+14. ATS Experienced Professional.
+15. ATS Fresh Graduate.
+16. ATS Technical.
+17. ATS International.
+18. ATS Career Change.
+19. ATS Simple One-Page.
+20. ATS Professional Two-Page.
+
+## Category 3: Europass-Style CV — 10 templates
+
+21. Europass Classic.
+22. Europass Modern.
+23. Europass Blue.
+24. Europass Minimal.
+25. Europass Professional.
+26. Europass International.
+27. Europass Technical.
+28. Europass Graduate.
+29. Europass Experienced Worker.
+30. Europass Elegant.
+
+**Important:** These are 10 Europass-style template designs, not 10 templates officially endorsed by the European Union. For any template marketed as an official Europass CV, use the official Europass platform and its permitted functionality. Otherwise, clearly label these templates “Europass-inspired” or “European CV Style.” Do not falsely imply official EU certification or endorsement.
+
+## Category 4: Fresher and Student CV — 10 templates
+
+31. First Job Starter.
+32. University Graduate.
+33. College Student.
+34. Internship Ready.
+35. Academic Profile.
+36. Scholarship Applicant.
+37. Entry-Level Professional.
+38. Skills-First Graduate.
+39. Career Launch.
+40. Student Portfolio CV.
+
+## Category 5: IT and Technology CV — 10 templates
+
+41. Software Developer.
+42. Web Developer.
+43. IT Support Specialist.
+44. Data Analyst.
+45. Cybersecurity Professional.
+46. UI/UX Designer.
+47. Digital Marketing Specialist.
+48. Network Engineer.
+49. Technical Project Manager.
+50. Modern Tech Professional.
+
+## Category 6: Office, Administration and Corporate CV — 10 templates
+
+51. Office Executive.
+52. Administrative Assistant.
+53. Data Entry Operator.
+54. Computer Operator.
+55. Customer Service.
+56. HR Professional.
+57. Accountant.
+58. Banking Professional.
+59. Sales Executive.
+60. Operations Manager.
+
+## Category 7: Skilled Worker and International Jobs — 10 templates
+
+61. General Worker.
+62. Factory Worker.
+63. Warehouse Worker.
+64. Construction Professional.
+65. Electrician.
+66. Plumber.
+67. Welder.
+68. Driver.
+69. Hospitality Professional.
+70. International Skilled Worker.
+
+## Category 8: Creative and Portfolio CV — 10 templates
+
+71. Graphic Designer.
+72. Creative Portfolio.
+73. Photographer.
+74. Content Creator.
+75. Video Editor.
+76. Social Media Manager.
+77. Marketing Creative.
+78. Visual Designer.
+79. Personal Brand CV.
+80. Creative Professional.
+
+## Category 9: Academic, Research and Education CV — 10 templates
+
+81. Academic CV.
+82. Researcher.
+83. Lecturer.
+84. Teacher.
+85. Research Assistant.
+86. PhD Applicant.
+87. Publication-Focused CV.
+88. Education Professional.
+89. Academic Fellowship.
+90. International Scholarship CV.
+
+## Category 10: Premium Executive and Specialized CV — 10 templates
+
+91. Senior Executive.
+92. Leadership Profile.
+93. Project Manager.
+94. Healthcare Professional.
+95. Nursing Professional.
+96. Engineering Professional.
+97. Finance Executive.
+98. Career Change Professional.
+99. Senior International Professional.
+100. Premium Signature CV.
+
+These categories and names should correspond to 100 distinct template designs, not merely 100 differently named copies of the same layout.
+
+# 3. Free and Premium Template Rules
+
+Implement the following access rules exactly:
+
+### Free templates
+
+- Exactly 20 templates are permanently free.
+- Users can edit, preview, download, and print these templates without payment.
+- Free templates must not contain a MoSaFa watermark in their final downloaded or printed version.
+- No account should be required just to use a free template unless the existing site architecture makes one necessary.
+
+### Premium templates
+
+- Exactly 80 templates are paid.
+- Each template costs ৳10.
+- Users can select a premium template and edit their CV before purchasing.
+- Users can preview the finished design without paying.
+- Every unpaid premium preview must display a clear, tasteful “The MoSaFa” watermark.
+- The watermark must remain visible in the preview and preview exports.
+- After verified payment for the selected template, the user can download and print the purchased design without the watermark.
+- A successful purchase must unlock only the template or entitlements actually paid for.
+- A purchased template must remain unlocked for the same user or browser identity according to the chosen entitlement design, without requiring repeat payment for the same purchase.
+- Provide a clear purchase history or purchase receipt if supported by the backend.
+
+Do not rely on hiding a button or removing a CSS watermark as the only payment protection. Enforce premium entitlements on the server when generating or authorizing clean premium exports.
+
+# 4. Premium Preview and Watermark
+
+Create a professional preview experience.
+
+When a user opens any template:
+
+- Show a realistic CV preview with sample content.
+- Include a template name and category.
+- Display a badge indicating Free or Premium.
+- Allow zoom in and zoom out.
+- Support desktop, tablet, and mobile preview.
+- Let users change their information and see the CV update live.
+- Support multiple pages.
+- Provide a page navigation control for multi-page CVs.
+
+For unpaid premium templates, add a subtle but visible diagonal watermark reading:
+
+**THE MoSaFa**
+
+The watermark must appear on every page of the premium preview, including any preview PDF or image generated before purchase.
+
+For purchased premium templates and free templates, export a clean document with no watermark.
+
+Do not remove the watermark merely because the user opens browser print preview. A premium document must be authorized before the clean, watermark-free output becomes available.
+
+# 5. CV Creation Wizard
+
+Build a step-by-step CV creation wizard with a progress indicator.
+
+## Step 1: Personal Information
+
+Fields:
+
+- Full name.
+- Professional job title.
+- Profile photo, optional.
+- Email address.
+- Phone number.
+- Current city and country.
+- Full address, optional.
+- LinkedIn profile.
+- Portfolio website.
+- GitHub profile.
+- Other professional links.
+- Nationality, optional.
+- Work authorization, optional where relevant.
+
+Do not force users to include age, marital status, religion, gender, national ID, or a profile photo. These details are not universally appropriate in international CVs.
+
+## Step 2: Professional Summary
+
+Provide a text editor for a professional summary.
+
+Include optional assistance that can help users improve clarity, grammar, and professional wording.
+
+If no AI API is configured, use local examples and guided prompts rather than pretending an AI service was called.
+
+## Step 3: Work Experience
+
+Allow multiple entries with:
+
+- Job title.
+- Employer.
+- Location.
+- Start date.
+- End date.
+- Currently working checkbox.
+- Responsibilities.
+- Achievements.
+- Optional measurable results.
+
+Allow users to add, edit, delete, and reorder experience entries.
+
+## Step 4: Education
+
+Support multiple education records:
+
+- Degree or qualification.
+- Institution.
+- Subject or major.
+- Location.
+- Start and graduation dates.
+- Grade or GPA, optional.
+- Additional information.
+
+## Step 5: Skills
+
+Allow users to add categorized skills:
+
+- Technical skills.
+- Computer skills.
+- Language skills.
+- Communication skills.
+- Leadership skills.
+- Industry-specific skills.
+
+Avoid displaying misleading proficiency percentages unless the user explicitly enters them.
+
+## Step 6: Languages
+
+For each language, allow a level such as:
+
+- Native.
+- Beginner.
+- Elementary.
+- Intermediate.
+- Upper-intermediate.
+- Advanced.
+- Proficient.
+- Fluent.
+
+Where appropriate, allow CEFR levels A1, A2, B1, B2, C1, and C2. Do not automatically assign a CEFR level based on a vague self-description.
+
+## Step 7: Additional Sections
+
+Users can add optional sections:
+
+- Certifications.
+- Training.
+- Projects.
+- Achievements.
+- Volunteer work.
+- Publications.
+- Awards.
+- Professional memberships.
+- References.
+- Hobbies and interests.
+- Driving licence, where relevant.
+- Other custom sections.
+
+Allow sections to be hidden, renamed, and reordered.
+
+## Step 8: Template Selection
+
+Show all 100 templates in a filterable gallery.
+
+Filters:
+
+- All templates.
+- Free.
+- Premium.
+- Europass-inspired.
+- ATS-friendly.
+- Modern.
+- Creative.
+- Student.
+- Experienced.
+- International.
+
+Search by template name and category.
+
+## Step 9: Live Editing
+
+After selecting a template, users can update their CV and see the changes in a live preview.
+
+Support:
+
+- Font family.
+- Font size.
+- Heading size.
+- Accent color.
+- Line spacing.
+- Section spacing.
+- Page margins.
+- Section order.
+- Optional profile photo.
+- One-column and two-column layouts where supported.
+- Page-break control where practical.
+
+Template structure should remain stable. Editing a font or color must not destroy the layout.
+
+## Step 10: Export and Download
+
+For free templates, allow clean PDF and print output.
+
+For premium templates:
+
+- Before purchase: watermark preview only.
+- After verified purchase: clean PDF download and clean print output.
+- Never grant premium access based solely on a URL parameter, localStorage flag, client-side button state, or editable browser JavaScript variable.
+
+# 6. Design Quality and 100 Distinct Templates
+
+The templates must look professionally designed and visually different.
+
+Use a reusable template-rendering system with distinct layout configurations rather than hardcoding 100 unrelated applications.
+
+Each template must define:
+
+- Template ID.
+- Template name.
+- Category.
+- Price and access status.
+- Page size.
+- Column layout.
+- Header design.
+- Typography.
+- Accent colors.
+- Section-heading style.
+- Spacing.
+- Optional profile-photo position.
+- Page-break behavior.
+- Watermark behavior.
+- ATS suitability.
+- Recommended use case.
+
+Create 100 actual template configurations with intentional design differences.
+
+Avoid generic repetitive cards with only a color change.
+
+Design standards:
+
+- Professional typography.
+- Balanced white space.
+- Excellent alignment.
+- Consistent margins.
+- Clear hierarchy.
+- Appropriate use of icons.
+- Legible body text.
+- Clean page breaks.
+- No unnecessary decorative graphics on ATS templates.
+- Strong visual appeal for creative templates.
+- Professional, restrained styling for executive and European CV templates.
+
+Use standard A4 paper size by default, with an optional US Letter setting.
+
+Support Bengali and English fonts where practical. Ensure Bengali text renders correctly in PDF exports.
+
+Do not use decorative fonts for essential CV content.
+
+# 7. Europass-Inspired CV Features
+
+Provide a dedicated Europass-inspired category with 10 distinct European-style templates.
+
+Features should include:
+
+- Clear personal information.
+- Professional profile.
+- Work experience in reverse chronological order.
+- Education and training.
+- Skills and languages.
+- Optional certifications and projects.
+- Consistent date formatting.
+- A4 document layout.
+- Optional European language proficiency levels.
+- Clean, readable typography.
+
+Allow users to choose a Europass-inspired layout without claiming that the document is an official Europass-generated CV.
+
+Add a small informational note:
+
+“এই টেমপ্লেটগুলো ইউরোপীয় CV স্টাইল অনুসরণ করে তৈরি। এগুলো EU-এর অফিসিয়াল Europass সার্টিফায়েড টেমপ্লেট নয়।”
+
+Provide a link to the official Europass website:
+
+https://europass.europa.eu/
+
+For ATS-oriented templates, use a simple reading order, standard headings, selectable text, and minimal layout complexity. Explain that no template can guarantee compatibility with every applicant-tracking system.
+
+# 8. CV Quality Assistant
+
+Build a client-side CV quality checker.
+
+Check for:
+
+- Missing name or contact information.
+- Missing professional summary.
+- Missing education details.
+- Missing experience dates.
+- Inconsistent date formats.
+- Very short or excessively long summaries.
+- Repeated or empty bullet points.
+- Potential spelling mistakes where a local dictionary is available.
+- Missing skills.
+- Broken or incomplete professional links.
+- Excessive page length.
+- Low readability or inconsistent formatting.
+
+Display a CV completeness score out of 100.
+
+Explain that the score is an editorial checklist, not a measure of job success or a prediction of being hired.
+
+Include practical improvement suggestions.
+
+Add an ATS readability checklist for applicable templates.
+
+# 9. bKash and Nagad Payment System
+
+Implement a real payment workflow for premium template purchases.
+
+Payment options:
+
+- bKash.
+- Nagad.
+
+Price: ৳10 for one premium template.
+
+Use an authorized payment gateway or official merchant integration where available.
+
+Official starting points:
+
+- bKash Business: https://www.bkash.com/en/business
+- Nagad Merchant: https://nagad.com.bd/services/?service=merchant-payment
+
+Do not invent API endpoints, merchant IDs, credentials, or payment confirmation responses.
+
+### Required payment flow
+
+1. User chooses a premium template.
+2. The system creates a unique order on the backend.
+3. The backend records the template ID, price, order ID, and payment status.
+4. User proceeds to the configured bKash/Nagad checkout.
+5. The gateway processes the payment.
+6. The backend verifies the transaction using the provider's supported verification mechanism.
+7. The system records the verified transaction.
+8. The purchased template is unlocked for the appropriate user or purchase identity.
+9. The user can download or print the clean CV.
+10. The user receives a receipt or confirmation.
+
+### Payment security
+
+- Never store secret API keys in frontend JavaScript.
+- Never trust a success redirect as proof of payment.
+- Verify payments on the server.
+- Validate the expected amount, order ID, transaction ID, and payment status.
+- Prevent duplicate transaction processing.
+- Prevent replayed payment callbacks.
+- Do not unlock templates for pending, failed, cancelled, or unverified transactions.
+- Store only necessary transaction data.
+- Provide understandable error messages.
+- Include sandbox/test mode before production launch.
+
+### Important deployment constraint
+
+The existing Blogger frontend cannot safely implement server-side payment verification by itself.
+
+Design a backend API that can be deployed separately, and configure the frontend to communicate with that backend through a secure HTTPS connection.
+
+Keep the backend modular and document the required environment variables.
+
+If payment credentials or a backend are not provided, implement the payment interface and a clearly labeled sandbox/demo mode only. Do not simulate successful live payments or unlock real premium downloads without verified payment.
+
+Do not use a manual TrxID form as the sole proof of payment unless it is followed by a reliable independent verification process.
+
+# 10. Payment and Download Experience
+
+For each premium template, show:
+
+- Template preview.
+- Template name.
+- Price: ৳10.
+- “কিনুন ও আনলক করুন” button.
+- Available payment methods.
+- Secure payment status.
+- Purchase confirmation.
+- “ওয়াটারমার্ক ছাড়া PDF ডাউনলোড” button after verified payment.
+
+Use these Bengali status messages where appropriate:
+
+- “পেমেন্ট সম্পন্ন হয়নি।”
+- “পেমেন্ট যাচাই করা হচ্ছে।”
+- “পেমেন্ট সফল হয়েছে!”
+- “আপনার টেমপ্লেট আনলক হয়েছে।”
+- “এখন ওয়াটারমার্ক ছাড়া ডাউনলোড করতে পারবেন।”
+- “পেমেন্ট যাচাই করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।”
+
+Avoid fake success animations before the backend confirms payment.
+
+# 11. PDF, Print and Document Export
+
+Export quality is critical.
+
+The final PDF should:
+
+- Use A4 or US Letter paper as selected.
+- Preserve the template's layout.
+- Include all user-entered CV sections.
+- Support multi-page documents.
+- Avoid clipping text.
+- Avoid overlapping sections.
+- Preserve Bengali text.
+- Keep text selectable where practical.
+- Use sensible page breaks.
+- Avoid blank extra pages.
+- Print with correct margins.
+- Exclude editor controls and navigation.
+- Exclude watermarks for free and legitimately purchased premium templates.
+
+Use a reliable, browser-compatible PDF generation or print method appropriate to the Blogger environment. If an external library is used, explain its dependency and fallback behavior.
+
+For clean premium exports, verify entitlement before enabling the clean export process.
+
+If a user has paid for a template, the exported PDF must not contain “The MoSaFa” watermark.
+
+# 12. Save and Restore
+
+Provide:
+
+- Autosave draft data locally.
+- Restore a previous draft.
+- Create a new CV.
+- Duplicate a CV.
+- Rename saved CVs.
+- Delete a saved CV after confirmation.
+- Export CV project data to JSON.
+- Import JSON project data.
+- Clear all local CV data after confirmation.
+
+Do not save sensitive CV content to a remote server by default.
+
+Explain that browser-local drafts may disappear if browser data is cleared or the user changes devices.
+
+If user accounts and cross-device access are added later, obtain appropriate consent and implement access controls.
+
+# 13. Privacy and Security
+
+- CV data may contain personal information.
+- Keep personal data local by default.
+- Do not send CV content to an AI service without explicit user consent.
+- Do not expose user CV data to other users.
+- Validate imported files and input fields.
+- Avoid unnecessary analytics.
+- Use HTTPS for payment and backend communication.
+- Never place payment secrets in client-side code.
+- Provide a clear privacy notice.
+- Make the optional profile photo optional.
+- Do not require unnecessary sensitive information.
+
+# 14. Language and Localization
+
+Support:
+
+- Bengali interface.
+- English interface.
+- Bengali CV content.
+- English CV content.
+- Mixed Bengali-English content where practical.
+
+Include a language toggle.
+
+Use accurate labels and professional translations.
+
+The selected interface language should not automatically translate or overwrite the user's CV content.
+
+# 15. UI and User Experience
+
+Design a modern, polished interface consistent with The MoSaFa.
+
+Use:
+
+- Clean white and neutral backgrounds.
+- Rounded cards.
+- Subtle shadows.
+- Professional typography.
+- Clear category navigation.
+- Attractive template thumbnails.
+- Search and filtering.
+- Responsive layouts.
+- Progress indicators.
+- Clear error and success messages.
+- Keyboard accessibility.
+- Mobile-friendly touch controls.
+- Fast loading.
+
+Main screen sections:
+
+1. Hero section: “আপনার ক্যারিয়ারের জন্য তৈরি করুন প্রফেশনাল CV”
+2. A clear “CV তৈরি করুন” button.
+3. Statistics: 100 templates, 20 free templates, 80 premium templates.
+4. Template category grid.
+5. Featured free templates.
+6. Premium template gallery.
+7. How it works.
+8. Europass-inspired CV section.
+9. Frequently asked questions.
+10. Privacy and payment information.
+
+Do not clutter the CV editor with unnecessary advertisements or marketing elements.
+
+# 16. Tool Gallery Card
+
+Add one new card to the existing The MoSaFa tool gallery.
+
+**Title:** The MoSaFa CV Maker
+
+**Bengali description:** “১০০টি প্রফেশনাল CV টেমপ্লেট থেকে পছন্দ করুন, ফ্রিতে প্রিভিউ দেখুন এবং মাত্র ৳১০-এ প্রিমিয়াম CV ডাউনলোড করুন।”
+
+**Category:** Career & Productivity
+
+**Icon:** File-text or a professional CV icon.
+
+**Route:** `?tool=cv-maker`
+
+Follow the same card structure, preview behavior, and open-tool behavior used by the existing website.
+
+Do not alter any other tool cards.
+
+# 17. Suggested Architecture
+
+Keep the code modular.
+
+Frontend modules:
+
+- CV Maker route and entry point.
+- Template registry containing exactly 100 configurations.
+- CV data model.
+- CV form wizard.
+- Live preview renderer.
+- Watermark preview layer.
+- Template filter and search.
+- PDF/print export.
+- Local draft storage.
+- CV quality checker.
+- Payment checkout interface.
+- Purchase status and entitlement interface.
+
+Backend modules, when configured:
+
+- Create order.
+- Initiate payment.
+- Verify payment.
+- Process signed callbacks/webhooks.
+- Store purchase records.
+- Check entitlements.
+- Authorize premium exports.
+- Generate receipts.
+- Handle refunds or payment reversals where supported.
+
+Use a maintainable data structure for templates. Avoid duplicating large amounts of HTML for every design.
+
+# 18. Testing Requirements
+
+Before completing the implementation, verify the following:
+
+1. Exactly 100 templates exist.
+2. Exactly 10 categories exist.
+3. Exactly 20 templates are free.
+4. Exactly 80 templates are premium.
+5. Each premium template costs exactly ৳10.
+6. All 100 templates have distinct, intentional designs.
+7. All 10 Europass-inspired templates are available.
+8. Free templates download and print without a watermark.
+9. Unpaid premium previews display a watermark on every page.
+10. Purchased premium templates export without a watermark after verified payment.
+11. CV form data updates the live preview.
+12. Long CVs export across multiple pages.
+13. Bengali text renders correctly.
+14. JSON import/export works.
+15. Draft autosave and restore work.
+16. Payment success is never assumed without verification.
+17. The UI is responsive on desktop and mobile.
+18. `?tool=cv-maker` works after refreshing the Blogger page.
+19. All other existing tools still function.
+20. No buttons, filters, export actions, or purchase controls are decorative or nonfunctional.
+
+Do not claim that live bKash/Nagad payments have been tested unless real gateway credentials and the appropriate test environment were available.
+
+# 19. Final Deliverables
+
+Return:
+
+- Complete updated code integrated into the existing SPA.
+- The exact template registry containing all 100 template configurations.
+- The 20 free and 80 premium template assignments.
+- A working CV wizard and live preview.
+- Functional watermark logic.
+- PDF download and print functionality.
+- Local draft save and restore.
+- Payment backend integration code or a clearly defined backend API contract.
+- Setup instructions for configuring the authorized bKash/Nagad payment integration.
+- A list of features actually implemented and tested.
+- A clear explanation of anything that still requires external credentials or deployment.
+
+## Final Instruction
+
+Build this as a real CV-making product, not a static mockup. Prioritize excellent template design, reliable PDF output, clear free-versus-premium access, accurate payment verification, privacy, and seamless integration with the existing The MoSaFa Blogger SPA.
+
+Do not silently replace missing functionality with fake payment success, sample-only buttons, or claims of completed integration.

@@ -1,0 +1,404 @@
+<!-- =======================================================================
+  MoSaFa Golpo Ghor (গল্পের ঘর) — Blogger SPA Integration Module
+  Namespace: MoSaFaGolpoGhor
+  Route: ?tool=golpo-ghor (and ?tool=golpo-ghor&story=slug)
+  100% Pure HTML, CSS (Tailwind CDN / Custom), and Vanilla JavaScript
+  Zero React, Zero Node.js, Zero build step required!
+======================================================================== -->
+
+<style>
+  /* MoSaFa Golpo Ghor Scoped Styling */
+  .mgg-reader-light { background-color: #ffffff; color: #0f172a; }
+  .mgg-reader-sepia { background-color: #fbf7ee; color: #3d2f1f; }
+  .mgg-reader-dark  { background-color: #121416; color: #e2e0dc; }
+
+  @media print {
+    body * { visibility: hidden !important; }
+    #mgg-print-area, #mgg-print-area * { visibility: visible !important; }
+    #mgg-print-area { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; }
+    .mgg-no-print { display: none !important; }
+  }
+</style>
+
+<!-- Main Container Mount Point for Blogger -->
+<div id="mosafa-golpo-ghor-container" class="w-full max-w-6xl mx-auto px-4 py-6 font-sans">
+  <!-- Dynamic content will be rendered here by MoSaFaGolpoGhor.init() -->
+</div>
+
+<script>
+/**
+ * MoSaFa Golpo Ghor — Independent Modular Single-File Architecture
+ * Isolated within MoSaFaGolpoGhor namespace
+ */
+window.MoSaFaGolpoGhor = (function() {
+  'use strict';
+
+  // 1. ১২টি ক্যাটাগরি কনফিগারেশন
+  var CATEGORIES = [
+    { id: 'romance', name: 'প্রেম ও রোমান্টিক গল্প', icon: '❤️' },
+    { id: 'horror', name: 'ভৌতিক গল্প', icon: '👻' },
+    { id: 'mystery', name: 'রহস্য ও গোয়েন্দা', icon: '🔍' },
+    { id: 'thriller', name: 'থ্রিলার ও অ্যাডভেঞ্চার', icon: '⚡' },
+    { id: 'comedy', name: 'হাসির গল্প', icon: '😄' },
+    { id: 'family', name: 'পারিবারিক ও সামাজিক গল্প', icon: '🏡' },
+    { id: 'inspirational', name: 'শিক্ষামূলক ও অনুপ্রেরণামূলক', icon: '💡' },
+    { id: 'children', name: 'শিশু-কিশোরদের গল্প', icon: '🎈' },
+    { id: 'moral', name: 'নৈতিক ও মূল্যবোধভিত্তিক', icon: '⚖️' },
+    { id: 'classic', name: 'বাংলা ক্লাসিক সাহিত্য', icon: '📜' },
+    { id: 'short-story', name: 'ছোটগল্প', icon: '📖' },
+    { id: 'novel-series', name: 'ধারাবাহিক গল্প ও উপন্যাস', icon: '📚' }
+  ];
+
+  // 2. মূল গল্প ডেটাসেট (JSON-সামঞ্জস্যপূর্ণ অবজেক্ট)
+  var STORIES = [
+    {
+      id: 'story-1',
+      slug: 'kankal-rabindranath-tagore',
+      title: 'কঙ্কাল',
+      author: 'রবীন্দ্রনাথ ঠাকুর',
+      category: 'বাংলা ক্লাসিক সাহিত্য',
+      categorySlug: 'classic',
+      shortDescription: 'একটি পরিত্যক্ত ঘরের ঝুলন্ত নরকঙ্কাল হঠাৎ জীবন্ত হয়ে এক অতীত নারীর যৌবন, ঈর্ষা ও বিষাদময় প্রেমের গোপন ইতিহাস শোনায়।',
+      coverGradient: 'from-slate-800 to-indigo-950',
+      coverIcon: '💀',
+      contentType: 'classic',
+      copyrightStatus: 'verified-public-domain',
+      sourceName: 'সাধনা পত্রিকা / রবীন্দ্র রচনাবলী',
+      licenseName: 'পাবলিক ডোমেইন (Public Domain)',
+      permissionNote: 'রবীন্দ্রনাথ ঠাকুরের সাহিত্যকর্ম উন্মুক্ত পাবলিক ডোমেইনের অন্তর্ভুক্ত।',
+      estimatedReadingMinutes: 8,
+      chapters: [
+        {
+          chapterNumber: 1,
+          title: 'প্রথম অধ্যায়: যে ঘরে কঙ্কালটি ঝুলিত',
+          content: [
+            'যে ঘরে আমরা শুইতাম, তাহারই পাশের ঘরে একটি নরকঙ্কাল ঝুলানো থাকিত। রাত্রে বাতাসে তাহার অস্থিসমূহ খটখট শব্দ করিত। দিনে আমরা তাহার অস্থি নাড়াচাড়া করিয়া ডাক্তারির হাড়ের নাম মুখস্থ করিতাম।',
+            'যিনি আমাদিগকে পড়াইতেন তিনি বলিতেন, এটি এক যুবতীর কঙ্কাল। বাল্যকালে সেই অস্থিময় কঙ্কালের দিকে চাহিয়া কখনো মনে হয় নাই যে, একদিন ইহারও একটি মধুর রূপ ছিল, ইহার রক্তমাংসে পূর্ণ দেহে যৌবনের হিল্লোল বহিত এবং ইহার আঁখিকোণে হাসির বিদ্যুৎ চমকিত।',
+            'একদিন কাজের অবসরে সেই পুরাতন শয়নকক্ষে একাকী রাত্রিযাপন করিতে আসিয়াছিলাম। বাতাস স্তব্ধ ছিল। হঠাৎ ঘরের কোণে একটা দীর্ঘশ্বাস পড়িল। তখনই অতি মৃদু কণ্ঠে ধ্বনিত হইল— "কে ও ঘরে? তোমরা কি ভয় পাইলে?"'
+          ]
+        },
+        {
+          chapterNumber: 2,
+          title: 'দ্বিতীয় অধ্যায়: কঙ্কালের রূপকথা',
+          content: [
+            'আমি বলিলাম, "কে তুমি?" উত্তর আসিল, "আমি সেই কঙ্কাল! তোমরা যাহার বক্ষে আঙুল বুলাইয়া পাঁজরের হাড় গণিতে— আজ কি আমার কথা একটু শুনিবে?"',
+            'ছায়ামূর্তি বলিল, "একদিন আমার এক অপরূপ রূপ ছিল। আমার দর্পণে আমি যখন দাঁড়াইতাম, তখন আমার রূপের ঢেউয়ে আমি নিজেই পাগল হইয়া যাইতাম। বাল্যবিধবা হইয়া আমি বাপের বাড়ির অন্তঃপুরে বন্দিনী ছিলাম। কিন্তু অন্তর রূপের তৃষ্ণায় হাহাকার করিত। একদিন এক নবীন ডাক্তার আসিলেন। তাঁহার রূপ দেখিয়া আমার সারা দেহে ঝড়ের কাঁপন উঠিল।"',
+            '"কিন্তু ডাক্তারবাবু প্রেমে পড়িলেন আমার দূরসম্পর্কের এক শান্ত সরল বোনের। আমি ঈর্ষায় ছারখার হইয়া এক রাতে শরবতে বিষ মিশাইয়াছিলাম। কিন্তু শেষ পর্যন্ত সে বিষ কাহার কণ্ঠে গেল? ডাক্তারবাবুর, না আমার নিজের? সেই রহস্যের উত্তর দেওয়ার আগেই ভোরের আলোর ছোঁয়ায় কঙ্কালের মৃদু কণ্ঠ মিলিয়ে গেল অনন্তের অন্ধকারে।"'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'story-2',
+      slug: 'postmaster-rabindranath-tagore',
+      title: 'পোস্টমাস্টার',
+      author: 'রবীন্দ্রনাথ ঠাকুর',
+      category: 'বাংলা ক্লাসিক সাহিত্য',
+      categorySlug: 'classic',
+      shortDescription: 'উলাপোড় গ্রামের নিঃসঙ্গ পোস্টমাস্টার ও অনাথ বালিকা রতনের নিঃশব্দ স্নেহের বন্ধন এবং চিরন্তন বিদায়ের মর্মস্পর্শী কাহিনি।',
+      coverGradient: 'from-amber-800 to-amber-950',
+      coverIcon: '✉️',
+      contentType: 'classic',
+      copyrightStatus: 'verified-public-domain',
+      sourceName: 'হিতবাদী পত্রিকা / গল্পগুচ্ছ',
+      licenseName: 'পাবলিক ডোমেইন (Public Domain)',
+      permissionNote: 'রবীন্দ্রনাথ ঠাকুরের "পোস্টমাস্টার" উন্মুক্ত পাবলিক ডোমেইনের অন্তর্ভুক্ত।',
+      estimatedReadingMinutes: 7,
+      chapters: [
+        {
+          chapterNumber: 1,
+          title: 'প্রথম অধ্যায়: উলাপোড়ের নিঃসঙ্গ জীবন',
+          content: [
+            'কলিকাতার ছেলে পোস্টমাস্টার উলাপোড় গ্রামে আসিয়া প্রথমটা কিছুতেই মন বসাইতে পারিল না। নিভৃত গ্রামে বর্ষাকালে নদীর জল বাড়িয়া চারিদিক ভাসাইয়া দিয়াছে।',
+            'তাঁহার একাকীত্বের সঙ্গী ছিল কেবল একটি অনাথ বালিকা— রতন। রতন পোস্টমাস্টারের ফুটফরমাশ খাটিত এবং উচ্ছিষ্ট ভাত খাইয়া পোস্ট অফিসের এক কোণে পড়িয়া থাকিত। তাহার সংসারে কেহ ছিল না।'
+          ]
+        },
+        {
+          chapterNumber: 2,
+          title: 'দ্বিতীয় অধ্যায়: ব্যথিত বালিকা ও চিরবিদায়',
+          content: [
+            'পোস্টমাস্টার তাহাকে বর্ণপরিচয় শিখাইতে শুরু করিলেন। অল্প কয়েকদিনেই রতন ক, খ শিখিয়া ফেলিল। হঠাৎ পোস্টমাস্টার কঠিন ম্যালেরিয়া জ্বরে পড়িলেন। রতন পরম স্নেহে তাঁহার সেবা করিল।',
+            'আরোগ্য লাভ করিয়া পোস্টমাস্টার বদলির ছুটি মঞ্জুর করায় গ্রাম ছাড়িবার উদ্যোগ করিলেন। যাইবার সময় কিছু টাকা দিতে চাহিলে রতন ধূলায় পড়িয়া কাঁদিল— "দাদাবাবু, আমাকে টাকা দিয়ো না; আমাকে সঙ্গে লইয়া চলো!" নৌকায় ভাসিয়া পোস্টমাস্টারের মনে হইল— জগতে কত বিচ্ছেদ, কত বিরহ, কত আশাভঙ্গই না ঘটিতেছে!'
+          ]
+        }
+      ]
+    },
+    {
+      id: 'story-3',
+      slug: 'gramer-rohoshyomoy-bari',
+      title: 'গ্রামের রহস্যময় বাড়ি',
+      author: 'মোফাচ্ছির আহমেদ',
+      category: 'রহস্য ও গোয়েন্দা',
+      categorySlug: 'mystery',
+      shortDescription: 'পদ্মপুকুরের ধারের পুরোনো তালুকদার বাড়িতে অমাবস্যার রাতে রহস্যময় নীল আলো জ্বলে ওঠার নেপথ্যে চার বন্ধুর সত্য অনুসন্ধান।',
+      coverGradient: 'from-amber-700 to-slate-900',
+      coverIcon: '🏚️',
+      contentType: 'original',
+      copyrightStatus: 'permission-granted',
+      sourceName: 'The MoSaFa মৌলিক সংকলন',
+      licenseName: 'CC BY-NC 4.0',
+      permissionNote: 'The MoSaFa প্ল্যাটফর্মে উন্মুক্ত পাঠের জন্য অনুমোদিত মৌলিক রচনা।',
+      estimatedReadingMinutes: 8,
+      chapters: [
+        {
+          chapterNumber: 1,
+          title: 'একমাত্র অধ্যায়: ভূতুড়ে আলোর আসল রহস্য',
+          content: [
+            'পদ্মপুকুর গ্রামের উত্তর সীমানায় প্রায় একশো বছরের পুরোনো তালুকদার বাড়িটিকে নিয়ে আতঙ্কের শেষ ছিল না। অমাবস্যার রাতে দোতলার খড়খড়ি ভেদ করে এক অদ্ভুত নীল আলো দেখা যেত।',
+            'কলেজপড়ুয়া চার বন্ধু অনিক, রাহাত, তানভীর আর প্রান্ত অমাবস্যার রাতে টর্চ হাতে সেখানে প্রবেশ করল। দোতলায় উঠে তারা দেখল, কোনো ভূত নয়! মেঝের সিন্দুক ভেঙে প্রত্নতাত্ত্বিক মুদ্রা চুরি করছিল সোবহান চোরাকারবারি ও তার দল, আর তাদের নীলচে ইউভি ল্যাম্প বাইরে থেকে ভূতুড়ে আলো মনে হতো।',
+            'অনিকদের সাহসিকতায় এবং জরুরি সেবা ৯৯৯-এ কলের মাধ্যমে পুলিশ এসে হাতেনাতে চক্রটিকে পাকড়াও করল। গ্রামবাসী রক্ষা পেল ভীতি আর কুসংস্কার থেকে।'
+          ]
+        }
+      ]
+    }
+  ];
+
+  // 3. Local State Management
+  var state = {
+    activeStory: null,
+    activeChapterIndex: 0,
+    searchQuery: '',
+    selectedCategory: 'all',
+    contentTypeFilter: 'all',
+    readingTimeFilter: 'all',
+    bookmarks: [],
+    readingHistory: {},
+    readerPrefs: { fontSize: 'medium', lineHeight: 'relaxed', theme: 'light' }
+  };
+
+  function loadLocalData() {
+    try {
+      state.bookmarks = JSON.parse(localStorage.getItem('mosafa_golpo_bookmarks') || '[]');
+      state.readingHistory = JSON.parse(localStorage.getItem('mosafa_golpo_history') || '{}');
+      state.readerPrefs = JSON.parse(localStorage.getItem('mosafa_golpo_reader_prefs') || '{"fontSize":"medium","lineHeight":"relaxed","theme":"light"}');
+    } catch (e) {}
+  }
+
+  function saveLocalData() {
+    try {
+      localStorage.setItem('mosafa_golpo_bookmarks', JSON.stringify(state.bookmarks));
+      localStorage.setItem('mosafa_golpo_history', JSON.stringify(state.readingHistory));
+      localStorage.setItem('mosafa_golpo_reader_prefs', JSON.stringify(state.readerPrefs));
+    } catch (e) {}
+  }
+
+  // 4. Router & Query Param Reader
+  function checkRoute() {
+    var params = new URLSearchParams(window.location.search);
+    var storySlug = params.get('story');
+    if (storySlug) {
+      var found = STORIES.find(function(s) { return s.slug === storySlug; });
+      if (found) {
+        openStory(found, false);
+        return;
+      }
+    }
+    state.activeStory = null;
+    render();
+  }
+
+  function openStory(story, pushState) {
+    state.activeStory = story;
+    state.activeChapterIndex = 0;
+    if (pushState !== false) {
+      var newUrl = window.location.pathname + '?tool=golpo-ghor&story=' + story.slug;
+      window.history.pushState({ tool: 'golpo-ghor', story: story.slug }, '', newUrl);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    render();
+  }
+
+  function closeStory() {
+    state.activeStory = null;
+    var newUrl = window.location.pathname + '?tool=golpo-ghor';
+    window.history.pushState({ tool: 'golpo-ghor' }, '', newUrl);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    render();
+  }
+
+  function toggleBookmark(storyId) {
+    var idx = state.bookmarks.indexOf(storyId);
+    if (idx > -1) {
+      state.bookmarks.splice(idx, 1);
+    } else {
+      state.bookmarks.push(storyId);
+    }
+    saveLocalData();
+    render();
+  }
+
+  // 5. Main Render Function
+  function render() {
+    var container = document.getElementById('mosafa-golpo-ghor-container');
+    if (!container) return;
+
+    if (state.activeStory) {
+      renderReader(container);
+    } else {
+      renderLibrary(container);
+    }
+  }
+
+  // Render Reader
+  function renderReader(container) {
+    var story = state.activeStory;
+    var chapter = story.chapters[state.activeChapterIndex] || story.chapters[0];
+    var isBookmarked = state.bookmarks.indexOf(story.id) > -1;
+
+    var themeClass = state.readerPrefs.theme === 'sepia' ? 'mgg-reader-sepia' : (state.readerPrefs.theme === 'dark' ? 'mgg-reader-dark' : 'mgg-reader-light');
+    var fontSizeStyle = state.readerPrefs.fontSize === 'small' ? '1rem' : (state.readerPrefs.fontSize === 'large' ? '1.35rem' : '1.15rem');
+
+    var html = '<div class="p-4 sm:p-8 rounded-3xl border shadow-sm transition-colors ' + themeClass + '" id="mgg-print-area">';
+    
+    // Top Bar
+    html += '<div class="flex items-center justify-between pb-4 border-b border-current/20 mb-6 mgg-no-print">';
+    html += '<button onclick="MoSaFaGolpoGhor.closeStory()" class="px-3.5 py-1.5 rounded-xl border font-bold text-xs bg-white/40 dark:bg-slate-800 cursor-pointer">⬅️ লাইব্রেরি</button>';
+    html += '<div class="text-center truncate max-w-xs"><h3 class="font-bold text-sm truncate">' + story.title + '</h3><span class="text-[11px] opacity-75">' + story.author + '</span></div>';
+    html += '<div class="flex items-center gap-2">';
+    html += '<button onclick="MoSaFaGolpoGhor.toggleBookmark(\'' + story.id + '\')" class="px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer">' + (isBookmarked ? '🔖 বুকমার্কড' : '🔖 বুকমার্ক') + '</button>';
+    html += '<button onclick="window.print()" class="px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer hidden sm:inline">🖨️ প্রিন্ট</button>';
+    html += '</div></div>';
+
+    // Metadata & Attribution
+    html += '<div class="mb-6"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 mr-2">' + story.category + '</span>';
+    html += '<span class="text-xs font-bold opacity-75">⏱️ ' + story.estimatedReadingMinutes + ' মিনিট পাঠ</span>';
+    html += '<h1 class="text-2xl sm:text-4xl font-extrabold mt-3">' + story.title + '</h1>';
+    html += '<p class="text-base font-bold opacity-80 mt-1">লেখক: ' + story.author + '</p>';
+    html += '<div class="mt-3 p-3 rounded-2xl bg-current/5 border border-current/10 text-xs">';
+    html += '<p class="font-bold text-emerald-600">🛡️ লাইসেন্স: ' + story.licenseName + '</p>';
+    html += '<p class="opacity-75 mt-0.5">' + story.permissionNote + '</p>';
+    html += '</div></div>';
+
+    // Chapter Title & Body
+    html += '<div class="mt-8 mb-4"><h2 class="text-xl font-bold">' + chapter.title + '</h2></div>';
+    html += '<article style="font-size: ' + fontSizeStyle + '; line-height: 1.9;" class="space-y-4 select-text text-justify">';
+    chapter.content.forEach(function(p) {
+      html += '<p>' + p + '</p>';
+    });
+    html += '</article>';
+
+    // Bottom Navigation
+    html += '<div class="mt-10 pt-6 border-t border-current/20 flex items-center justify-between mgg-no-print">';
+    if (state.activeChapterIndex > 0) {
+      html += '<button onclick="MoSaFaGolpoGhor.prevChapter()" class="px-4 py-2 rounded-xl border text-xs font-bold cursor-pointer">⬅️ পূর্ববর্তী অধ্যায়</button>';
+    } else {
+      html += '<div></div>';
+    }
+    if (state.activeChapterIndex < story.chapters.length - 1) {
+      html += '<button onclick="MoSaFaGolpoGhor.nextChapter()" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold cursor-pointer">পরবর্তী অধ্যায় ➡️</button>';
+    } else {
+      html += '<span class="text-xs font-bold text-emerald-600">✅ গল্পটি সম্পূর্ণ পড়া হয়েছে!</span>';
+    }
+    html += '</div></div>';
+
+    container.innerHTML = html;
+  }
+
+  // Render Library
+  function renderLibrary(container) {
+    var filtered = STORIES.filter(function(story) {
+      if (state.selectedCategory !== 'all' && story.categorySlug !== state.selectedCategory) return false;
+      if (!state.searchQuery.trim()) return true;
+      var q = state.searchQuery.toLowerCase();
+      return story.title.toLowerCase().indexOf(q) > -1 ||
+             story.author.toLowerCase().indexOf(q) > -1 ||
+             story.shortDescription.toLowerCase().indexOf(q) > -1;
+    });
+
+    var html = '<div class="space-y-8">';
+    
+    // Header Hero
+    html += '<div class="text-center py-6 bg-gradient-to-b from-amber-50/80 to-transparent rounded-3xl p-6 border border-amber-200/60">';
+    html += '<span class="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">✨ বাংলা ডিজিটাল লাইব্রেরি</span>';
+    html += '<h2 class="text-2xl sm:text-4xl font-black text-slate-900 mt-2">MoSaFa Golpo Ghor</h2>';
+    html += '<p class="text-xs sm:text-sm text-slate-600 mt-1">আপনার পছন্দের গল্প, আপনার নিজের পড়ার জগৎ</p>';
+    html += '<div class="max-w-md mx-auto mt-4"><input type="text" id="mgg-search-input" value="' + state.searchQuery + '" placeholder="গল্প বা লেখকের নাম দিয়ে খুঁজুন..." class="w-full px-4 py-3 rounded-2xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-sm" oninput="MoSaFaGolpoGhor.setSearch(this.value)"></div>';
+    html += '</div>';
+
+    // Categories Bar
+    html += '<div><h3 class="font-bold text-sm mb-3">গল্পের বিভাগসমূহ:</h3><div class="flex items-center gap-2 overflow-x-auto pb-2">';
+    html += '<button onclick="MoSaFaGolpoGhor.setCategory(\'all\')" class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 cursor-pointer ' + (state.selectedCategory === 'all' ? 'bg-slate-900 text-white' : 'bg-white border text-slate-700') + '">সব গল্প (' + STORIES.length + ')</button>';
+    CATEGORIES.forEach(function(cat) {
+      var isSel = state.selectedCategory === cat.id;
+      html += '<button onclick="MoSaFaGolpoGhor.setCategory(\'' + cat.id + '\')" class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 cursor-pointer ' + (isSel ? 'bg-rose-600 text-white' : 'bg-white border text-slate-700') + '">' + cat.icon + ' ' + cat.name + '</button>';
+    });
+    html += '</div></div>';
+
+    // Stories Grid
+    html += '<div><h3 class="font-bold text-base mb-4">উপলব্ধ গল্পসমূহ (' + filtered.length + 'টি)</h3>';
+    if (filtered.length > 0) {
+      html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">';
+      filtered.forEach(function(story) {
+        html += '<div onclick="MoSaFaGolpoGhor.openStoryBySlug(\'' + story.slug + '\')" class="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition p-5 flex flex-col justify-between cursor-pointer group">';
+        html += '<div><div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-2"><span class="px-2 py-0.5 rounded-md bg-slate-100">' + story.category + '</span><span>⏱️ ' + story.estimatedReadingMinutes + ' মি.</span></div>';
+        html += '<h4 class="text-lg font-bold text-slate-900 group-hover:text-rose-600 transition">' + story.title + '</h4>';
+        html += '<p class="text-xs font-bold text-slate-600 mt-0.5">লেখক: ' + story.author + '</p>';
+        html += '<p class="text-xs text-slate-500 mt-2 line-clamp-2">' + story.shortDescription + '</p></div>';
+        html += '<div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-rose-600"><span>পড়ুন 📖</span><span>➡️</span></div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="text-center py-12 bg-white rounded-3xl border text-slate-500 text-xs">কোনো গল্প পাওয়া যায়নি! ভিন্ন কি-ওয়ার্ড দিয়ে খুঁজুন।</div>';
+    }
+    html += '</div></div>';
+
+    container.innerHTML = html;
+  }
+
+  // 6. Public API
+  return {
+    init: function() {
+      loadLocalData();
+      checkRoute();
+      window.addEventListener('popstate', checkRoute);
+    },
+    openStoryBySlug: function(slug) {
+      var found = STORIES.find(function(s) { return s.slug === slug; });
+      if (found) openStory(found, true);
+    },
+    closeStory: closeStory,
+    toggleBookmark: toggleBookmark,
+    setCategory: function(catId) {
+      state.selectedCategory = catId;
+      render();
+    },
+    setSearch: function(val) {
+      state.searchQuery = val;
+      render();
+      var input = document.getElementById('mgg-search-input');
+      if (input) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    },
+    nextChapter: function() {
+      if (state.activeStory && state.activeChapterIndex < state.activeStory.chapters.length - 1) {
+        state.activeChapterIndex++;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        render();
+      }
+    },
+    prevChapter: function() {
+      if (state.activeStory && state.activeChapterIndex > 0) {
+        state.activeChapterIndex--;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        render();
+      }
+    },
+    addCustomStory: function(storyObj) {
+      if (storyObj && storyObj.id && storyObj.slug && storyObj.title) {
+        STORIES.push(storyObj);
+        render();
+      }
+    }
+  };
+})();
+
+// Auto-run if container exists
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.getElementById('mosafa-golpo-ghor-container')) {
+    window.MoSaFaGolpoGhor.init();
+  }
+});
+</script>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<html b:css='false' b:defaultwidgetversion='2' b:layoutsversion='3' expr:dir='data:blog.languageDirection' lang='bn' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল ও প্রেম টেস্ট</title>
+    <meta name="description" content="সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - প্রেম টেস্ট, লিপি টাইপিং টেস্ট, বয়স ক্যালকুলেটর ও প্রয়োজনীয় টুলস।" />
+    <meta property="og:title" content="The MoSaFa Tools - সকল অনলাইন টুলস এক ক্লিকে" />
+    <meta property="og:description" content="প্রেম টেস্ট, লিপি টাইপিং টেস্ট, বয়স ক্যালকুলেটর এবং প্রয়োজনীয় সকল অনলাইন টুলস।" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Google Fonts: Hind Siliguri for Bengali typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+//<![CDATA[
+tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              bengali: ['"Hind Siliguri"', 'system-ui', 'sans-serif'],
+            },
+            colors: {
+              brand: {
+                50: '#f0fdf4',
+                500: '#10b981',
+                600: '#059669',
+              },
+              romantic: {
+                50: '#fff1f2',
+                100: '#ffe4e6',
+                200: '#fecdd3',
+                300: '#fda4af',
+                400: '#fb7185',
+                500: '#f43f5e',
+                600: '#e11d48',
+                700: '#be123c',
+                800: '#9f1239',
+                900: '#881337',
+              }
+            }
+          }
+        }
+      }
+//]]>
+</script>
+
+    <style>
+      #navbar, #navbar-iframe, .navbar, b\:section#navbar, iframe[name="navbar-iframe"], iframe#navbar-iframe {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+      #Attribution1, .attribution, .quickedit, .blogger-clickToEdit, .cookie-choices-info {
+        display: none !important;
+      }
+
+      body {
+        font-family: 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f8fafc;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      #floatingCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .step-page {
+        display: none;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 0.28s ease, transform 0.28s ease;
+      }
+      .step-page.active {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .custom-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.85rem center;
+        background-size: 1.1em;
+        padding-right: 2.5rem;
+      }
+
+      .progress-ring-circle {
+        transition: stroke-dashoffset 1.4s ease-in-out;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+      }
+    </style>
+  <b:skin><![CDATA[]]></b:skin>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between relative selection:bg-rose-100 selection:text-rose-900">
+  <div id="root"></div>
+  <b:section id="main" showaddelement="no"/>
+</body>
+</html>

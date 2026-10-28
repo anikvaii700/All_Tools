@@ -1,0 +1,802 @@
+<!-- =======================================================================
+  The MoSaFa Tools — ফরম-১৩ (ভোটার স্থানান্তর ফরম ফিলাপ)
+  Blogger SPA Single-File Integration Module
+  Route: ?tool=voter-transfer-form
+  100% Pure HTML, Scoped CSS (Prefix: mosafa-form13-), and Vanilla JavaScript
+  Matches attached Form-13.pdf exactly, line-for-line, without extra styling!
+======================================================================== -->
+
+<div id="mosafa-form13-root" class="mosafa-form13-container" style="display: none;">
+  <!-- Action Bar -->
+  <div class="mosafa-form13-topbar">
+    <div class="mosafa-form13-brand">
+      <div class="mosafa-form13-icon">📄</div>
+      <div>
+        <h2 class="mosafa-form13-title">ফরম-১৩ (ভোটার এলাকা স্থানান্তরের আবেদন)</h2>
+        <p class="mosafa-form13-sub">[বিধি ২৬(৭) দ্রষ্টব্য] হুবহু মূল Form-13.pdf ফরম্যাট</p>
+      </div>
+    </div>
+    <div class="mosafa-form13-actions">
+      <button type="button" class="mosafa-form13-btn mosafa-btn-validate" onclick="MoSaFaForm13.validateForm()">✓ তথ্য যাচাই করুন</button>
+      <button type="button" class="mosafa-form13-btn mosafa-btn-print" onclick="window.print()">🖨️ প্রিন্ট করুন</button>
+      <button type="button" class="mosafa-form13-btn mosafa-btn-pdf" onclick="MoSaFaForm13.downloadPDF()">📥 PDF ডাউনলোড</button>
+      <button type="button" class="mosafa-form13-btn mosafa-btn-sample" onclick="MoSaFaForm13.loadSampleData()">✨ নমুনা ডাটা লোড</button>
+      <button type="button" class="mosafa-form13-btn mosafa-btn-reset" onclick="MoSaFaForm13.confirmReset()">🗑️ সব তথ্য মুছুন</button>
+    </div>
+  </div>
+
+  <div class="mosafa-form13-notice">
+    <strong>🛡️ ১০০% ব্রাউজার প্রসেসিং:</strong> আপনার কোনো ব্যক্তিগত তথ্য বা NID নম্বর সার্ভারে সংরক্ষণ করা হয় না। আপনার টাইপকৃত তথ্য সরাসরি নিচে থাকা অফিশিয়াল ফরম-১৩ এর ডটেড লাইনে বসে যায়। প্রিন্ট বা PDF ডাউনলোড করে সংশ্লিষ্ট নির্বাচন অফিসে জমা দিন।
+  </div>
+
+  <!-- Workspace Grid: Input Form + Form-13 Preview -->
+  <div class="mosafa-form13-grid">
+    <!-- INPUT FORM -->
+    <div class="mosafa-form13-inputs">
+      <!-- প্রাপক -->
+      <div class="mosafa-form13-card">
+        <h3 class="mosafa-card-header">প্রাপক : উপজেলা/থানা নির্বাচন অফিসার</h3>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>উপজেলা/থানা *</label>
+            <input type="text" id="f13-office-upazila" placeholder="যেমন: মিরপুর / সদর" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>জেলা *</label>
+            <input type="text" id="f13-office-district" placeholder="যেমন: ঢাকা / নীলফামারী" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+      </div>
+
+      <!-- ১, ২, ৩ -->
+      <div class="mosafa-form13-card">
+        <h3 class="mosafa-card-header">১, ২ ও ৩ নম্বর ক্রমিক</h3>
+        <div class="mosafa-form-group">
+          <label>১। আবেদনকারীর নাম : *</label>
+          <input type="text" id="f13-app-name" placeholder="পূর্ণ নাম লিখুন" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+        <div class="mosafa-form-group">
+          <label>২। জাতীয় পরিচয়পত্র নম্বর (NID) : *</label>
+          <input type="text" id="f13-app-nid" placeholder="১০, ১৩ বা ১৭ ডিজিট" oninput="MoSaFaForm13.syncPreview()">
+          <span style="font-size: 10px; color: #64748b; font-style: italic;">(জাতীয় পরিচয়পত্রের ছায়ালিপি সংযুক্ত করিতে হইবে)</span>
+        </div>
+        <div class="mosafa-form-group">
+          <label>৩। জন্ম তারিখ : *</label>
+          <input type="text" id="f13-app-dob" placeholder="যেমন: ১২/০৪/১৯৯৪" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+      </div>
+
+      <!-- ৪। বর্তমান তালিকাভুক্তি সংক্রান্ত তথ্যাদি -->
+      <div class="mosafa-form13-card">
+        <h3 class="mosafa-card-header">৪। বর্তমান তালিকাভুক্তি সংক্রান্ত তথ্যাদি-</h3>
+        <div class="mosafa-form-group">
+          <label>ভোটার নম্বর :</label>
+          <input type="text" id="f13-cur-voterno" placeholder="ভোটার নম্বর" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>ভোটার এলাকার নাম:</label>
+            <input type="text" id="f13-cur-areaname" placeholder="বর্তমান এলাকার নাম" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>ভোটার এলাকার নম্বর :</label>
+            <input type="text" id="f13-cur-areano" placeholder="এলাকা নং" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>উপজেলা/থানা :</label>
+            <input type="text" id="f13-cur-upazila" placeholder="উপজেলা" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>জেলা :</label>
+            <input type="text" id="f13-cur-district" placeholder="জেলা" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>গ্রাম/রাস্তার নাম ও নম্বর :</label>
+            <input type="text" id="f13-cur-village" placeholder="গ্রাম বা রাস্তা" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>বাসা/হোল্ডিং নম্বর :</label>
+            <input type="text" id="f13-cur-holding" placeholder="বাসা নং" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+      </div>
+
+      <!-- ৫। যে এলাকায় স্থানান্তর হইতে ইচ্ছুক -->
+      <div class="mosafa-form13-card" style="background: #f8fafc; border-color: #cbd5e1;">
+        <h3 class="mosafa-card-header">৫। যে এলাকায় স্থানান্তর হইতে ইচ্ছুক-</h3>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>জেলা : *</label>
+            <input type="text" id="f13-dest-district" placeholder="গন্তব্য জেলা" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>উপজেলা/থানা : *</label>
+            <input type="text" id="f13-dest-upazila" placeholder="গন্তব্য উপজেলা" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>সিটি কর্পোরেশন/পৌরসভা/ইউনিয়ন/ক্যান্ট: বোর্ড :</label>
+            <input type="text" id="f13-dest-localbody" placeholder="সিটি কর্পোরেশন/পৌরসভা/ইউপি" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>ওয়ার্ড নম্বর :</label>
+            <input type="text" id="f13-dest-ward" placeholder="ওয়ার্ড নং" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>ভোটার এলাকার নাম : *</label>
+            <input type="text" id="f13-dest-areaname" placeholder="গন্তব্য এলাকার নাম" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>ভোটার এলাকার নম্বর :</label>
+            <input type="text" id="f13-dest-areano" placeholder="এলাকা নং" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>গ্রাম/রাস্তার নাম ও নম্বর :</label>
+            <input type="text" id="f13-dest-village" placeholder="গ্রাম বা রাস্তা নং" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>বাসা/হোল্ডিং নম্বর :</label>
+            <input type="text" id="f13-dest-holding" placeholder="বাসা নং" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+        <div class="mosafa-form-group">
+          <label>টেলিফোন/মোবাইল ফোন নম্বর : *</label>
+          <input type="text" id="f13-dest-phone" placeholder="০১xxxxxxxxx" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+        <div class="mosafa-form-row">
+          <div class="mosafa-form-group">
+            <label>ডাকঘর :</label>
+            <input type="text" id="f13-dest-postoffice" placeholder="ডাকঘর" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+          <div class="mosafa-form-group">
+            <label>পোস্ট কোড : (৪ ডিজিট)</label>
+            <input type="text" id="f13-dest-postcode" maxlength="4" placeholder="যেমন: ১২১৬" oninput="MoSaFaForm13.syncPreview()">
+          </div>
+        </div>
+      </div>
+
+      <!-- ৬ ও ৭ -->
+      <div class="mosafa-form13-card">
+        <h3 class="mosafa-card-header">৬ ও ৭ নম্বর ক্রমিক</h3>
+        <div class="mosafa-form-group">
+          <label>৬। ৫ নম্বর ক্রমিকে বর্ণিত ঠিকানায় যে সময় হইতে অবস্থান করিতেছেন :</label>
+          <input type="text" id="f13-duration" placeholder="যেমন: ২ বছর ৬ মাস" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+        <div class="mosafa-form-group">
+          <label>৭। স্থানান্তরের কারণ :</label>
+          <input type="text" id="f13-reason" placeholder="যেমন: স্থায়ীভাবে পরিবারসহ বাসা পরিবর্তন ও বসবাস" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+      </div>
+
+      <!-- পৃষ্ঠা ২: আবেদনকারী ও সনাক্তকারীর স্বাক্ষর -->
+      <div class="mosafa-form13-card">
+        <h3 class="mosafa-card-header">পৃষ্ঠা ২ : আবেদনকারী ও সনাক্তকারীর তথ্য</h3>
+        <div class="mosafa-form-group">
+          <label>আবেদনকারীর স্বাক্ষর টেক্সট (ঐচ্ছিক):</label>
+          <input type="text" id="f13-sig-text" placeholder="হাতে স্বাক্ষরের জন্য খালি রাখতে পারেন" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+        <div class="mosafa-form-group">
+          <label>সনাক্তকারীর নাম :</label>
+          <input type="text" id="f13-ident-name" placeholder="জনপ্রতিনিধি/কর্মকর্তার নাম" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+        <div class="mosafa-form-group">
+          <label>সনাক্তকারীর জাতীয় পরিচয়পত্র নম্বর :</label>
+          <input type="text" id="f13-ident-nid" placeholder="NID নম্বর" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+        <div class="mosafa-form-group">
+          <label>সনাক্তকারীর ঠিকানা :</label>
+          <input type="text" id="f13-ident-addr" placeholder="কার্যালয় / ঠিকানা" oninput="MoSaFaForm13.syncPreview()">
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE FORM-13 VISUAL A4 PREVIEW -->
+    <div class="mosafa-form13-preview-wrapper">
+      <div class="mosafa-preview-toolbar">
+        <span>📄 Form-13.pdf হুবহু প্রিভিউ</span>
+        <button type="button" class="mosafa-form13-btn" onclick="window.print()">🖨️ প্রিন্ট করুন</button>
+      </div>
+
+      <!-- PAGE 1 -->
+      <div id="mosafa-page-1" class="mosafa-a4-sheet">
+        <div class="mosafa-f13-header">
+          <div class="bold">ফরম-১৩</div>
+          <div class="bold">[বিধি ২৬(৭) দ্রষ্টব্য]</div>
+          <div class="bold" style="margin-top: 10px;">
+            এক ভোটার এলাকা হইতে অন্য ভোটার এলাকায় ভোটার স্থানান্তরের আবেদন
+          </div>
+        </div>
+
+        <div style="margin: 18px 0 16px;">
+          <div class="bold">প্রাপক :</div>
+          <div style="padding-left: 20px;">
+            <div>উপজেলা/থানা নির্বাচন অফিসার</div>
+            <div>উপজেলা/থানা<span id="pv-office-upazila" class="dotted-fill min-200">...................................................</span></div>
+            <div>জেলা<span id="pv-office-district" class="dotted-fill min-240">...........................................................</span></div>
+          </div>
+        </div>
+
+        <div class="f13-row">
+          <span class="bold w-170">১। আবেদনকারীর নাম :</span>
+          <span id="pv-app-name" class="dotted-fill flex-1 font-semibold">................................................................................................................................</span>
+        </div>
+
+        <div style="margin: 6px 0;">
+          <div class="f13-row">
+            <span class="bold w-250">২। জাতীয় পরিচয়পত্র নম্বর (NID) :</span>
+            <span id="pv-app-nid" class="dotted-fill flex-1 mono bold">............................................................................................................</span>
+          </div>
+          <div style="text-align: right; font-size: 11px; font-style: italic; padding-right: 10px;">
+            (জাতীয় পরিচয়পত্রের ছায়ালিপি সংযুক্ত করিতে হইবে)
+          </div>
+        </div>
+
+        <div class="f13-row" style="margin-bottom: 12px;">
+          <span class="bold w-130">৩। জন্ম তারিখ :</span>
+          <span id="pv-app-dob" class="dotted-fill flex-1">......................................................................................................................................</span>
+        </div>
+
+        <!-- ৪। বর্তমান তালিকাভুক্তি সংক্রান্ত তথ্যাদি- -->
+        <div style="margin-bottom: 12px;">
+          <div class="bold">৪। বর্তমান তালিকাভুক্তি সংক্রান্ত তথ্যাদি-</div>
+          <div style="padding-left: 20px;">
+            <div class="f13-row">
+              <span class="bold w-120">ভোটার নম্বর :</span>
+              <span id="pv-cur-voterno" class="dotted-fill flex-1 mono bold">..........................................................................................................................</span>
+            </div>
+            <div class="f13-split">
+              <div class="f13-row flex-1">
+                <span class="bold">ভোটার এলাকার নাম:</span>
+                <span id="pv-cur-areaname" class="dotted-fill flex-1 truncate">............................................................</span>
+              </div>
+              <div class="f13-row">
+                <span class="bold" style="margin-left: 10px;">ভোটার এলাকার নম্বর :</span>
+                <span id="pv-cur-areano" class="dotted-fill min-100 mono bold text-center">........................</span>
+              </div>
+            </div>
+            <div class="f13-split">
+              <div class="f13-row flex-1">
+                <span class="bold">উপজেলা/থানা :</span>
+                <span id="pv-cur-upazila" class="dotted-fill flex-1 truncate">............................................................</span>
+              </div>
+              <div class="f13-row">
+                <span class="bold" style="margin-left: 10px;">জেলা :</span>
+                <span id="pv-cur-district" class="dotted-fill min-120 text-center">................................</span>
+              </div>
+            </div>
+            <div class="f13-split">
+              <div class="f13-row flex-1">
+                <span class="bold">গ্রাম/রাস্তার নাম ও নম্বর :</span>
+                <span id="pv-cur-village" class="dotted-fill flex-1 truncate">................................................</span>
+              </div>
+              <div class="f13-row">
+                <span class="bold" style="margin-left: 10px;">বাসা/হোল্ডিং নম্বর :</span>
+                <span id="pv-cur-holding" class="dotted-fill min-100 text-center">........................</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ৫। যে এলাকায় স্থানান্তর হইতে ইচ্ছুক- -->
+        <div style="margin-bottom: 12px;">
+          <div class="bold">৫। যে এলাকায় স্থানান্তর হইতে ইচ্ছুক-</div>
+          <div style="padding-left: 20px;">
+            <div class="f13-split">
+              <div class="f13-row flex-1">
+                <span class="bold">জেলা :</span>
+                <span id="pv-dest-district" class="dotted-fill flex-1 truncate">............................................................</span>
+              </div>
+              <div class="f13-row">
+                <span class="bold" style="margin-left: 10px;">উপজেলা/থানা :</span>
+                <span id="pv-dest-upazila" class="dotted-fill min-140 text-center">....................................</span>
+              </div>
+            </div>
+            <div class="f13-split">
+              <div class="f13-row flex-1">
+                <span class="bold">সিটি কর্পোরেশন/পৌরসভা/ইউনিয়ন/ক্যান্ট: বোর্ড :</span>
+                <span id="pv-dest-localbody" class="dotted-fill flex-1 truncate">....................................</span>
+              </div>
+              <div class="f13-row">
+                <span class="bold" style="margin-left: 10px;">ওয়ার্ড নম্বর :</span>
+                <span id="pv-dest-ward" class="dotted-fill min-70 text-center">..........</span>
+              </div>
+            </div>
+            <div class="f13-split">
+              <div class="f13-row flex-1">
+                <span class="bold">ভোটার এলাকার নাম :</span>
+                <span id="pv-dest-areaname" class="dotted-fill flex-1 truncate">............................................................</span>
+              </div>
+              <div class="f13-row">
+                <span class="bold" style="margin-left: 10px;">ভোটার এলাকার নম্বর :</span>
+                <span id="pv-dest-areano" class="dotted-fill min-100 mono bold text-center">........................</span>
+              </div>
+            </div>
+            <div class="f13-split">
+              <div class="f13-row flex-1">
+                <span class="bold">গ্রাম/রাস্তার নাম ও নম্বর :</span>
+                <span id="pv-dest-village" class="dotted-fill flex-1 truncate">................................................</span>
+              </div>
+              <div class="f13-row">
+                <span class="bold" style="margin-left: 10px;">বাসা/হোল্ডিং নম্বর :</span>
+                <span id="pv-dest-holding" class="dotted-fill min-100 text-center">........................</span>
+              </div>
+            </div>
+            <div class="f13-row">
+              <span class="bold w-200">টেলিফোন/মোবাইল ফোন নম্বর :</span>
+              <span id="pv-dest-phone" class="dotted-fill flex-1 mono bold">............................................................................................................</span>
+            </div>
+            <div class="f13-split" style="align-items: center;">
+              <div class="f13-row flex-1">
+                <span class="bold">ডাকঘর :</span>
+                <span id="pv-dest-postoffice" class="dotted-fill flex-1 truncate">........................................................................</span>
+              </div>
+              <div class="f13-row" style="margin-left: 14px;">
+                <span class="bold" style="margin-right: 6px;">পোস্ট কোড :</span>
+                <div class="f13-postbox-group">
+                  <div id="pv-post-0" class="f13-postbox"></div>
+                  <div id="pv-post-1" class="f13-postbox"></div>
+                  <div id="pv-post-2" class="f13-postbox"></div>
+                  <div id="pv-post-3" class="f13-postbox"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ৬ ও ৭ -->
+        <div style="margin-top: 14px;">
+          <div class="f13-row">
+            <span class="bold">৬। ৫ নম্বর ক্রমিকে বর্ণিত ঠিকানায় যে সময় হইতে অবস্থান করিতেছেন :</span>
+            <span id="pv-duration" class="dotted-fill flex-1">....................................................................................</span>
+          </div>
+          <div class="f13-row" style="margin-top: 6px;">
+            <span class="bold">৭। স্থানান্তরের কারণ:</span>
+            <span id="pv-reason" class="dotted-fill flex-1">..................................................................................................................................</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE 2 -->
+      <div id="mosafa-page-2" class="mosafa-a4-sheet" style="margin-top: 24px;">
+        <!-- ৮। ৫ নম্বর ক্রমিকে বর্ণিত ঠিকানায় অবস্থানের সমর্থনে নিম্নের দলিলাদি সংযুক্ত করিতে হইবে : -->
+        <div>
+          <div class="bold">৮। ৫ নম্বর ক্রমিকে বর্ণিত ঠিকানায় অবস্থানের সমর্থনে নিম্নের দলিলাদি সংযুক্ত করিতে হইবে :</div>
+          <div style="padding-left: 20px; line-height: 1.6; margin-top: 6px;">
+            <div>(ক) প্রথম শ্রেণীর কর্মকর্তা/ ক্যান্টনমেন্ট বোর্ডের এক্সিকিউটিভ অফিসার/ সিটি কর্পোরেশন/পৌরসভার মেয়র /ওয়ার্ড কাউন্সিলর/ইউনিয়ন পরিষদ চেয়ারম্যান কর্তৃক প্রদত্ত প্রত্যয়ন পত্র।</div>
+            <div>(খ) ইউটিলিটি বিলের অনুলিপি (যদি থাকে)</div>
+            <div>(গ) বাড়ী ভাড়া রশিদ/চৌকিদারী কর রশিদ/পৌরকর রশিদ/অন্যান্য</div>
+          </div>
+        </div>
+
+        <!-- আবেদনকারীর স্বাক্ষর বা টিপসহি -->
+        <div style="text-align: right; margin: 40px 10px 30px 0;">
+          <div style="display: inline-block; text-align: center; width: 240px;">
+            <div id="pv-sig-text" class="dotted-fill" style="width: 100%; height: 22px;"></div>
+            <div class="bold" style="font-size: 12px; margin-top: 4px;">আবেদনকারীর স্বাক্ষর বা টিপসহি</div>
+          </div>
+        </div>
+
+        <!-- আবেদনকারীকে সনাক্তকারীর স্বাক্ষর : ... -->
+        <div style="max-width: 500px; margin: 30px auto; line-height: 1.7;">
+          <div class="f13-row">
+            <span class="bold" style="width: 240px; text-align: right; padding-right: 8px;">আবেদনকারীকে সনাক্তকারীর স্বাক্ষর :</span>
+            <span class="dotted-fill flex-1">.....................................................</span>
+          </div>
+          <div class="f13-row">
+            <span class="bold" style="width: 240px; text-align: right; padding-right: 8px;">নাম :</span>
+            <span id="pv-ident-name" class="dotted-fill flex-1 bold">.....................................................</span>
+          </div>
+          <div class="f13-row">
+            <span class="bold" style="width: 240px; text-align: right; padding-right: 8px;">জাতীয় পরিচয়পত্র নম্বর :</span>
+            <span id="pv-ident-nid" class="dotted-fill flex-1 mono bold">.....................................................</span>
+          </div>
+          <div class="f13-row">
+            <span class="bold" style="width: 240px; text-align: right; padding-right: 8px;">ঠিকানা :</span>
+            <span id="pv-ident-addr" class="dotted-fill flex-1">.....................................................</span>
+          </div>
+        </div>
+
+        <!-- [কেবলমাত্র অফিসে ব্যবহারের জন্য] -->
+        <div style="margin-top: 36px;">
+          <div style="text-align: center; font-weight: bold; margin-bottom: 8px;">[কেবলমাত্র অফিসে ব্যবহারের জন্য]</div>
+          <div style="line-height: 1.8;">
+            দাখিলকৃত দলিলাদি পরীক্ষান্তে <span class="dotted-fill min-160">........................................</span>ভোটার এলাকার জন্য প্রণীত ভোটার তালিকা হইতে নাম কর্তন এবং <span class="dotted-fill min-160">........................................</span>ভোটার এলাকায় নাম অন্তর্ভুক্ত করা হইল।
+          </div>
+
+          <div style="text-align: right; margin: 26px 10px 16px 0;">
+            <div style="display: inline-block; text-align: center; width: 240px;">
+              <div class="dotted-fill" style="width: 100%; height: 20px;"></div>
+              <div class="bold" style="font-size: 12px; margin-top: 4px;">উপজেলা/থানা নির্বাচন কর্মকর্তা</div>
+              <div class="dotted-fill" style="width: 150px; height: 16px; margin: 6px auto 0;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ডটেড লাইন -->
+        <div style="border-bottom: 1px dotted #000; margin: 22px 0;"></div>
+
+        <!-- প্রাপ্তিস্বীকার পত্র -->
+        <div>
+          <div style="text-align: center; font-weight: bold; margin-bottom: 10px;">প্রাপ্তিস্বীকার পত্র</div>
+          <div class="f13-row">
+            <span class="bold">জনাব/বেগম</span>
+            <span id="pv-rc-name" class="dotted-fill flex-1 bold" style="margin: 0 4px;">...................................................................................</span>
+            <span class="bold">এর আবেদন ফরম গৃহীত হইল।</span>
+          </div>
+          <div class="f13-row" style="margin-top: 8px;">
+            <span class="bold">আবেদন ফরম নম্বর</span>
+            <span class="dotted-fill flex-1 mono bold" style="margin-left: 4px;">...........................................................................</span>
+          </div>
+
+          <div style="text-align: right; margin: 26px 10px 0 0;">
+            <div style="display: inline-block; text-align: center; width: 220px;">
+              <div class="dotted-fill" style="width: 100%; height: 20px;"></div>
+              <div class="bold" style="font-size: 12px; margin-top: 4px;">গ্রহণকারীর স্বাক্ষর</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Scoped CSS matching Form-13 */
+  .mosafa-form13-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px;
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+    color: #1e293b;
+  }
+  .mosafa-form13-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #ffffff;
+    padding: 14px 20px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+  .mosafa-form13-brand { display: flex; align-items: center; gap: 12px; }
+  .mosafa-form13-icon { font-size: 26px; }
+  .mosafa-form13-title { font-size: 18px; font-weight: 900; margin: 0; color: #0f172a; }
+  .mosafa-form13-sub { font-size: 11px; margin: 2px 0 0; color: #64748b; }
+  .mosafa-form13-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mosafa-form13-btn {
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mosafa-btn-validate { background: #e0e7ff; color: #4338ca; }
+  .mosafa-btn-print { background: #0f172a; color: #ffffff; }
+  .mosafa-btn-pdf { background: #047857; color: #ffffff; }
+  .mosafa-btn-sample { background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; }
+  .mosafa-btn-reset { background: #ffe4e6; color: #be123c; }
+
+  .mosafa-form13-notice {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    padding: 10px 16px;
+    border-radius: 14px;
+    font-size: 12px;
+    color: #92400e;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .mosafa-form13-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.35fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .mosafa-form13-grid { grid-template-columns: 1fr; }
+  }
+
+  .mosafa-form13-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .mosafa-card-header {
+    font-size: 12px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .mosafa-form-group { margin-bottom: 10px; }
+  .mosafa-form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 4px;
+  }
+  .mosafa-form-group input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 12px;
+    box-sizing: border-box;
+    background: #f8fafc;
+    outline: none;
+  }
+  .mosafa-form-group input:focus { border-color: #0f172a; background: #ffffff; }
+  .mosafa-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  /* Form-13 A4 Layout */
+  .mosafa-a4-sheet {
+    background: #ffffff;
+    width: 100%;
+    max-width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 18mm 20mm;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    box-sizing: border-box;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #000000;
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', serif;
+  }
+  .mosafa-f13-header { text-align: center; margin-bottom: 20px; }
+  .bold { font-weight: 700; }
+  .mono { font-family: monospace; letter-spacing: 0.5px; }
+  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dotted-fill {
+    border-bottom: 1px dotted #000000;
+    padding: 0 4px;
+    display: inline-block;
+  }
+  .f13-row { display: flex; align-items: baseline; }
+  .f13-split { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .flex-1 { flex: 1; }
+  .w-120 { width: 120px; flex-shrink: 0; }
+  .w-130 { width: 130px; flex-shrink: 0; }
+  .w-170 { width: 170px; flex-shrink: 0; }
+  .w-200 { width: 200px; flex-shrink: 0; }
+  .w-250 { width: 250px; flex-shrink: 0; }
+  .min-70 { min-width: 70px; }
+  .min-100 { min-width: 100px; }
+  .min-120 { min-width: 120px; }
+  .min-140 { min-width: 140px; }
+  .min-160 { min-width: 160px; }
+  .min-200 { min-width: 200px; }
+  .min-240 { min-width: 240px; }
+  .text-center { text-align: center; }
+
+  .f13-postbox-group { display: flex; border: 1px solid #000; }
+  .f13-postbox {
+    width: 22px;
+    height: 22px;
+    border-right: 1px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 11px;
+  }
+  .f13-postbox:last-child { border-right: none; }
+
+  .mosafa-preview-toolbar {
+    background: #ffffff;
+    padding: 10px 16px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  /* Print Styles */
+  @media print {
+    body * { visibility: hidden; }
+    .mosafa-form13-preview-wrapper,
+    .mosafa-a4-sheet,
+    .mosafa-a4-sheet * {
+      visibility: visible;
+    }
+    .mosafa-form13-preview-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+    .mosafa-preview-toolbar,
+    .mosafa-form13-topbar,
+    .mosafa-form13-inputs,
+    .mosafa-form13-notice {
+      display: none !important;
+    }
+    .mosafa-a4-sheet {
+      border: none !important;
+      box-shadow: none !important;
+      page-break-after: always;
+      margin: 0 auto;
+      padding: 14mm 16mm;
+    }
+  }
+</style>
+
+<script>
+  window.MoSaFaForm13 = {
+    init: function() {
+      var urlParams = new URLSearchParams(window.location.search);
+      var tool = urlParams.get('tool');
+      var root = document.getElementById('mosafa-form13-root');
+      if (root) {
+        if (tool === 'voter-transfer-form') {
+          root.style.display = 'block';
+          this.loadSampleData();
+        } else {
+          root.style.display = 'none';
+        }
+      }
+    },
+
+    syncPreview: function() {
+      var setVal = function(id, pvId, fallback) {
+        var el = document.getElementById(id);
+        var pv = document.getElementById(pvId);
+        if (el && pv) {
+          pv.textContent = el.value.trim() || fallback || '....................';
+        }
+      };
+
+      setVal('f13-office-upazila', 'pv-office-upazila', '...................................................');
+      setVal('f13-office-district', 'pv-office-district', '...........................................................');
+
+      setVal('f13-app-name', 'pv-app-name', '................................................................................................................................');
+      setVal('f13-app-nid', 'pv-app-nid', '............................................................................................................');
+      setVal('f13-app-dob', 'pv-app-dob', '......................................................................................................................................');
+
+      setVal('f13-cur-voterno', 'pv-cur-voterno', '..........................................................................................................................');
+      setVal('f13-cur-areaname', 'pv-cur-areaname', '............................................................');
+      setVal('f13-cur-areano', 'pv-cur-areano', '........................');
+      setVal('f13-cur-upazila', 'pv-cur-upazila', '............................................................');
+      setVal('f13-cur-district', 'pv-cur-district', '................................');
+      setVal('f13-cur-village', 'pv-cur-village', '................................................');
+      setVal('f13-cur-holding', 'pv-cur-holding', '........................');
+
+      setVal('f13-dest-district', 'pv-dest-district', '............................................................');
+      setVal('f13-dest-upazila', 'pv-dest-upazila', '....................................');
+      setVal('f13-dest-localbody', 'pv-dest-localbody', '....................................');
+      setVal('f13-dest-ward', 'pv-dest-ward', '..........');
+      setVal('f13-dest-areaname', 'pv-dest-areaname', '............................................................');
+      setVal('f13-dest-areano', 'pv-dest-areano', '........................');
+      setVal('f13-dest-village', 'pv-dest-village', '................................................');
+      setVal('f13-dest-holding', 'pv-dest-holding', '........................');
+      setVal('f13-dest-phone', 'pv-dest-phone', '............................................................................................................');
+      setVal('f13-dest-postoffice', 'pv-dest-postoffice', '........................................................................');
+
+      // Post code 4 boxes
+      var pCode = (document.getElementById('f13-dest-postcode') || {}).value || '';
+      for (var i = 0; i < 4; i++) {
+        var box = document.getElementById('pv-post-' + i);
+        if (box) box.textContent = pCode[i] || '';
+      }
+
+      setVal('f13-duration', 'pv-duration', '....................................................................................');
+      setVal('f13-reason', 'pv-reason', '..................................................................................................................................');
+
+      setVal('f13-sig-text', 'pv-sig-text', '');
+      setVal('f13-ident-name', 'pv-ident-name', '.....................................................');
+      setVal('f13-ident-nid', 'pv-ident-nid', '.....................................................');
+      setVal('f13-ident-addr', 'pv-ident-addr', '.....................................................');
+
+      // Receipt slip
+      setVal('f13-app-name', 'pv-rc-name', '...................................................................................');
+    },
+
+    loadSampleData: function() {
+      var set = function(id, val) {
+        var el = document.getElementById(id);
+        if (el) el.value = val;
+      };
+      set('f13-office-upazila', 'মিরপুর');
+      set('f13-office-district', 'ঢাকা');
+
+      set('f13-app-name', 'মোঃ মোফাসসিরুল ইসলাম');
+      set('f13-app-nid', '১৯৯৪২৬১২২৩০০০০৫৬৭');
+      set('f13-app-dob', '১২/০৪/১৯৯৪');
+
+      set('f13-cur-voterno', '২৬১২১২০০৪৫');
+      set('f13-cur-areaname', 'সৈয়দপুর পৌরসভা ০১ নং ওয়ার্ড');
+      set('f13-cur-areano', '০১০২');
+      set('f13-cur-upazila', 'সৈয়দপুর');
+      set('f13-cur-district', 'নীলফামারী');
+      set('f13-cur-village', 'রেলওয়ে কলোনি রোড');
+      set('f13-cur-holding', '১২/বি');
+
+      set('f13-dest-district', 'ঢাকা');
+      set('f13-dest-upazila', 'মিরপুর');
+      set('f13-dest-localbody', 'ঢাকা উত্তর সিটি কর্পোরেশন');
+      set('f13-dest-ward', '১২');
+      set('f13-dest-areaname', 'দক্ষিণ পাইকপাড়া ও মধ্য পাইকপাড়া');
+      set('f13-dest-areano', '১২০৫');
+      set('f13-dest-village', 'পাইকপাড়া প্রধান সড়ক, লেন-৪');
+      set('f13-dest-holding', '১৪৫/২-এ');
+      set('f13-dest-phone', '০১৭xxxxxxxx');
+      set('f13-dest-postoffice', 'মিরপুর');
+      set('f13-dest-postcode', '১২১৬');
+
+      set('f13-duration', '২ বছর ৬ মাস');
+      set('f13-reason', 'স্থায়ীভাবে পরিবারসহ বাসা পরিবর্তন ও বসবাস');
+
+      set('f13-sig-text', 'মোফাসসিরুল ইসলাম');
+      set('f13-ident-name', 'আলহাজ্ব মোঃ রফিকুল হাসান');
+      set('f13-ident-nid', '১৯৭৫২৬১২২৮০০০০৭৮৯');
+      set('f13-ident-addr', '১২ নং ওয়ার্ড কার্যালয়, পাইকপাড়া, মিরপুর');
+
+      this.syncPreview();
+    },
+
+    confirmReset: function() {
+      if (confirm('আপনি কি নিশ্চিত যে সকল তথ্য মুছে নতুন ফরম প্রস্তুত করতে চান?')) {
+        var inputs = document.querySelectorAll('#mosafa-form13-root input[type="text"]');
+        for (var i = 0; i < inputs.length; i++) {
+          inputs[i].value = '';
+        }
+        this.syncPreview();
+      }
+    },
+
+    validateForm: function() {
+      var name = (document.getElementById('f13-app-name') || {}).value || '';
+      var nid = (document.getElementById('f13-app-nid') || {}).value || '';
+      var destArea = (document.getElementById('f13-dest-areaname') || {}).value || '';
+      var mobile = (document.getElementById('f13-dest-phone') || {}).value || '';
+
+      if (!name.trim() || !nid.trim() || !destArea.trim() || !mobile.trim()) {
+        alert('⚠️ অনুগ্রহ করে আবেদনকারীর নাম, NID নম্বর, গন্তব্য ভোটার এলাকা ও মোবাইল নম্বর পূরণ করুন।');
+      } else {
+        alert('✅ ফরম-১৩ এর সকল আবশ্যকীয় তথ্য পূরণ করা হয়েছে! আপনি ফরমটি প্রিন্ট বা PDF ডাউনলোড করতে পারেন।');
+      }
+    },
+
+    downloadPDF: function() {
+      window.print();
+    }
+  };
+
+  // Run on load and URL change
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { MoSaFaForm13.init(); });
+  } else {
+    MoSaFaForm13.init();
+  }
+  window.addEventListener('popstate', function() { MoSaFaForm13.init(); });
+</script>
