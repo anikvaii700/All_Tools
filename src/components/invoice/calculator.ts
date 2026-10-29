@@ -102,8 +102,10 @@ export function calculateInvoice(invoice: Invoice): InvoiceCalculation {
 
 export function formatMoney(val: number, currencySymbol = '৳'): string {
   const safeVal = isNaN(val) ? 0 : val;
+  // If whole number, don't show .00; if has decimals, show 2 decimal places
+  const hasDecimals = Math.abs(safeVal % 1) >= 0.005;
   const formatted = safeVal.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: hasDecimals ? 2 : 0,
     maximumFractionDigits: 2,
   });
   return `${currencySymbol}${formatted}`;

@@ -1,45 +1,49 @@
-import React from 'react';
-import { BusinessProfile, Invoice, InvoiceCalculation } from './types';
+import React, { useRef } from 'react';
+import { InvoiceTemplateProps } from './types';
 import { formatMoney } from './calculator';
-import { numberToWordsBengali, numberToWordsEnglish, toBengaliNumerals } from './numberToWords';
+import { cleanBengaliAmountInWords, numberToWordsEnglish, toBengaliNumerals } from './numberToWords';
+import { SignatureBlock } from './SignatureBlock';
 
-interface TemplateProps {
-  invoice: Invoice;
-  business: BusinessProfile;
-  calc: InvoiceCalculation;
-  onEditField?: (fieldId: string) => void;
-}
-
-export const InvoiceTemplateModern: React.FC<TemplateProps> = ({ invoice, business, calc, onEditField }) => {
+export const InvoiceTemplateModern: React.FC<InvoiceTemplateProps> = ({
+  invoice,
+  business,
+  calc,
+  onEditField,
+  onUpdateInvoice,
+  onUpdateBusiness,
+  onUpdateItem,
+  onAddItem,
+  onRemoveItem,
+  onOpenSignatureModal,
+}) => {
   const isBn = invoice.language === 'bn';
   const currencySymbol = invoice.currency.includes('৳') ? '৳' : invoice.currency.split(' ')[0] || '৳';
 
   const amountInWords = isBn
-    ? numberToWordsBengali(calc.grandTotal)
+    ? cleanBengaliAmountInWords(calc.grandTotal)
     : numberToWordsEnglish(calc.grandTotal, currencySymbol === '৳' ? 'Taka' : 'Currency');
 
   const numFormat = (num: number) =>
     isBn ? toBengaliNumerals(formatMoney(num, '')) : formatMoney(num, '');
 
-  const clickProps = (fieldId: string, label = 'এডিট করতে ক্লিক করুন') => ({
-    onClick: () => onEditField && onEditField(fieldId),
-    title: `${label} ✏️`,
-    className:
-      'cursor-pointer hover:bg-rose-50/80 hover:outline-dashed hover:outline-2 hover:outline-rose-400 rounded transition-all print:hover:bg-transparent print:hover:outline-none print:cursor-default',
-  });
+  const custNameRef = useRef<HTMLInputElement>(null);
+  const custCompanyRef = useRef<HTMLInputElement>(null);
+  const custAddressRef = useRef<HTMLInputElement>(null);
+  const custPhoneRef = useRef<HTMLInputElement>(null);
+  const invNumberRef = useRef<HTMLInputElement>(null);
+  const invDateRef = useRef<HTMLInputElement>(null);
+  const invDueDateRef = useRef<HTMLInputElement>(null);
+  const bizNameRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="bg-white text-slate-800 p-8 sm:p-10 font-sans text-xs sm:text-sm min-h-[900px] flex flex-col justify-between border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-6 print:m-0 print:min-h-0 select-none">
+    <div className="invoice-printable-doc bg-white text-slate-800 p-8 sm:p-10 font-sans text-xs sm:text-sm min-h-[900px] flex flex-col justify-between border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-6 print:m-0 print:min-h-0 select-none">
       <div>
         {/* Top Gradient Accent Banner */}
         <div className="h-2 w-full bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 rounded-full mb-6 print:hidden" />
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pb-6">
-          <div
-            {...clickProps('field-business-settings', 'ব্যবসার তথ্য ও প্রোফাইল এডিট করুন')}
-            className="flex items-start gap-4 p-1 rounded-2xl cursor-pointer hover:bg-rose-50/80 hover:outline-dashed hover:outline-2 hover:outline-rose-400 transition"
-          >
+          <div className="flex items-start gap-4 flex-1 w-full">
             {business.logoUrl ? (
               <img
                 src={business.logoUrl}
@@ -48,22 +52,55 @@ export const InvoiceTemplateModern: React.FC<TemplateProps> = ({ invoice, busine
               />
             ) : (
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-indigo-100 shrink-0">
-                {business.businessName.charAt(0) || 'M'}
+                {business.businessName?.charAt(0) || 'M'}
               </div>
             )}
-            <div>
-              <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded-full">
-                {isBn ? 'অফিসিয়াল ইনভয়েস' : 'Official Invoice'}
-              </span>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
-                {business.businessName || 'ব্যবসার নাম'}
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5 max-w-sm whitespace-pre-line leading-relaxed">
-                {business.businessAddress}
-              </p>
+            <div 
+              onClick={() => { bizNameRef.current?.focus(); onEditField?.('field-biz-name'); }}
+              className="flex-1 cursor-pointer"
+            >
+              <input
+                type="text"
+                value={invoice.memoTypeTitle || (isBn ? 'অফিসিয়াল ইনভয়েস' : 'Official Invoice')}
+                onChange={(e) => onUpdateInvoice?.({ memoTypeTitle: e.target.value })}
+                className="text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded-full border-none focus:outline-none print:p-0"
+              />
+              <input
+                ref={bizNameRef}
+                type="text"
+                value={business.businessName || ''}
+                placeholder={isBn ? 'ব্যবসার নাম' : 'Business Name'}
+                onChange={(e) => onUpdateBusiness?.({ businessName: e.target.value })}
+                className="w-full text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1 bg-transparent border-none focus:outline-none focus:bg-slate-50 rounded py-2 sm:py-3 min-h-[48px] sm:min-h-[58px] leading-relaxed print:p-0"
+              />
+              <input
+                type="text"
+                value={business.businessAddress || ''}
+                placeholder={isBn ? 'ঠিকানা লিখুন...' : 'Address...'}
+                onChange={(e) => onUpdateBusiness?.({ businessAddress: e.target.value })}
+                className="w-full text-xs text-slate-500 mt-0.5 bg-transparent border-none focus:outline-none focus:bg-slate-50 rounded py-0.5 print:p-0"
+              />
               <div className="text-[11px] text-slate-500 mt-1 flex flex-wrap gap-x-3">
-                {business.phone && <span>📞 {business.phone}</span>}
-                {business.email && <span>✉️ {business.email}</span>}
+                <div className="flex items-center gap-1">
+                  <span>📞</span>
+                  <input
+                    type="text"
+                    value={business.phone || ''}
+                    placeholder="Phone"
+                    onChange={(e) => onUpdateBusiness?.({ phone: e.target.value })}
+                    className="font-mono bg-transparent border-b border-slate-300 focus:outline-none px-1 py-0.5 w-28 print:border-none print:p-0"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>✉️</span>
+                  <input
+                    type="text"
+                    value={business.email || ''}
+                    placeholder="Email"
+                    onChange={(e) => onUpdateBusiness?.({ email: e.target.value })}
+                    className="font-mono bg-transparent border-b border-slate-300 focus:outline-none px-1 py-0.5 w-36 print:border-none print:p-0"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -72,313 +109,270 @@ export const InvoiceTemplateModern: React.FC<TemplateProps> = ({ invoice, busine
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
               {isBn ? 'ইনভয়েস নম্বর' : 'Invoice Number'}
             </span>
-            <div
-              {...clickProps('field-inv-number', 'ইনভয়েস নম্বর এডিট করুন')}
-              className="text-base sm:text-lg font-black text-indigo-900 font-mono inline-block"
+            <div 
+              onClick={() => { invNumberRef.current?.focus(); onEditField?.('field-inv-number'); }}
+              className="cursor-pointer"
             >
-              {invoice.invoiceNumber}
+              <input
+                ref={invNumberRef}
+                type="text"
+                value={invoice.invoiceNumber || ''}
+                placeholder="INV-0001"
+                onChange={(e) => onUpdateInvoice?.({ invoiceNumber: e.target.value })}
+                className="text-base sm:text-lg font-black text-indigo-900 font-mono sm:text-right bg-transparent border-none focus:outline-none w-32 print:p-0"
+              />
             </div>
-            <div className="mt-2 text-xs space-y-0.5">
-              <div {...clickProps('field-inv-date', 'চালানের তারিখ এডিট করুন')} className="text-slate-600">
-                <span className="text-slate-400">{isBn ? 'ইস্যু তারিখ:' : 'Issued:'}</span> {invoice.invoiceDate}
+            <div className="mt-2 text-xs space-y-1">
+              <div 
+                onClick={() => { invDateRef.current?.focus(); onEditField?.('field-inv-date'); }}
+                className="text-slate-600 flex items-center sm:justify-end gap-1 cursor-pointer"
+              >
+                <span className="text-slate-400">{isBn ? 'তারিখঃ' : 'Date:'}</span>
+                <input
+                  ref={invDateRef}
+                  type="text"
+                  value={invoice.invoiceDate || ''}
+                  placeholder="Date"
+                  onChange={(e) => onUpdateInvoice?.({ invoiceDate: e.target.value })}
+                  className="font-mono font-bold sm:text-right bg-transparent border-b border-slate-200 focus:outline-none w-28 print:border-none print:p-0"
+                />
               </div>
-              {invoice.dueDate && (
-                <div {...clickProps('field-inv-due-date', 'পরিশোধের শেষ তারিখ এডিট করুন')} className="text-slate-600">
-                  <span className="text-slate-400">{isBn ? 'পরিশোধ:' : 'Due:'}</span> {invoice.dueDate}
-                </div>
-              )}
+              <div 
+                onClick={() => { invDueDateRef.current?.focus(); onEditField?.('field-inv-due-date'); }}
+                className="text-slate-600 flex items-center sm:justify-end gap-1 cursor-pointer"
+              >
+                <span className="text-slate-400">{isBn ? 'পরিশোধঃ' : 'Due:'}</span>
+                <input
+                  ref={invDueDateRef}
+                  type="text"
+                  value={invoice.dueDate || ''}
+                  placeholder="Due Date"
+                  onChange={(e) => onUpdateInvoice?.({ dueDate: e.target.value })}
+                  className="font-mono sm:text-right bg-transparent border-b border-slate-200 focus:outline-none w-28 print:border-none print:p-0"
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Customer & Info Pill Box */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 px-5 bg-gradient-to-r from-slate-50 to-indigo-50/30 rounded-2xl border border-slate-200/80 my-4">
-          <div className="space-y-0.5">
+          <div className="space-y-2">
             <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block mb-0.5">
               {isBn ? 'ইনভয়েস প্রাপক (Billed To):' : 'Billed To:'}
             </span>
-            <div
-              {...clickProps('field-cust-name', 'গ্রাহকের নাম এডিট করুন')}
-              className="font-extrabold text-slate-900 text-sm sm:text-base inline-block"
+            <div 
+              onClick={() => { custNameRef.current?.focus(); onEditField?.('field-cust-name'); }}
+              className="flex items-center gap-2 cursor-pointer"
             >
-              {invoice.customer.name || (isBn ? 'নামহীন গ্রাহক' : 'Customer Name')}
+              <span className="font-bold text-slate-700 shrink-0 text-sm">{isBn ? 'নামঃ' : 'Name:'}</span>
+              <input
+                ref={custNameRef}
+                type="text"
+                value={invoice.customer.name || ''}
+                placeholder={isBn ? 'গ্রাহকের নাম' : 'Customer Name'}
+                onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, name: e.target.value } })}
+                className="font-extrabold text-slate-900 text-xs sm:text-sm flex-1 bg-transparent border-b border-indigo-200 focus:outline-none focus:bg-white rounded px-3 py-1.5 sm:py-2 min-h-[38px] sm:min-h-[42px] leading-relaxed print:border-none print:p-0"
+              />
             </div>
-            {invoice.customer.companyName && (
-              <div
-                {...clickProps('field-cust-company', 'কোম্পানির নাম এডিট করুন')}
-                className="text-xs font-semibold text-slate-700"
-              >
-                {invoice.customer.companyName}
-              </div>
-            )}
-            <div
-              {...clickProps('field-cust-address', 'গ্রাহকের ঠিকানা এডিট করুন')}
-              className="text-xs text-slate-600 mt-0.5 whitespace-pre-line"
+            <div 
+              onClick={() => { custCompanyRef.current?.focus(); onEditField?.('field-cust-company'); }}
+              className="flex items-center gap-2 cursor-pointer"
             >
-              {invoice.customer.address || '—'}
-            </div>
-            <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-x-3">
-              <span {...clickProps('field-cust-phone', 'গ্রাহকের ফোন নম্বর এডিট করুন')}>
-                ফোন: {invoice.customer.phone || '—'}
-              </span>
-              <span {...clickProps('field-cust-email', 'গ্রাহকের ইমেইল এডিট করুন')}>
-                ইমেইল: {invoice.customer.email || '—'}
-              </span>
+              <span className="font-bold text-slate-500 shrink-0 text-sm">{isBn ? 'কোম্পানিঃ' : 'Company:'}</span>
+              <input
+                ref={custCompanyRef}
+                type="text"
+                value={invoice.customer.companyName || ''}
+                placeholder={isBn ? 'কোম্পানির নাম' : 'Company Name'}
+                onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, companyName: e.target.value } })}
+                className="text-xs sm:text-sm text-slate-700 flex-1 bg-transparent border-b border-indigo-100 focus:outline-none focus:bg-white rounded px-3 py-1.5 min-h-[38px] leading-relaxed print:border-none print:p-0"
+              />
             </div>
           </div>
 
-          <div className="flex flex-col justify-center sm:items-end text-xs space-y-1 text-slate-600">
-            <div {...clickProps('field-inv-status', 'পেমেন্ট স্ট্যাটাস এডিট করুন')}>
-              <span className="text-slate-400">{isBn ? 'পেমেন্ট স্ট্যাটাস:' : 'Status:'} </span>
-              <span
-                className={`inline-block font-bold px-2.5 py-0.5 rounded-full text-[11px] ${
-                  calc.isOverdue
-                    ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                    : invoice.paymentStatus === 'paid'
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                    : invoice.paymentStatus === 'partial'
-                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                    : 'bg-slate-200 text-slate-700'
-                }`}
-              >
-                {calc.isOverdue
-                  ? isBn ? 'বিলম্বিত (Overdue)' : 'Overdue'
-                  : invoice.paymentStatus === 'paid'
-                  ? isBn ? 'পরিশোধিত' : 'Paid'
-                  : invoice.paymentStatus === 'partial'
-                  ? isBn ? 'আংশিক পরিশোধিত' : 'Partial'
-                  : isBn ? 'অপরিশোধিত' : 'Unpaid'}
-              </span>
+          <div className="space-y-2">
+            <div 
+              onClick={() => { custAddressRef.current?.focus(); onEditField?.('field-cust-address'); }}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <span className="font-bold text-slate-500 shrink-0 text-sm">{isBn ? 'ঠিকানাঃ' : 'Address:'}</span>
+              <input
+                ref={custAddressRef}
+                type="text"
+                value={invoice.customer.address || ''}
+                placeholder={isBn ? 'গ্রাহকের ঠিকানা' : 'Customer Address'}
+                onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, address: e.target.value } })}
+                className="text-xs sm:text-sm text-slate-600 flex-1 bg-transparent border-b border-indigo-100 focus:outline-none focus:bg-white rounded px-3 py-1.5 sm:py-2 min-h-[38px] sm:min-h-[42px] leading-relaxed print:border-none print:p-0"
+              />
             </div>
-            {business.tradeLicense && <div>ট্রেড লাইসেন্স: {business.tradeLicense}</div>}
-            {business.binVatNumber && <div>BIN/VAT: {business.binVatNumber}</div>}
+            <div 
+              onClick={() => { custPhoneRef.current?.focus(); onEditField?.('field-cust-phone'); }}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <span className="font-bold text-slate-500 shrink-0 text-sm">{isBn ? 'মোবাইলঃ' : 'Phone:'}</span>
+              <input
+                ref={custPhoneRef}
+                type="text"
+                value={invoice.customer.phone || ''}
+                placeholder="01xxxxxxxxx"
+                onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, phone: e.target.value } })}
+                className="font-mono text-xs sm:text-sm text-slate-700 flex-1 bg-transparent border-b border-indigo-100 focus:outline-none focus:bg-white rounded px-3 py-1.5 min-h-[38px] leading-relaxed print:border-none print:p-0"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Items Table */}
-        <div className="mt-6 overflow-x-auto">
+        {/* Table */}
+        <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b-2 border-indigo-600 text-indigo-950 text-[11px] uppercase tracking-wider font-extrabold">
-                <th className="py-3 px-3 w-8 text-center">#</th>
-                <th
-                  {...clickProps(`field-item-name-${invoice.items[0]?.id || ''}`, 'আইটেম নাম এডিট করুন')}
-                  className="py-3 px-3 cursor-pointer hover:bg-indigo-50"
-                >
-                  {isBn ? 'সেবা বা পণ্যের নাম ✏️' : 'Description ✏️'}
-                </th>
-                <th
-                  {...clickProps(`field-item-qty-${invoice.items[0]?.id || ''}`, 'পরিমাণ এডিট করুন')}
-                  className="py-3 px-3 text-center cursor-pointer hover:bg-indigo-50"
-                >
-                  {isBn ? 'পরিমাণ ✏️' : 'Qty ✏️'}
-                </th>
-                <th
-                  {...clickProps(`field-item-price-${invoice.items[0]?.id || ''}`, 'মূল্য এডিট করুন')}
-                  className="py-3 px-3 text-right cursor-pointer hover:bg-indigo-50"
-                >
-                  {isBn ? 'মূল্য ✏️' : 'Unit Price ✏️'}
-                </th>
-                <th
-                  {...clickProps(`field-item-discount-${invoice.items[0]?.id || ''}`, 'ছাড় এডিট করুন')}
-                  className="py-3 px-3 text-right cursor-pointer hover:bg-indigo-50"
-                >
-                  {isBn ? 'ছাড় ✏️' : 'Discount ✏️'}
-                </th>
-                <th
-                  {...clickProps(`field-item-vat-${invoice.items[0]?.id || ''}`, 'ভ্যাট এডিট করুন')}
-                  className="py-3 px-3 text-right cursor-pointer hover:bg-indigo-50"
-                >
-                  {isBn ? 'ভ্যাট ✏️' : 'VAT ✏️'}
-                </th>
-                <th
-                  {...clickProps(`field-item-price-${invoice.items[0]?.id || ''}`, 'মোট টাকার হিসাব এডিট করুন')}
-                  className="py-3 px-3 text-right cursor-pointer hover:bg-indigo-50"
-                >
-                  {isBn ? 'মোট ✏️' : 'Total ✏️'}
-                </th>
+              <tr className="bg-slate-50 text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                <th className="py-3 px-3 w-12 text-center">#</th>
+                <th className="py-3 px-4">{isBn ? 'বিবরণ' : 'Description'}</th>
+                <th className="py-3 px-3 w-24 text-center">{isBn ? 'পরিমাণ' : 'Qty'}</th>
+                <th className="py-3 px-3 w-28 text-right">{isBn ? 'দর' : 'Rate'}</th>
+                <th className="py-3 px-4 w-32 text-right">{isBn ? 'মোট' : 'Amount'}</th>
+                <th className="py-3 px-1 w-8 print:hidden"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
-              {invoice.items.map((item, idx) => {
-                const qtyStr = isBn ? toBengaliNumerals(item.quantity) : String(item.quantity);
-                const unitStr = item.unit === 'custom' ? item.customUnit || '' : item.unit;
-                return (
-                  <tr key={item.id || idx} className="hover:bg-indigo-50/30 transition">
-                    <td className="py-3 px-3 text-center text-slate-400 font-mono">
-                      {isBn ? toBengaliNumerals(idx + 1) : idx + 1}
-                    </td>
-                    <td
-                      {...clickProps(`field-item-name-${item.id}`, 'আইটেমের নাম এডিট করুন')}
-                      className="py-3 px-3"
-                    >
-                      <div className="font-bold text-slate-900">{item.name || 'আইটেম'}</div>
-                      {item.description && (
-                        <div className="text-[11px] text-slate-500 mt-0.5">{item.description}</div>
-                      )}
-                    </td>
-                    <td
-                      {...clickProps(`field-item-qty-${item.id}`, 'পরিমাণ (Quantity) এডিট করুন')}
-                      className="py-3 px-3 text-center whitespace-nowrap font-bold text-indigo-900"
-                    >
-                      {qtyStr} <span className="text-[10px] text-slate-400 font-normal">{unitStr}</span>
-                    </td>
-                    <td
-                      {...clickProps(`field-item-price-${item.id}`, 'একক দর (Price) এডিট করুন')}
-                      className="py-3 px-3 text-right font-medium"
-                    >
-                      {currencySymbol} {numFormat(item.unitPrice)}
-                    </td>
-                    <td
-                      {...clickProps(`field-item-discount-${item.id}`, 'ছাড় (Discount) এডিট করুন')}
-                      className="py-3 px-3 text-right text-slate-500"
-                    >
-                      {item.discountValue > 0
-                        ? item.discountType === 'percent'
-                          ? `${isBn ? toBengaliNumerals(item.discountValue) : item.discountValue}%`
-                          : `${currencySymbol}${numFormat(item.discountValue)}`
-                        : '—'}
-                    </td>
-                    <td
-                      {...clickProps(`field-item-vat-${item.id}`, 'ভ্যাট এডিট করুন')}
-                      className="py-3 px-3 text-right text-slate-500"
-                    >
-                      {item.vatRate > 0
-                        ? `${isBn ? toBengaliNumerals(item.vatRate) : item.vatRate}%`
-                        : '—'}
-                    </td>
-                    <td
-                      {...clickProps(`field-item-price-${item.id}`, 'মোটের হিসাব পরিবর্তন করুন')}
-                      className="py-3 px-3 text-right font-black text-indigo-950"
-                    >
-                      {currencySymbol} {numFormat(item.lineTotal || 0)}
-                    </td>
-                  </tr>
-                );
-              })}
+              {invoice.items.map((item, idx) => (
+                <tr key={item.id} className="hover:bg-slate-50/50">
+                  <td className="py-2.5 px-3 text-center font-bold text-slate-400">
+                    {idx + 1}
+                  </td>
+                  <td className="py-2 px-2">
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => onUpdateItem?.(item.id, { name: e.target.value })}
+                      placeholder="Item name"
+                      className="w-full font-bold text-slate-900 bg-transparent border-none focus:outline-none focus:bg-slate-50 px-1 py-0.5 print:p-0"
+                    />
+                    <input
+                      type="text"
+                      value={item.description || ''}
+                      onChange={(e) => onUpdateItem?.(item.id, { description: e.target.value })}
+                      placeholder="Description..."
+                      className="w-full text-[11px] text-slate-400 bg-transparent border-none focus:outline-none focus:bg-slate-50 px-1 py-0.5 print:p-0 print:placeholder-transparent"
+                    />
+                  </td>
+                  <td className="py-2 px-2 text-center">
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={item.quantity}
+                      onChange={(e) => onUpdateItem?.(item.id, { quantity: parseFloat(e.target.value) || 0 })}
+                      className="w-full text-center font-mono font-bold bg-transparent border-none outline-none focus:outline-none focus:bg-slate-50 px-1 py-1 print:border-none print:p-0"
+                    />
+                  </td>
+                  <td className="py-2 px-2 text-right">
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={item.unitPrice}
+                      onChange={(e) => onUpdateItem?.(item.id, { unitPrice: parseFloat(e.target.value) || 0 })}
+                      className="w-full text-right font-mono bg-transparent border-none outline-none focus:outline-none focus:bg-slate-50 px-1 py-1 print:border-none print:p-0"
+                    />
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                    {currencySymbol} {numFormat(item.lineTotal)}
+                  </td>
+                  <td className="py-1 px-1 text-center print:hidden">
+                    {invoice.items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveItem?.(item.id)}
+                        className="text-red-400 hover:text-red-600 text-xs px-1"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+
+              <tr className="print:hidden bg-slate-50/50">
+                <td colSpan={6} className="py-1.5 px-3 text-center">
+                  <button
+                    type="button"
+                    onClick={() => onAddItem?.()}
+                    className="text-xs font-bold text-indigo-600 hover:underline"
+                  >
+                    ➕ {isBn ? 'আইটেম যোগ করুন' : 'Add Item'}
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Calculation & Bank Info */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6 pt-4 border-t border-slate-200">
-          <div className="md:col-span-7 space-y-3">
-            <div
-              {...clickProps('field-calc-subtotal', 'আইটেমের মোট টাকা')}
-              className="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100"
-            >
-              <span className="text-[10px] uppercase font-bold text-indigo-500 block tracking-wider">
-                {isBn ? 'কথায় মোট টাকা:' : 'Amount In Words:'}
-              </span>
-              <p className="text-xs font-bold text-indigo-950 mt-0.5">{amountInWords}</p>
+        {/* Calculations */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="md:col-span-7 space-y-2">
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
+              <span className="font-bold text-slate-700">{isBn ? 'কথায়ঃ ' : 'In Words: '}</span>
+              <input
+                type="text"
+                value={invoice.customInWords !== undefined ? invoice.customInWords : amountInWords}
+                onChange={(e) => onUpdateInvoice?.({ customInWords: e.target.value })}
+                placeholder={amountInWords}
+                className="w-full font-bold text-slate-900 mt-1 bg-transparent border-b border-slate-300 focus:outline-none focus:bg-white px-1 py-0.5 print:border-none print:p-0"
+              />
             </div>
-
-            {(business.bkashNumber || business.nagadNumber || business.bankAccountNumber) && (
-              <div
-                {...clickProps('field-business-settings', 'পেমেন্ট ও ব্যাংক তথ্য পরিবর্তন করতে সেটিংস খুলুন')}
-                className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1"
-              >
-                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
-                  {isBn ? 'পেমেন্ট গ্রহণের মাধ্যম:' : 'Payment Gateways:'}
-                </span>
-                {business.bkashNumber && (
-                  <div>
-                    <span className="font-semibold text-pink-600">bKash:</span> {business.bkashNumber}
-                  </div>
-                )}
-                {business.nagadNumber && (
-                  <div>
-                    <span className="font-semibold text-orange-600">Nagad:</span> {business.nagadNumber}
-                  </div>
-                )}
-                {business.bankAccountNumber && (
-                  <div className="text-[11px] text-slate-600">
-                    <span className="font-semibold text-indigo-900">{business.bankName}:</span>{' '}
-                    A/C {business.bankAccountNumber} ({business.bankAccountName})
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div
-              {...clickProps('field-inv-notes', 'বিশেষ নোট এডিট করুন')}
-              className="text-xs text-slate-600 bg-slate-50/60 p-2.5 rounded-xl border border-slate-200/60"
-            >
-              <strong>{isBn ? 'বিশেষ নোট:' : 'Notes:'}</strong> {invoice.notes || '—'}
+            <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+              <span className="font-bold text-slate-600">{isBn ? 'নোটঃ ' : 'Notes: '}</span>
+              <input
+                type="text"
+                value={invoice.notes || ''}
+                placeholder="Notes..."
+                onChange={(e) => onUpdateInvoice?.({ notes: e.target.value })}
+                className="w-full bg-transparent border-none focus:outline-none focus:bg-white text-slate-600 px-1 py-0.5 print:p-0 print:placeholder-transparent"
+              />
             </div>
           </div>
 
           <div className="md:col-span-5">
-            <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-md space-y-2 text-xs">
-              <div
-                {...clickProps('field-calc-subtotal', 'সাবটোটাল')}
-                className="flex justify-between text-slate-300 p-1 rounded hover:bg-slate-800"
-              >
-                <span>{isBn ? 'সাবটোটাল:' : 'Subtotal:'}</span>
-                <span className="font-semibold">
-                  {currencySymbol} {numFormat(calc.subtotal)}
-                </span>
+            <div className="border border-slate-200 rounded-2xl p-4 space-y-2 text-xs bg-slate-50/50">
+              <div className="flex justify-between text-slate-600">
+                <span>{isBn ? 'সাবটোটালঃ' : 'Subtotal:'}</span>
+                <span className="font-mono font-bold">{currencySymbol} {numFormat(calc.subtotal)}</span>
               </div>
-
-              {calc.itemDiscounts > 0 && (
-                <div
-                  {...clickProps(`field-item-discount-${invoice.items[0]?.id || ''}`, 'আইটেম ছাড় পরিবর্তন করুন')}
-                  className="flex justify-between text-rose-300 p-1 rounded hover:bg-slate-800"
-                >
-                  <span>{isBn ? 'আইটেম ছাড়:' : 'Item Discount:'}</span>
-                  <span>-{currencySymbol} {numFormat(calc.itemDiscounts)}</span>
+              {calc.totalDiscount > 0 && (
+                <div className="flex justify-between text-rose-600 font-medium">
+                  <span>{isBn ? 'ছাড়ঃ' : 'Discount:'}</span>
+                  <span className="font-mono">-{currencySymbol} {numFormat(calc.totalDiscount)}</span>
                 </div>
               )}
-
               {calc.totalVat > 0 && (
-                <div
-                  {...clickProps(`field-item-vat-${invoice.items[0]?.id || ''}`, 'ভ্যাট পরিবর্তন করুন')}
-                  className="flex justify-between text-slate-300 p-1 rounded hover:bg-slate-800"
-                >
-                  <span>{isBn ? 'ভ্যাট / ট্যাক্স:' : 'VAT/Tax:'}</span>
-                  <span>+{currencySymbol} {numFormat(calc.totalVat)}</span>
+                <div className="flex justify-between text-amber-700 font-bold">
+                  <span>{isBn ? 'ভ্যাট / ট্যাক্সঃ' : 'VAT / Tax:'}</span>
+                  <span className="font-mono font-bold">+{currencySymbol} {numFormat(calc.totalVat)}</span>
                 </div>
               )}
-
-              <div
-                {...clickProps('field-inv-discount', 'ইনভয়েস ছাড় পরিবর্তন করুন')}
-                className="flex justify-between text-rose-300 p-1 rounded hover:bg-slate-800"
-              >
-                <span>{isBn ? 'ইনভয়েস ছাড়:' : 'Invoice Discount:'}</span>
-                <span>-{currencySymbol} {numFormat(calc.invoiceDiscount)}</span>
+              <div className="pt-2 border-t border-slate-200 flex justify-between font-black text-sm text-slate-900">
+                <span>{isBn ? 'সর্বমোট বিলঃ' : 'Total Amount:'}</span>
+                <span>{currencySymbol} {numFormat(calc.grandTotal)}</span>
               </div>
-
-              <div
-                {...clickProps('field-inv-shipping', 'ডেলিভারি চার্জ পরিবর্তন করুন')}
-                className="flex justify-between text-slate-300 p-1 rounded hover:bg-slate-800"
-              >
-                <span>{isBn ? 'অন্যান্য চার্জ:' : 'Shipping:'}</span>
-                <span>+{currencySymbol} {numFormat(calc.shipping)}</span>
+              <div className="flex items-center justify-between text-emerald-700 font-bold">
+                <span>{isBn ? 'জমাঃ' : 'Paid:'}</span>
+                <div className="flex items-center justify-end">
+                  <span className="mr-1">{currencySymbol}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    value={invoice.paidAmount ?? 0}
+                    onChange={(e) => onUpdateInvoice?.({ paidAmount: parseFloat(e.target.value) || 0 })}
+                    className="w-20 text-right font-mono font-bold text-emerald-800 bg-transparent border-none focus:outline-none print:border-none print:p-0"
+                  />
+                </div>
               </div>
-
-              <div
-                {...clickProps('field-calc-subtotal', 'সর্বমোট বিল')}
-                className="pt-2 border-t border-slate-700 flex justify-between font-black text-base text-white p-1 rounded hover:bg-slate-800"
-              >
-                <span>{isBn ? 'সর্বমোট প্রদেয়:' : 'Grand Total:'}</span>
-                <span className="text-amber-400">
-                  {currencySymbol} {numFormat(calc.grandTotal)}
-                </span>
-              </div>
-
-              <div
-                {...clickProps('field-inv-paid-amount', 'পরিশোধিত টাকা পরিবর্তন করুন')}
-                className="flex justify-between text-emerald-400 font-semibold pt-1 p-1 rounded hover:bg-slate-800"
-              >
-                <span>{isBn ? 'পরিশোধিত:' : 'Paid:'}</span>
-                <span>{currencySymbol} {numFormat(calc.paidAmount)}</span>
-              </div>
-
-              <div
-                {...clickProps('field-inv-paid-amount', 'বকেয়া পরিবর্তন করতে পরিশোধিত টাকা এডিট করুন')}
-                className="flex justify-between text-rose-400 font-bold text-sm pt-1 border-t border-dashed border-slate-700 p-1 rounded hover:bg-slate-800"
-              >
-                <span>{isBn ? 'বকেয়া পাওনা:' : 'Due:'}</span>
+              <div className="flex justify-between text-rose-700 font-black text-sm pt-1 border-t border-slate-200">
+                <span>{isBn ? 'বাকীঃ' : 'Due:'}</span>
                 <span>{currencySymbol} {numFormat(calc.dueAmount)}</span>
               </div>
             </div>
@@ -386,33 +380,28 @@ export const InvoiceTemplateModern: React.FC<TemplateProps> = ({ invoice, busine
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="mt-10 pt-6 border-t border-slate-200">
-        <div className="flex justify-between items-end gap-6">
-          <div
-            {...clickProps('field-inv-terms', 'শর্তাবলী এডিট করুন')}
-            className="text-xs text-slate-500 max-w-sm p-1 rounded"
-          >
-            {invoice.terms && (
-              <p className="whitespace-pre-line text-[11px] mb-1">
-                <strong>{isBn ? 'শর্তাবলী:' : 'Terms:'}</strong> {invoice.terms}
-              </p>
-            )}
-            <p className="text-[10px] text-slate-400">
-              {business.defaultInvoiceFooter || 'The MoSaFa Tools • ইনভয়েস ও মানি রিসিট প্রস্তুতকারক'}
-            </p>
-          </div>
-
-          <div
-            {...clickProps('field-inv-signature', 'অনুমোদিত স্বাক্ষরের পদবী এডিট করুন')}
-            className="text-center shrink-0 p-1 rounded"
-          >
-            <div className="w-36 border-b-2 border-indigo-600 mb-1" />
-            <p className="text-xs font-bold text-slate-900">
-              {invoice.signatureTitle || (isBn ? 'অনুমোদিত স্বাক্ষর' : 'Authorized Signature')}
-            </p>
-          </div>
+      {/* Footer Signatures */}
+      <div className="pt-8 border-t border-slate-200 flex items-end justify-between text-xs font-bold text-slate-700">
+        <div className="text-center">
+          <div className="w-36 border-t-2 border-slate-400 mx-auto mb-1" />
+          <input
+            type="text"
+            value={invoice.customerSignatureTitle || (isBn ? 'গ্রাহকের স্বাক্ষর' : 'Customer Signature')}
+            onChange={(e) => onUpdateInvoice?.({ customerSignatureTitle: e.target.value })}
+            className="text-center font-bold text-slate-700 bg-transparent border-none focus:outline-none print:p-0"
+          />
         </div>
+        <SignatureBlock
+          signatureImage={invoice.signatureImage || business.signatureImage}
+          signatureTitle={business.signatureTitle || invoice.signatureTitle || (isBn ? 'অনুমোদিত স্বাক্ষর' : 'Authorized Signature')}
+          onUpdateTitle={(val) => {
+            onUpdateBusiness?.({ signatureTitle: val });
+            onUpdateInvoice?.({ signatureTitle: val });
+          }}
+          onOpenSignatureModal={onOpenSignatureModal}
+          lineColor="border-slate-400"
+          textColor="text-slate-700"
+        />
       </div>
     </div>
   );

@@ -79,6 +79,15 @@ export function numberToWordsBengali(amount: number): string {
   return (isNegative ? 'মাইনাস ' : '') + words.trim();
 }
 
+export function cleanBengaliAmountInWords(amountOrText: number | string): string {
+  const text = typeof amountOrText === 'number' ? numberToWordsBengali(amountOrText) : (amountOrText || '');
+  if (!text) return '';
+  return text
+    .replace(/(টাকা\s*মাত্র।?\s*)+/g, 'টাকা মাত্র।')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // English converter
 const enOnes = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
   'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];

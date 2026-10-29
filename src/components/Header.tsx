@@ -24,6 +24,7 @@ import {
   UserCheck,
   Search,
   Home,
+  Languages,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -69,6 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'golpo-ghor', name: 'গল্পের ঘর (জনপ্রিয় সকল বই ও গল্প)', icon: <BookOpen className="w-3.5 h-3.5 text-amber-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'বই ও গল্প' },
     { id: 'bangla-status', name: 'বাংলা স্ট্যাটাস ও ক্যাপশন হাব (১০০০+)', icon: <MessageSquareHeart className="w-3.5 h-3.5 text-violet-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ক্যাপশন' },
     { id: 'typing-test', name: 'লিপি টাইピング টেস্ট (স্পিড পরীক্ষা)', icon: <Keyboard className="w-3.5 h-3.5 text-blue-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'টাইপিং' },
+    { id: 'bangla-text-converter', name: 'MoSaFa বাংলা টেক্সট কনভার্টার', icon: <Languages className="w-3.5 h-3.5 text-emerald-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'কনভার্টার' },
 
     // 3. মানচিত্র, যাতায়াত ও ইউটিলিটি
     { id: 'bangladesh-map', name: 'MoSaFa My Bangladesh Map (ভ্রমণ মানচিত্র)', icon: <Compass className="w-3.5 h-3.5 text-emerald-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'ম্যাপ' },

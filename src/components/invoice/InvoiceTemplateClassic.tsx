@@ -1,25 +1,36 @@
-import React from 'react';
-import { BusinessProfile, Invoice, InvoiceCalculation } from './types';
+import React, { useRef } from 'react';
+import { InvoiceTemplateProps } from './types';
 import { formatMoney } from './calculator';
 import { numberToWordsBengali, numberToWordsEnglish, toBengaliNumerals } from './numberToWords';
+import { SignatureBlock } from './SignatureBlock';
 
-interface TemplateProps {
-  invoice: Invoice;
-  business: BusinessProfile;
-  calc: InvoiceCalculation;
-  onEditField?: (fieldId: string) => void;
-}
-
-export const InvoiceTemplateClassic: React.FC<TemplateProps> = ({ invoice, business, calc, onEditField }) => {
+export const InvoiceTemplateClassic: React.FC<InvoiceTemplateProps> = ({
+  invoice,
+  business,
+  calc,
+  onEditField,
+  onUpdateInvoice,
+  onUpdateBusiness,
+  onUpdateItem,
+  onAddItem,
+  onRemoveItem,
+  onOpenSignatureModal,
+}) => {
   const isBn = invoice.language === 'bn';
   const currencySymbol = invoice.currency.includes('৳') ? '৳' : invoice.currency.split(' ')[0] || '৳';
 
-  const amountInWords = isBn
+  const custNameInputRef = useRef<HTMLInputElement>(null);
+
+  const rawWords = invoice.customInWords || (isBn
     ? numberToWordsBengali(calc.grandTotal)
-    : numberToWordsEnglish(calc.grandTotal, currencySymbol === '৳' ? 'Taka' : 'Currency');
+    : numberToWordsEnglish(calc.grandTotal, currencySymbol === '৳' ? 'Taka' : 'Currency'));
+  const amountInWords = rawWords;
 
   const numFormat = (num: number) =>
     isBn ? toBengaliNumerals(formatMoney(num, '')) : formatMoney(num, '');
+
+  const inlineInput =
+    'bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-600 focus:bg-amber-50/50 outline-none rounded transition print:border-none print:bg-transparent print:p-0';
 
   const clickProps = (fieldId: string, label = 'এডিট করতে ক্লিক করুন') => ({
     onClick: () => onEditField && onEditField(fieldId),
@@ -29,39 +40,76 @@ export const InvoiceTemplateClassic: React.FC<TemplateProps> = ({ invoice, busin
   });
 
   return (
-    <div className="bg-white text-slate-800 p-8 sm:p-10 font-sans text-xs sm:text-sm min-h-[900px] flex flex-col justify-between border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-6 print:m-0 print:min-h-0 select-none">
+    <div className="bg-white text-slate-800 p-8 sm:p-10 font-sans text-xs sm:text-sm min-h-[900px] flex flex-col justify-between border border-slate-200 shadow-sm print:border-none print:shadow-none print:p-6 print:m-0 print:min-h-0 select-text">
       <div>
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b-2 border-slate-800">
-          <div
-            {...clickProps('field-business-settings', 'ব্যবসার নাম ও প্রোফাইল এডিট করুন')}
-            className="flex items-start gap-3.5 p-1 rounded-xl cursor-pointer hover:bg-rose-50/80 hover:outline-dashed hover:outline-2 hover:outline-rose-400 transition"
-          >
+          <div className="flex items-start gap-3.5 p-1 rounded-xl flex-1 max-w-lg">
             {business.logoUrl ? (
               <img
                 src={business.logoUrl}
                 alt="Logo"
-                className="w-16 h-16 object-contain rounded-lg border border-slate-200"
+                className="w-16 h-16 object-contain rounded-lg border border-slate-200 shrink-0"
               />
             ) : (
               <div className="w-14 h-14 rounded-xl bg-slate-800 text-white flex items-center justify-center font-bold text-xl shrink-0">
                 {business.businessName.charAt(0) || 'M'}
               </div>
             )}
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {business.businessName || 'ব্যবসার নাম'}
-              </h1>
-              {business.ownerName && (
-                <p className="text-xs text-slate-600 font-medium">স্বত্বাধিকারী: {business.ownerName}</p>
-              )}
-              <p className="text-xs text-slate-500 mt-1 max-w-sm whitespace-pre-line">
-                {business.businessAddress}
-              </p>
+            <div className="flex-1 py-1.5 sm:py-2">
+              <input
+                type="text"
+                value={business.businessName || ''}
+                onChange={(e) => onUpdateBusiness?.({ businessName: e.target.value })}
+                onFocus={() => onEditField?.('field-biz-name')}
+                title="প্রতিষ্ঠানের নাম এডিট করুন"
+                className={`w-full text-2xl sm:text-3xl font-black text-slate-900 tracking-tight py-2 sm:py-3 min-h-[48px] sm:min-h-[58px] leading-relaxed ${inlineInput}`}
+                placeholder="প্রতিষ্ঠানের নাম"
+              />
+              <div className="flex items-center gap-1 text-xs text-slate-600 font-medium mt-0.5">
+                <span className="shrink-0">{isBn ? 'স্বত্বাধিকারী:' : 'Prop:'}</span>
+                <input
+                  type="text"
+                  value={business.ownerName || ''}
+                  onChange={(e) => onUpdateBusiness?.({ ownerName: e.target.value })}
+                  onFocus={() => onEditField?.('field-biz-owner')}
+                  title="স্বত্বাধিকারী এডিট করুন"
+                  className={`w-full ${inlineInput}`}
+                  placeholder="স্বত্বাধিকারীর নাম"
+                />
+              </div>
+              <input
+                type="text"
+                value={business.businessAddress || ''}
+                onChange={(e) => onUpdateBusiness?.({ businessAddress: e.target.value })}
+                onFocus={() => onEditField?.('field-biz-address')}
+                title="ঠিকানা এডিট করুন"
+                className={`w-full text-xs text-slate-500 mt-1 ${inlineInput}`}
+                placeholder="প্রতিষ্ঠানের ঠিকানা"
+              />
               <div className="text-[11px] text-slate-500 mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-                {business.phone && <span>📞 {business.phone}</span>}
-                {business.email && <span>✉️ {business.email}</span>}
-                {business.website && <span>🌐 {business.website}</span>}
+                <div className="flex items-center gap-1">
+                  <span>📞</span>
+                  <input
+                    type="text"
+                    value={business.phone || ''}
+                    onChange={(e) => onUpdateBusiness?.({ phone: e.target.value })}
+                    onFocus={() => onEditField?.('field-biz-phone')}
+                    className={`w-28 text-[11px] ${inlineInput}`}
+                    placeholder="ফোন নম্বর"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>✉️</span>
+                  <input
+                    type="text"
+                    value={business.email || ''}
+                    onChange={(e) => onUpdateBusiness?.({ email: e.target.value })}
+                    onFocus={() => onEditField?.('field-biz-email')}
+                    className={`w-36 text-[11px] ${inlineInput}`}
+                    placeholder="ইমেইল"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -70,21 +118,39 @@ export const InvoiceTemplateClassic: React.FC<TemplateProps> = ({ invoice, busin
             <div className="inline-block bg-slate-900 text-white font-extrabold px-3 py-1 text-xs uppercase tracking-wider rounded-sm mb-2">
               {isBn ? 'ইনভয়েস / বিল' : 'INVOICE'}
             </div>
-            <div {...clickProps('field-inv-number', 'ইনভয়েস নম্বর এডিট করুন')}>
+            <div className="flex items-center sm:justify-end gap-1">
               <span className="text-slate-500">{isBn ? 'ইনভয়েস নং:' : 'Invoice No:'} </span>
-              <span className="font-bold text-slate-900">{invoice.invoiceNumber}</span>
+              <input
+                type="text"
+                value={invoice.invoiceNumber || ''}
+                onChange={(e) => onUpdateInvoice?.({ invoiceNumber: e.target.value })}
+                onFocus={() => onEditField?.('field-inv-number')}
+                className={`font-bold text-slate-900 font-mono w-28 sm:text-right ${inlineInput}`}
+              />
             </div>
-            <div {...clickProps('field-inv-date', 'তারিখ এডিট করুন')}>
+            <div className="flex items-center sm:justify-end gap-1">
               <span className="text-slate-500">{isBn ? 'তারিখ:' : 'Date:'} </span>
-              <span className="font-semibold text-slate-800">{invoice.invoiceDate}</span>
+              <input
+                type="text"
+                value={invoice.invoiceDate || ''}
+                onChange={(e) => onUpdateInvoice?.({ invoiceDate: e.target.value })}
+                onFocus={() => onEditField?.('field-inv-date')}
+                className={`font-semibold text-slate-800 font-mono w-28 sm:text-right ${inlineInput}`}
+              />
             </div>
             {invoice.dueDate && (
-              <div {...clickProps('field-inv-due-date', 'পরিশোধের শেষ তারিখ এডিট করুন')}>
+              <div className="flex items-center sm:justify-end gap-1">
                 <span className="text-slate-500">{isBn ? 'পরিশোধের শেষ তারিখ:' : 'Due Date:'} </span>
-                <span className="font-semibold text-slate-800">{invoice.dueDate}</span>
+                <input
+                  type="text"
+                  value={invoice.dueDate || ''}
+                  onChange={(e) => onUpdateInvoice?.({ dueDate: e.target.value })}
+                  onFocus={() => onEditField?.('field-inv-due-date')}
+                  className={`font-semibold text-slate-800 font-mono w-28 sm:text-right ${inlineInput}`}
+                />
               </div>
             )}
-            <div {...clickProps('field-inv-status', 'পেমেন্ট স্ট্যাটাস এডিট করুন')}>
+            <div>
               <span className="text-slate-500">{isBn ? 'স্ট্যাটাস:' : 'Status:'} </span>
               <span
                 className={`inline-block font-bold px-2 py-0.5 rounded text-[11px] uppercase ${
@@ -119,37 +185,67 @@ export const InvoiceTemplateClassic: React.FC<TemplateProps> = ({ invoice, busin
 
         {/* Billed To / Customer Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-5 border-b border-slate-200">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-              {isBn ? 'বিল গ্রাহক (Customer):' : 'Billed To:'}
-            </span>
-            <div
-              {...clickProps('field-cust-name', 'গ্রাহকের নাম এডিট করুন')}
-              className="font-bold text-slate-900 text-sm sm:text-base inline-block"
-            >
-              {invoice.customer.name || (isBn ? 'নামহীন গ্রাহক' : 'Customer Name')}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => custNameInputRef.current?.focus()}>
+              <span className="font-bold text-slate-800 shrink-0 text-sm">{isBn ? 'নামঃ' : 'Name:'}</span>
+              <input
+                ref={custNameInputRef}
+                type="text"
+                value={invoice.customer.name || ''}
+                onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, name: e.target.value } })}
+                onFocus={() => onEditField?.('field-cust-name')}
+                title="গ্রাহকের নাম এডিট করুন"
+                className={`flex-1 font-bold text-slate-900 text-xs sm:text-sm px-3 py-1.5 sm:py-2 min-h-[38px] sm:min-h-[42px] leading-relaxed ${inlineInput}`}
+                placeholder="খরিদ্দারের নাম লিখুন..."
+              />
             </div>
-            {invoice.customer.companyName && (
-              <div
-                {...clickProps('field-cust-company', 'কোম্পানির নাম এডিট করুন')}
-                className="text-xs font-semibold text-slate-700"
-              >
-                {invoice.customer.companyName}
-              </div>
-            )}
-            <div
-              {...clickProps('field-cust-address', 'গ্রাহকের ঠিকানা এডিট করুন')}
-              className="text-xs text-slate-600 whitespace-pre-line"
-            >
-              {invoice.customer.address || '—'}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-600 shrink-0">{isBn ? 'প্রতিষ্ঠানঃ' : 'Company:'}</span>
+              <input
+                type="text"
+                value={invoice.customer.companyName || ''}
+                onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, companyName: e.target.value } })}
+                onFocus={() => onEditField?.('field-cust-company')}
+                title="কোম্পানির নাম"
+                className={`flex-1 text-xs font-semibold text-slate-700 px-3 py-1.5 min-h-[38px] leading-relaxed ${inlineInput}`}
+                placeholder="কোম্পানির নাম (ঐচ্ছিক)"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-600 shrink-0">{isBn ? 'ঠিকানাঃ' : 'Address:'}</span>
+              <input
+                type="text"
+                value={invoice.customer.address || ''}
+                onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, address: e.target.value } })}
+                onFocus={() => onEditField?.('field-cust-address')}
+                title="গ্রাহকের ঠিকানা"
+                className={`flex-1 text-xs text-slate-600 px-3 py-1.5 sm:py-2 min-h-[38px] sm:min-h-[42px] leading-relaxed ${inlineInput}`}
+                placeholder="গ্রাহকের ঠিকানা..."
+              />
             </div>
             <div className="text-xs text-slate-500 mt-1 flex flex-wrap gap-x-3">
-              <span {...clickProps('field-cust-phone', 'গ্রাহকের ফোন নম্বর এডিট করুন')}>
-                ফোন: {invoice.customer.phone || '—'}
-              </span>
-              <span {...clickProps('field-cust-email', 'গ্রাহকের ইমেইল এডিট করুন')}>
-                ইমেইল: {invoice.customer.email || '—'}
-              </span>
+              <div className="flex items-center gap-1">
+                <span>{isBn ? 'মোবাইলঃ' : 'Phone:'}</span>
+                <input
+                  type="text"
+                  value={invoice.customer.phone || ''}
+                  onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, phone: e.target.value } })}
+                  onFocus={() => onEditField?.('field-cust-phone')}
+                  className={`w-28 text-xs px-2 py-1 min-h-[34px] leading-relaxed ${inlineInput}`}
+                  placeholder="০১৭০০-০০০০০০"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <span>ইমেইল:</span>
+                <input
+                  type="text"
+                  value={invoice.customer.email || ''}
+                  onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, email: e.target.value } })}
+                  onFocus={() => onEditField?.('field-cust-email')}
+                  className={`w-36 text-xs ${inlineInput}`}
+                  placeholder="ইমেইল এড্রেস"
+                />
+              </div>
             </div>
           </div>
 
@@ -437,15 +533,17 @@ export const InvoiceTemplateClassic: React.FC<TemplateProps> = ({ invoice, busin
             </p>
           </div>
 
-          <div
-            {...clickProps('field-inv-signature', 'অনুমোদিত স্বাক্ষরের পদবী এডিট করুন')}
-            className="text-center shrink-0 p-1 rounded"
-          >
-            <div className="w-40 border-b border-slate-800 mb-1" />
-            <p className="text-xs font-bold text-slate-800">
-              {invoice.signatureTitle || (isBn ? 'অনুমোদিত স্বাক্ষর' : 'Authorized Signature')}
-            </p>
-          </div>
+          <SignatureBlock
+            signatureImage={invoice.signatureImage || business.signatureImage}
+            signatureTitle={invoice.signatureTitle || (isBn ? 'অনুমোদিত স্বাক্ষর' : 'Authorized Signature')}
+            onUpdateTitle={(val) => {
+              onUpdateInvoice?.({ signatureTitle: val });
+              onUpdateBusiness?.({ signatureTitle: val });
+            }}
+            onOpenSignatureModal={onOpenSignatureModal}
+            lineColor="border-slate-800"
+            textColor="text-slate-800"
+          />
         </div>
       </div>
     </div>

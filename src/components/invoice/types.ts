@@ -43,6 +43,10 @@ export interface BusinessProfile {
   tagline?: string;
   subtitle?: string;
   religiousHeader?: string;
+  memoTypeTitle?: string;
+  dealerText?: string;
+  signatureTitle?: string;
+  signatureImage?: string;
 }
 
 export interface Customer {
@@ -88,6 +92,10 @@ export interface Invoice {
   notes: string;
   terms: string;
   signatureTitle: string;
+  signatureImage?: string;
+  customerSignatureTitle?: string;
+  customInWords?: string;
+  memoTypeTitle?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -120,4 +128,17 @@ export interface InvoiceCalculation {
   paidAmount: number;
   dueAmount: number;
   isOverdue: boolean;
+}
+
+export interface InvoiceTemplateProps {
+  invoice: Invoice;
+  business: BusinessProfile;
+  calc: InvoiceCalculation;
+  onEditField?: (fieldId: string) => void;
+  onUpdateInvoice?: (updates: Partial<Invoice>) => void;
+  onUpdateBusiness?: (updates: Partial<BusinessProfile>) => void;
+  onUpdateItem?: (id: string, updates: Partial<InvoiceItem>) => void;
+  onAddItem?: () => void;
+  onRemoveItem?: (id: string) => void;
+  onOpenSignatureModal?: () => void;
 }

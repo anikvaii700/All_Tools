@@ -1,269 +1,348 @@
-import React from 'react';
-import { BusinessProfile, Invoice, InvoiceCalculation } from './types';
+import React, { useRef } from 'react';
+import { InvoiceTemplateProps } from './types';
 import { formatMoney } from './calculator';
-import { numberToWordsBengali, toBengaliNumerals } from './numberToWords';
+import { cleanBengaliAmountInWords, toBengaliNumerals } from './numberToWords';
+import { SignatureBlock } from './SignatureBlock';
 
-interface TemplateProps {
-  invoice: Invoice;
-  business: BusinessProfile;
-  calc: InvoiceCalculation;
-  onEditField?: (fieldId: string) => void;
-}
-
-export const InvoiceTemplateFurnitureClassic: React.FC<TemplateProps> = ({
+export const InvoiceTemplateFurnitureClassic: React.FC<InvoiceTemplateProps> = ({
   invoice,
   business,
   calc,
   onEditField,
+  onUpdateInvoice,
+  onUpdateBusiness,
+  onUpdateItem,
+  onAddItem,
+  onRemoveItem,
+  onOpenSignatureModal,
 }) => {
   const currencySymbol = '৳';
-  const amountInWords = numberToWordsBengali(calc.grandTotal);
+  const amountInWords = cleanBengaliAmountInWords(calc.grandTotal);
   const numFormat = (num: number) => toBengaliNumerals(formatMoney(num, ''));
 
-  const clickProps = (fieldId: string, label = 'এডিট করতে ক্লিক করুন') => ({
-    onClick: () => onEditField && onEditField(fieldId),
-    title: `${label} ✏️`,
-    className:
-      'cursor-pointer hover:bg-rose-50/80 hover:outline-dashed hover:outline-2 hover:outline-rose-400 rounded transition-all print:hover:bg-transparent print:hover:outline-none print:cursor-default',
-  });
+  const custNameRef = useRef<HTMLInputElement>(null);
+  const custAddressRef = useRef<HTMLInputElement>(null);
+  const invNumberRef = useRef<HTMLInputElement>(null);
+  const invDateRef = useRef<HTMLInputElement>(null);
+  const bizNameRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="bg-[#fff6ee] text-slate-900 p-6 sm:p-8 font-sans text-xs sm:text-sm min-h-[920px] flex flex-col justify-between border-4 border-[#fb923c] rounded-xl shadow-md print:border-none print:shadow-none print:p-6 print:m-0 print:min-h-0 relative select-none">
+    <div className="invoice-printable-doc bg-[#fff6ee] text-slate-900 p-6 sm:p-8 font-sans text-xs sm:text-sm min-h-[920px] flex flex-col justify-between border-4 border-[#fb923c] rounded-xl shadow-md print:border-none print:shadow-none print:p-6 print:m-0 print:min-h-0 relative select-none">
       {/* Right Diamond Red Cash Memo Ribbon */}
-      <div className="absolute top-0 right-3 bg-red-600 text-white font-black py-2 px-3 text-xs shadow-md rounded-b-xl border-b-2 border-amber-300">
-        ক্যাশ মেমো
+      <div className="absolute top-0 right-3 bg-red-600 text-white font-black py-1 px-3 text-xs shadow-md rounded-b-xl border-b-2 border-amber-300">
+        <input
+          type="text"
+          value={invoice.memoTypeTitle || 'ক্যাশ মেমো'}
+          onChange={(e) => onUpdateInvoice?.({ memoTypeTitle: e.target.value })}
+          className="bg-transparent border-none outline-none text-white text-center w-24 focus:outline-none font-bold"
+        />
       </div>
 
       <div>
         {/* Business Title in Classic Calligraphic Bengali Red */}
-        <div className="text-center pt-2 pb-2">
-          <h1
-            {...clickProps('field-biz-name', 'ব্যবসার নাম এডিট করুন')}
-            className="text-2xl sm:text-4xl font-black text-red-600 tracking-tight drop-shadow-xs"
+        <div className="text-center py-3 sm:py-4">
+          <div 
+            onClick={() => { bizNameRef.current?.focus(); onEditField?.('field-biz-name'); }}
+            className="cursor-pointer my-1"
           >
-            {business.businessName || 'মায়ের দোয়া জান্নাত ফার্নিচার'}
-          </h1>
-          <div
-            {...clickProps('field-biz-owner', 'প্রোপাইটর এডিট করুন')}
-            className="inline-block bg-sky-500 text-white font-bold text-xs px-4 py-0.5 rounded-full mt-1"
-          >
-            প্রোপাইটর ঃ {business.ownerName || 'মোঃ জসিম'}
+            <input
+              ref={bizNameRef}
+              type="text"
+              value={business.businessName || ''}
+              placeholder="মায়ের দোয়া জান্নাত ফার্নিচার"
+              onChange={(e) => onUpdateBusiness?.({ businessName: e.target.value })}
+              className="w-full text-center text-2xl sm:text-4xl md:text-5xl font-black text-red-600 tracking-tight drop-shadow-xs bg-transparent border-none outline-none focus:outline-none focus:bg-white/80 rounded py-2.5 sm:py-3.5 min-h-[52px] sm:min-h-[68px] leading-relaxed print:p-0"
+            />
           </div>
-          <p
-            {...clickProps('field-biz-address', 'ঠিকানা এডিট করুন')}
-            className="text-xs text-slate-700 mt-1"
-          >
-            {business.businessAddress || 'পুরাতন কন্ট্রোল্যের মোড়, বায়তুল শরফ মসজিদের পাশে, দক্ষিণ পতেঙ্গা, চট্টগ্রাম।'}
-          </p>
+          <div className="inline-flex items-center gap-1 bg-sky-500 text-white font-bold text-xs px-4 py-1 rounded-full mt-1">
+            <span>প্রোপাইটরঃ</span>
+            <input
+              type="text"
+              value={business.ownerName || ''}
+              placeholder="মোঃ জসিম"
+              onChange={(e) => onUpdateBusiness?.({ ownerName: e.target.value })}
+              className="bg-transparent border-none outline-none text-white focus:outline-none text-center min-w-[120px] print:p-0 font-bold"
+            />
+          </div>
+          <input
+            type="text"
+            value={business.businessAddress || ''}
+            placeholder="পুরাতন কন্ট্রোল্যের মোড়, বায়তুল শরফ মসজিদের পাশে, দক্ষিণ পতেঙ্গা, চট্টগ্রাম।"
+            onChange={(e) => onUpdateBusiness?.({ businessAddress: e.target.value })}
+            className="w-full text-center text-xs text-slate-700 mt-1.5 bg-transparent border-none outline-none focus:outline-none focus:bg-white/80 rounded py-0.5 print:p-0"
+          />
 
-          <div className="mt-2 flex flex-col sm:flex-row items-center justify-between bg-lime-600 text-white px-4 py-1 rounded-lg text-xs font-bold gap-2">
-            <span {...clickProps('field-biz-tagline', 'পণ্যের বিবরণ / স্লোগান এডিট করুন')}>
-              {business.tagline || 'এখানে উন্নত মানের কাঠের ফার্নিচার বিক্রয় ও নকশা করা হয়।'}
-            </span>
-            <span
-              {...clickProps('field-biz-phone', 'মোবাইল নম্বর এডিট করুন')}
-              className="font-mono cursor-pointer"
-            >
-              মোবাঃ {toBengaliNumerals(business.phone || '০১৭৭৭-০৭০৪৬৬')}
-            </span>
+          <div className="mt-2 flex flex-col sm:flex-row items-center justify-between bg-lime-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold gap-2">
+            <input
+              type="text"
+              value={business.tagline || ''}
+              placeholder="এখানে উন্নত মানের কাঠের ফার্নিচার বিক্রয় ও নকশা করা হয়।"
+              onChange={(e) => onUpdateBusiness?.({ tagline: e.target.value })}
+              className="bg-transparent border-none outline-none text-white focus:outline-none flex-1 text-center sm:text-left print:p-0 print:placeholder-transparent"
+            />
+            <div className="flex items-center gap-1 font-mono">
+              <span>মোবাঃ</span>
+              <input
+                type="text"
+                value={business.phone || ''}
+                placeholder="০১৭৭৭-০৭০৪৬৬"
+                onChange={(e) => onUpdateBusiness?.({ phone: e.target.value })}
+                className="bg-transparent border-none outline-none text-white focus:outline-none font-mono text-center w-28 print:p-0"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Customer Information Grid with Colored Labels */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 my-3 text-xs">
-          <div className="sm:col-span-6 flex items-center gap-1.5">
-            <span className="bg-purple-800 text-white font-bold px-3 py-0.5 rounded text-[11px] shrink-0">
+        {/* Customer Information Grid with Colored Labels - Extra Spacing for Matras (ই-কার, ঈ-কার) */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 my-3 text-xs">
+          <div 
+            onClick={() => { invNumberRef.current?.focus(); onEditField?.('field-inv-number'); }}
+            className="sm:col-span-6 flex items-center gap-1.5 cursor-pointer"
+          >
+            <span className="bg-purple-800 text-white font-bold px-3 py-1.5 rounded text-[11px] shrink-0">
               নং-
             </span>
-            <div
-              {...clickProps('field-inv-number', 'ইনভয়েস নম্বর এডিট করুন')}
-              className="flex-1 border border-slate-300 bg-white font-mono font-bold text-slate-900 px-2 py-0.5 rounded"
-            >
-              {invoice.invoiceNumber}
-            </div>
+            <input
+              ref={invNumberRef}
+              type="text"
+              value={invoice.invoiceNumber || ''}
+              placeholder="MSF-INV-0001"
+              onChange={(e) => onUpdateInvoice?.({ invoiceNumber: e.target.value })}
+              className="flex-1 border border-slate-300 bg-white font-mono font-bold text-slate-900 px-3 py-1.5 rounded focus:outline-none focus:ring-1 focus:ring-purple-400 print:border-none print:p-0"
+            />
           </div>
 
-          <div className="sm:col-span-6 flex items-center gap-1.5">
-            <span className="bg-emerald-700 text-white font-bold px-3 py-0.5 rounded text-[11px] shrink-0">
-              তারিখ
+          <div 
+            onClick={() => { invDateRef.current?.focus(); onEditField?.('field-inv-date'); }}
+            className="sm:col-span-6 flex items-center gap-1.5 cursor-pointer"
+          >
+            <span className="bg-emerald-700 text-white font-bold px-3 py-1.5 rounded text-[11px] shrink-0">
+              তারিখঃ
             </span>
-            <div
-              {...clickProps('field-inv-date', 'তারিখ এডিট করুন')}
-              className="flex-1 border border-slate-300 bg-white font-mono font-bold text-slate-900 px-2 py-0.5 rounded"
-            >
-              {toBengaliNumerals(invoice.invoiceDate)}
-            </div>
+            <input
+              ref={invDateRef}
+              type="text"
+              value={invoice.invoiceDate || ''}
+              placeholder="২০২৬-১০-২৮"
+              onChange={(e) => onUpdateInvoice?.({ invoiceDate: e.target.value })}
+              className="flex-1 border border-slate-300 bg-white font-mono font-bold text-slate-900 px-3 py-1.5 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400 print:border-none print:p-0"
+            />
           </div>
 
-          <div className="sm:col-span-12 flex items-center gap-1.5">
-            <span className="bg-emerald-700 text-white font-bold px-4 py-0.5 rounded text-[11px] shrink-0">
-              নাম
+          {/* Customer Name with Extra Padding & Line Height for Vowels/Matras */}
+          <div 
+            onClick={() => { custNameRef.current?.focus(); onEditField?.('field-cust-name'); }}
+            className="sm:col-span-12 flex items-center gap-1.5 cursor-pointer"
+          >
+            <span className="bg-emerald-700 text-white font-bold px-4 py-2 rounded text-xs shrink-0 select-none">
+              নামঃ
             </span>
-            <div
-              {...clickProps('field-cust-name', 'গ্রাহকের নাম এডিট করুন')}
-              className="flex-1 border border-slate-300 bg-white font-bold text-slate-900 px-2 py-0.5 rounded min-h-[24px]"
-            >
-              {invoice.customer.name || 'সম্মানিত ক্রেতা'}
-            </div>
+            <input
+              ref={custNameRef}
+              type="text"
+              value={invoice.customer.name || ''}
+              placeholder="সম্মানিত ক্রেতার নাম"
+              onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, name: e.target.value } })}
+              className="flex-1 border border-slate-300 bg-white font-bold text-slate-900 px-3 py-2 rounded min-h-[38px] sm:min-h-[42px] text-xs sm:text-sm leading-relaxed focus:outline-none focus:ring-1 focus:ring-emerald-400 print:border-none print:p-0"
+            />
           </div>
 
-          <div className="sm:col-span-12 flex items-center gap-1.5">
-            <span className="bg-emerald-700 text-white font-bold px-3 py-0.5 rounded text-[11px] shrink-0">
-              ঠিকানা
+          {/* Customer Address with Extra Padding for Matras */}
+          <div 
+            onClick={() => { custAddressRef.current?.focus(); onEditField?.('field-cust-address'); }}
+            className="sm:col-span-12 flex items-center gap-1.5 cursor-pointer"
+          >
+            <span className="bg-emerald-700 text-white font-bold px-4 py-2 rounded text-xs shrink-0 select-none">
+              ঠিকানাঃ
             </span>
-            <div
-              {...clickProps('field-cust-address', 'ঠিকানা এডিট করুন')}
-              className="flex-1 border border-slate-300 bg-white text-slate-800 px-2 py-0.5 rounded min-h-[24px]"
-            >
-              {invoice.customer.address || '—'}
-            </div>
+            <input
+              ref={custAddressRef}
+              type="text"
+              value={invoice.customer.address || ''}
+              placeholder="ক্রেতার ঠিকানা"
+              onChange={(e) => onUpdateInvoice?.({ customer: { ...invoice.customer, address: e.target.value } })}
+              className="flex-1 border border-slate-300 bg-white font-medium text-slate-900 px-3 py-2 rounded min-h-[38px] sm:min-h-[42px] text-xs sm:text-sm leading-relaxed focus:outline-none focus:ring-1 focus:ring-emerald-400 print:border-none print:p-0"
+            />
           </div>
         </div>
 
-        {/* Dual Orange & Cyan Header Table with Pastel Column Tint */}
-        <div className="border-2 border-slate-700 rounded-lg overflow-hidden bg-white shadow-xs">
+        {/* Traditional Grid Table without inner boxes ('ঘর ঘর' মুক্ত পরিচ্ছন্ন টেবিল) */}
+        <div className="border-2 border-orange-400 rounded-lg overflow-hidden bg-white">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="text-white text-[11px] sm:text-xs font-black text-center">
-                <th className="py-2 px-2 bg-sky-500 border-r border-sky-400 w-12">ক্রম</th>
-                <th className="py-2 px-4 bg-amber-500 border-r border-amber-400 text-left">বিবরণ</th>
-                <th
-                  {...clickProps(`field-item-price-${invoice.items[0]?.id || ''}`, 'দর এডিট করুন')}
-                  className="py-2 px-3 bg-sky-500 border-r border-sky-400 w-24 text-right"
-                >
-                  দর
-                </th>
-                <th
-                  {...clickProps(`field-item-qty-${invoice.items[0]?.id || ''}`, 'পরিমাণ এডিট করুন')}
-                  className="py-2 px-3 bg-amber-500 border-r border-amber-400 w-24"
-                >
-                  পরিমাণ
-                </th>
-                <th className="py-2 px-4 bg-sky-500 w-32 text-right">টাকা</th>
+              <tr className="bg-orange-500 text-white text-[11px] sm:text-xs font-bold text-center">
+                <th className="py-2.5 px-2 border-r border-orange-300 w-12">নং</th>
+                <th className="py-2.5 px-4 border-r border-orange-300 text-left">বিবরণ</th>
+                <th className="py-2.5 px-3 border-r border-orange-300 w-24">পরিমাণ</th>
+                <th className="py-2.5 px-3 border-r border-orange-300 w-24 text-right">দর</th>
+                <th className="py-2.5 px-4 w-28 text-right">টাকা</th>
+                <th className="py-2.5 px-1 w-8 print:hidden"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-xs">
+            <tbody className="divide-y divide-orange-100 text-xs">
               {invoice.items.map((item, idx) => (
-                <tr key={item.id} className="hover:bg-amber-50/50 transition">
-                  <td className="py-2.5 px-2 text-center font-bold text-slate-700 border-r border-slate-300">
+                <tr key={item.id} className="hover:bg-orange-50/40 transition">
+                  <td className="py-2.5 px-2 text-center font-bold text-orange-900 border-r border-orange-200">
                     {toBengaliNumerals(idx + 1)}
                   </td>
-                  <td className="py-2.5 px-3 border-r border-slate-300">
-                    <div
-                      {...clickProps(`field-item-name-${item.id}`, 'আইটেমের নাম এডিট করুন')}
-                      className="font-bold text-slate-900"
-                    >
-                      {item.name || 'ফার্নিচার আইটেম'}
-                    </div>
-                    {item.description && (
-                      <div className="text-[10px] text-slate-500">{item.description}</div>
-                    )}
+                  <td className="py-1 px-2 border-r border-orange-200">
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => onUpdateItem?.(item.id, { name: e.target.value })}
+                      placeholder="ফার্নিচারের বিবরণ লিখুন"
+                      className="w-full font-bold text-slate-900 bg-transparent border-none outline-none focus:outline-none focus:bg-orange-50 px-1 py-1 print:p-0"
+                    />
                   </td>
-                  <td
-                    {...clickProps(`field-item-price-${item.id}`, 'দর পরিবর্তন করুন')}
-                    className="py-2.5 px-3 text-right font-mono bg-sky-50/30 border-r border-slate-300"
-                  >
-                    {numFormat(item.unitPrice)}
+                  <td className="py-1 px-2 text-center border-r border-orange-200">
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={item.quantity}
+                      onChange={(e) => onUpdateItem?.(item.id, { quantity: parseFloat(e.target.value) || 0 })}
+                      className="w-full text-center font-mono font-bold bg-transparent border-none outline-none focus:outline-none focus:bg-orange-50 py-1 px-1 print:p-0"
+                    />
                   </td>
-                  <td
-                    {...clickProps(`field-item-qty-${item.id}`, 'পরিমাণ পরিবর্তন করুন')}
-                    className="py-2.5 px-3 text-center font-mono font-bold bg-amber-50/30 border-r border-slate-300"
-                  >
-                    {toBengaliNumerals(item.quantity)} {item.unit !== 'piece' ? item.unit : ''}
+                  <td className="py-1 px-2 text-right border-r border-orange-200">
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={item.unitPrice}
+                      onChange={(e) => onUpdateItem?.(item.id, { unitPrice: parseFloat(e.target.value) || 0 })}
+                      className="w-full text-right font-mono bg-transparent border-none outline-none focus:outline-none focus:bg-orange-50 py-1 px-1 print:p-0"
+                    />
                   </td>
-                  <td
-                    {...clickProps(`field-item-price-${item.id}`, 'টাকা এডিট করুন')}
-                    className="py-2.5 px-3 text-right font-mono font-bold text-slate-900"
-                  >
+                  <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
                     {numFormat(item.lineTotal)}
+                  </td>
+                  <td className="py-1 px-1 text-center print:hidden">
+                    {invoice.items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveItem?.(item.id)}
+                        className="text-red-400 hover:text-red-600 text-xs px-1"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
 
-              {Array.from({ length: Math.max(0, 7 - invoice.items.length) }).map((_, i) => (
-                <tr key={`fill-${i}`} className="h-8">
-                  <td className="border-r border-slate-300"></td>
-                  <td className="border-r border-slate-300"></td>
-                  <td className="border-r border-slate-300 bg-sky-50/20"></td>
-                  <td className="border-r border-slate-300 bg-amber-50/20"></td>
+              <tr className="print:hidden bg-orange-50">
+                <td colSpan={6} className="py-1.5 px-3 text-center">
+                  <button
+                    type="button"
+                    onClick={() => onAddItem?.()}
+                    className="text-xs font-bold text-orange-800 hover:underline flex items-center justify-center gap-1 mx-auto"
+                  >
+                    <span>➕ আইটেম যোগ করুন</span>
+                  </button>
+                </td>
+              </tr>
+
+              {/* Empty placeholder rows */}
+              {Array.from({ length: Math.max(0, 5 - invoice.items.length) }).map((_, i) => (
+                <tr key={`empty-${i}`} className="h-7">
+                  <td className="border-r border-orange-200"></td>
+                  <td className="border-r border-orange-200"></td>
+                  <td className="border-r border-orange-200"></td>
+                  <td className="border-r border-orange-200"></td>
                   <td></td>
+                  <td className="print:hidden"></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Bottom Words and Advance/Due/Total Card */}
-        <div className="mt-3 flex flex-col sm:flex-row items-stretch justify-between gap-4">
+        {/* Calculations */}
+        <div className="mt-3 flex flex-col sm:flex-row items-stretch justify-between gap-3">
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-800 shrink-0">কথায় ঃ</span>
-              <div
-                {...clickProps('field-in-words', 'কথায় টাকা এডিট করুন')}
-                className="border-b border-dotted border-slate-700 flex-1 font-bold text-slate-900 text-xs px-2 py-0.5 cursor-pointer"
-              >
-                {amountInWords}
-              </div>
+              <span className="font-bold text-slate-800 shrink-0">কথায়ঃ</span>
+              <input
+                type="text"
+                value={invoice.customInWords !== undefined ? invoice.customInWords : amountInWords}
+                onChange={(e) => onUpdateInvoice?.({ customInWords: e.target.value })}
+                placeholder={amountInWords}
+                className="border-b border-orange-400 flex-1 font-bold text-slate-800 text-xs px-2 py-1 bg-transparent border-none outline-none focus:outline-none focus:bg-white rounded print:p-0"
+              />
             </div>
             {invoice.notes && (
-              <div
-                {...clickProps('field-inv-notes', 'নোট এডিট করুন')}
-                className="bg-amber-100/50 p-2 rounded text-[11px] text-slate-700 border border-amber-200"
-              >
-                {invoice.notes}
+              <div className="text-[11px] text-slate-600 italic">
+                <span className="font-bold">শর্তাবলীঃ </span>{invoice.notes}
               </div>
             )}
           </div>
 
-          {/* Right Advance, Due, Total Box */}
-          <div className="w-full sm:w-60 border border-slate-600 rounded-lg overflow-hidden bg-white shadow-xs text-xs">
-            <div className="flex border-b border-slate-300">
-              <span className="w-20 p-1.5 font-bold text-slate-800 border-r border-slate-300 bg-slate-100 text-center">
-                অগ্রিম
-              </span>
-              <span
-                {...clickProps('field-inv-paid-amount', 'পরিশোধিত টাকা এডিট করুন')}
-                className="flex-1 p-1.5 text-right font-mono font-bold text-emerald-700"
-              >
-                {currencySymbol} {numFormat(calc.paidAmount)}
-              </span>
+          <div className="w-full sm:w-64 border-2 border-orange-400 rounded-lg overflow-hidden divide-y divide-orange-200 text-xs font-bold bg-white">
+            {(calc.totalVat > 0 || calc.totalDiscount > 0) && (
+              <div className="flex justify-between py-1 px-3 bg-orange-50 text-slate-800">
+                <span>উপ-মোটঃ</span>
+                <span className="font-mono">{currencySymbol} {numFormat(calc.subtotal)}</span>
+              </div>
+            )}
+            {calc.totalDiscount > 0 && (
+              <div className="flex justify-between py-1 px-3 bg-rose-50 text-rose-700">
+                <span>ছাড়ঃ</span>
+                <span className="font-mono">-{currencySymbol} {numFormat(calc.totalDiscount)}</span>
+              </div>
+            )}
+            {calc.totalVat > 0 && (
+              <div className="flex justify-between py-1 px-3 bg-amber-50 text-amber-900 border-b border-orange-200">
+                <span>ভ্যাট / ট্যাক্সঃ</span>
+                <span className="font-mono font-bold">+{currencySymbol} {numFormat(calc.totalVat)}</span>
+              </div>
+            )}
+            <div className="flex justify-between py-1.5 px-3 bg-orange-100 text-slate-900">
+              <span>{calc.totalVat > 0 || calc.totalDiscount > 0 ? 'সর্বমোট টাকাঃ' : 'মোট টাকাঃ'}</span>
+              <span className="font-mono">{currencySymbol} {numFormat(calc.grandTotal)}</span>
             </div>
-            <div className="flex border-b border-slate-300">
-              <span className="w-20 p-1.5 font-bold text-slate-800 border-r border-slate-300 bg-slate-100 text-center">
-                বাকী
-              </span>
-              <span
-                {...clickProps('field-inv-paid-amount', 'বকেয়া টাকা এডিট করুন')}
-                className="flex-1 p-1.5 text-right font-mono font-bold text-rose-700"
-              >
-                {currencySymbol} {numFormat(calc.dueAmount)}
-              </span>
+            <div className="flex items-center justify-between py-1 px-3">
+              <span>জমাঃ</span>
+              <div className="flex items-center justify-end">
+                <span className="mr-1">{currencySymbol}</span>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={invoice.paidAmount ?? 0}
+                  onChange={(e) => onUpdateInvoice?.({ paidAmount: parseFloat(e.target.value) || 0 })}
+                  className="w-20 text-right font-mono font-bold text-slate-900 bg-transparent border-none outline-none focus:outline-none print:p-0"
+                />
+              </div>
             </div>
-            <div className="flex bg-amber-50">
-              <span className="w-20 p-1.5 font-black text-slate-900 border-r border-slate-300 bg-amber-200 text-center">
-                মোট
-              </span>
-              <span
-                {...clickProps('field-inv-paid-amount', 'মোট টাকা এডিট করুন')}
-                className="flex-1 p-1.5 text-right font-mono font-black text-slate-900 text-sm"
-              >
-                {currencySymbol} {numFormat(calc.grandTotal)}
-              </span>
+            <div className="flex justify-between py-1.5 px-3 bg-red-100 text-red-700">
+              <span>বাকীঃ</span>
+              <span className="font-mono font-black">{currencySymbol} {numFormat(calc.dueAmount)}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer Signatures */}
-      <div className="pt-8 flex items-end justify-between text-xs font-bold text-slate-800 border-t border-orange-300 mt-4">
+      {/* Footer Signatures with Digital Drawing Support */}
+      <div className="pt-8 border-t border-orange-300 flex items-end justify-between text-xs font-bold text-slate-700">
         <div className="text-center">
-          <div className="w-32 sm:w-40 border-t border-slate-700 mx-auto mb-1" />
-          <span>ক্রেতার স্বাক্ষর</span>
+          <div className="w-36 border-t-2 border-slate-700 mx-auto mb-1" />
+          <input
+            type="text"
+            value={invoice.customerSignatureTitle || 'ক্রেতার স্বাক্ষর'}
+            onChange={(e) => onUpdateInvoice?.({ customerSignatureTitle: e.target.value })}
+            className="text-center font-bold text-slate-700 bg-transparent border-none outline-none focus:outline-none print:p-0"
+          />
         </div>
-        <div className="text-center">
-          <div className="w-36 sm:w-48 border-t border-slate-700 mx-auto mb-1" />
-          <span>পক্ষে ঃ {business.businessName || 'মায়ের দোয়া জান্নাত ফার্নিচার'}</span>
-        </div>
+        
+        {/* Seller Digital Signature Block */}
+        <SignatureBlock
+          signatureTitle={business.signatureTitle || 'স্বত্বাধিকারীর স্বাক্ষর'}
+          onChangeTitle={(title) => onUpdateBusiness?.({ signatureTitle: title })}
+          signatureImage={business.signatureImage || invoice.signatureImage}
+          onOpenSignatureModal={onOpenSignatureModal}
+          defaultTitle="স্বত্বাধিকারীর স্বাক্ষর"
+        />
       </div>
     </div>
   );

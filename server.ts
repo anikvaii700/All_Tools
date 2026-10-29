@@ -397,6 +397,115 @@ async function startServer() {
     }
   });
 
+  // MoSaFa Application Writer AI Assistance API
+  app.post('/api/application-writer/ai-assist', async (req, res) => {
+    try {
+      const {
+        text = '',
+        action = 'improve',
+        tone = 'Formal',
+        documentType = 'Application',
+        language = 'bn',
+      } = req.body;
+
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({ success: false, error: 'Text is required' });
+      }
+
+      if (!ai) {
+        return res.json({
+          success: false,
+          isAiAvailable: false,
+          message: 'Gemini API কী সার্ভারে কনফিগার করা নেই। লোকাল টেমপ্লেট ও এডিটর সক্রিয় রয়েছে।',
+        });
+      }
+
+      let instruction = '';
+      switch (action) {
+        case 'improve':
+          instruction = `You are an expert formal document writer in Bangladesh. Improve the quality, tone, and readability of the following document. Make it highly professional and respectful. Keep all names, dates, placeholders, and structure intact. Return ONLY the revised document text, with NO conversational preamble or explanations.`;
+          break;
+        case 'formal':
+          instruction = `You are a legal and administrative formal document specialist in Bangladesh. Transform the following document into a strictly formal and official administrative style. Keep all names, dates, placeholders, and structure intact. Return ONLY the revised document text.`;
+          break;
+        case 'short':
+          instruction = `You are an executive editor. Make the following document concise, crisp, and to-the-point without losing any critical facts, dates, names, or official requests. Return ONLY the revised document text.`;
+          break;
+        case 'detailed':
+          instruction = `You are an administrative letter writer. Expand and elaborate on the following document, providing courteous, respectful, and complete formal descriptions for the request/situation. Keep all placeholders and facts intact. Return ONLY the revised document text.`;
+          break;
+        case 'grammar':
+          instruction = `You are an expert Bengali and English proofreader. Correct all spelling, grammar, punctuation, and phrasing errors in the following document. Do not alter the core facts or names. Return ONLY the revised document text.`;
+          break;
+        case 'translate-en':
+          instruction = `Translate the following formal Bengali document into a pristine, highly formal British/international English official letter format. Retain the same structure, names, and placeholders. Return ONLY the English document text.`;
+          break;
+        case 'translate-bn':
+          instruction = `Translate the following formal English letter into a standard formal Bengali application/letter (প্রমিত দাপ্তরিক বাংলা দরখাস্ত রীতি). Use appropriate Bengali administrative salutations (বরাবর, জনাব, অতএব বিনীত নিবেদন ইত্যাদি). Return ONLY the Bengali document text.`;
+          break;
+        case 'simple-bn':
+          instruction = `Rewrite the following Bengali document in clear, simple, respectful, and easy-to-understand Bengali (সহজ ও সাবলীল প্রমিত বাংলা) so that common citizens and officials can understand it effortlessly. Return ONLY the revised document text.`;
+          break;
+        default:
+          instruction = `Improve and polish the following formal document. Tone: ${tone}. Document type: ${documentType}. Language: ${language}. Return ONLY the revised document text with NO conversational filler.`;
+      }
+
+      const candidateModels = [
+        'gemini-2.5-flash',
+        'gemini-3.1-flash-lite',
+        'gemini-3.8-flash',
+        'gemini-flash-latest',
+      ];
+
+      let enhancedText = '';
+      for (const modelName of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${instruction}\n\n[DOCUMENT CONTENT START]\n${text}\n[DOCUMENT CONTENT END]` }],
+              },
+            ],
+            config: {
+              temperature: 0.3,
+            },
+          });
+          if (response && response.text) {
+            enhancedText = response.text.trim();
+            // Remove markdown code fences if model wrapped them
+            enhancedText = enhancedText.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '').trim();
+            break;
+          }
+        } catch (err: any) {
+          console.warn(`[ApplicationWriter] Model ${modelName} error:`, err?.message || err);
+        }
+      }
+
+      if (!enhancedText) {
+        return res.json({
+          success: false,
+          isAiAvailable: true,
+          message: 'AI প্রসেসিং সাময়িকভাবে সম্পন্ন করা সম্ভব হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।',
+        });
+      }
+
+      return res.json({
+        success: true,
+        isAiAvailable: true,
+        enhancedText,
+        action,
+      });
+    } catch (err: any) {
+      console.error('ApplicationWriter AI Error:', err);
+      return res.status(500).json({
+        success: false,
+        error: err?.message || 'Internal server error',
+      });
+    }
+  });
+
   // Vite integration: Dev middleware or static dist
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));

@@ -32,6 +32,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Info,
+  X,
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
@@ -82,6 +83,7 @@ import { InvoiceTemplateFurnitureClassic } from './invoice/InvoiceTemplateFurnit
 import { InvoiceTemplateDoorFurniture } from './invoice/InvoiceTemplateDoorFurniture';
 import { InvoiceTemplateFestiveMobile } from './invoice/InvoiceTemplateFestiveMobile';
 import { MoneyReceiptView } from './invoice/MoneyReceiptView';
+import { DigitalSignatureModal } from './invoice/DigitalSignatureModal';
 
 interface InvoiceMakerProps {
   onBackToHub: () => void;
@@ -184,6 +186,39 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [receiptOrInvoiceToDelete, setReceiptOrInvoiceToDelete] = useState<'invoice' | 'receipt'>('invoice');
+
+  // Modal & Preview States
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+
+  // Background Auto-Save (Continuous Persistence)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (invoice && invoice.invoiceNumber) {
+        setSavedInvoicesList((prev) => {
+          const idx = prev.findIndex((i) => i.id === invoice.id);
+          let updated: Invoice[];
+          if (idx >= 0) {
+            updated = [...prev];
+            updated[idx] = { ...invoice, updatedAt: new Date().toISOString() };
+          } else {
+            updated = [{ ...invoice, updatedAt: new Date().toISOString() }, ...prev];
+          }
+          saveInvoices(updated);
+          return updated;
+        });
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [invoice]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      saveBusinessProfile(business);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [business]);
 
   // Interactive Click-to-Point State
   const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null);
@@ -542,10 +577,19 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
 
   // Print Handling
   const handlePrint = () => {
-    window.print();
+    try {
+      window.focus();
+      onShowToast('প্রিন্ট প্রস্তুত হচ্ছে... 🖨️', '📄');
+      setTimeout(() => {
+        window.print();
+      }, 80);
+    } catch (e) {
+      console.error('Print error:', e);
+      window.print();
+    }
   };
 
-  // Reliable Multi-page PDF Export Engine
+  // Immediate Reliable PDF Export Engine
   const handleDownloadPdf = async (type: 'invoice' | 'receipt') => {
     const target = type === 'invoice' ? invoicePreviewRef.current : receiptPreviewRef.current;
     if (!target) {
@@ -555,16 +599,30 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
 
     try {
       setIsExportingPdf(true);
-      onShowToast('PDF তৈরি হচ্ছে... অনুগ্রহ করে কয়েক সেকেন্ড অপেক্ষা করুন', '⏳');
+      onShowToast('PDF তৈরি ও সেভ হচ্ছে... 📄', '⚡');
 
       const canvas = await html2canvas(target, {
         scale: 2,
         useCORS: true,
-        allowTaint: false,
+        allowTaint: true,
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: 800,
-        imageTimeout: 10000,
+        imageTimeout: 3000,
+        onclone: (clonedDoc) => {
+          const printableDoc = clonedDoc.querySelector('.invoice-printable-doc');
+          if (printableDoc) {
+            printableDoc.querySelectorAll('.print\\:hidden').forEach((el) => {
+              (el as HTMLElement).style.display = 'none';
+            });
+            printableDoc.querySelectorAll('input, textarea').forEach((el) => {
+              const inp = el as HTMLElement;
+              inp.style.border = 'none';
+              inp.style.outline = 'none';
+              inp.style.backgroundColor = 'transparent';
+              inp.style.boxShadow = 'none';
+            });
+          }
+        },
       });
 
       const pdf = new jsPDF({
@@ -576,28 +634,25 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
 
       const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
-      const pageCanvasHeight = Math.floor((canvas.width * 297) / 210);
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgHeightMm = (canvas.height * pdfWidth) / canvas.width;
 
-      if (canvas.height <= pageCanvasHeight + 40) {
-        // Single page
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const actualImgHeightMm = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, Math.min(actualImgHeightMm, pdfHeight), undefined, 'FAST');
+      if (imgHeightMm <= pdfHeight + 5) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, Math.min(imgHeightMm, pdfHeight), undefined, 'FAST');
       } else {
-        // Multi page support
-        const totalPages = Math.ceil(canvas.height / pageCanvasHeight);
+        const totalPages = Math.ceil(imgHeightMm / pdfHeight);
         for (let i = 0; i < totalPages; i++) {
           if (i > 0) pdf.addPage();
-          const sourceY = i * pageCanvasHeight;
-          const chunkHeight = Math.min(pageCanvasHeight, canvas.height - sourceY);
+          const sourceY = (i * pdfHeight * canvas.width) / pdfWidth;
+          const chunkHeight = Math.min((pdfHeight * canvas.width) / pdfWidth, canvas.height - sourceY);
 
           const pageCanvas = document.createElement('canvas');
           pageCanvas.width = canvas.width;
-          pageCanvas.height = pageCanvasHeight;
+          pageCanvas.height = (pdfHeight * canvas.width) / pdfWidth;
           const ctx = pageCanvas.getContext('2d');
           if (ctx) {
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, pageCanvas.width, pageCanvasHeight);
+            ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
             ctx.drawImage(canvas, 0, sourceY, canvas.width, chunkHeight, 0, 0, canvas.width, chunkHeight);
           }
           const pageImg = pageCanvas.toDataURL('image/jpeg', 0.95);
@@ -607,14 +662,15 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
 
       const fileName =
         type === 'invoice'
-          ? `${invoice.invoiceNumber || 'Invoice'}.pdf`
+          ? `${invoice.invoiceNumber || 'Cash_Memo'}.pdf`
           : `${receipt.receiptNumber || 'Receipt'}.pdf`;
 
       pdf.save(fileName);
-      onShowToast(`সফলভাবে ${fileName} ডাউনলোড সম্পন্ন হয়েছে! 📄`, '✅');
+      onShowToast(`সফলভাবে ${fileName} সেভ হয়েছে! 📄`, '✅');
     } catch (err: any) {
       console.error('PDF export error:', err);
-      onShowToast('PDF তৈরিতে সমস্যা হয়েছে। বিকল্প হিসেবে ব্রাউজার "প্রিন্ট" বাটন ব্যবহার করে PDF হিসেবে সেভ করুন।', '⚠️');
+      onShowToast('সরাসরি ব্রাউজারের প্রিন্ট ডায়ালগ দিয়ে "Save as PDF" করুন।', '🖨️');
+      window.print();
     } finally {
       setIsExportingPdf(false);
     }
@@ -688,41 +744,54 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
 
   // Render Template Selector (All 15 Templates)
   const renderInvoiceByTemplate = () => {
+    const commonProps = {
+      invoice,
+      business,
+      calc: currentCalc,
+      onEditField: handleFocusField,
+      onUpdateInvoice: (updates: Partial<Invoice>) => setInvoice((prev) => ({ ...prev, ...updates })),
+      onUpdateBusiness: (updates: Partial<BusinessProfile>) => setBusiness((prev) => ({ ...prev, ...updates })),
+      onUpdateItem: handleUpdateItem,
+      onAddItem: handleAddItem,
+      onRemoveItem: handleRemoveItem,
+      onOpenSignatureModal: () => setIsSignatureModalOpen(true),
+    };
+
     switch (invoice.template) {
       // 10 Bangladeshi Market Cash Memo Templates
       case 'memo-mobile-point':
-        return <InvoiceTemplateMobilePoint invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateMobilePoint {...commonProps} />;
       case 'memo-golden-gadhi':
-        return <InvoiceTemplateGoldenGadhi invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateGoldenGadhi {...commonProps} />;
       case 'memo-bismillah-store':
-        return <InvoiceTemplateBismillahStore invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateBismillahStore {...commonProps} />;
       case 'memo-computer-studio':
-        return <InvoiceTemplateComputerStudio invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateComputerStudio {...commonProps} />;
       case 'memo-enterprise':
-        return <InvoiceTemplateEnterprise invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateEnterprise {...commonProps} />;
       case 'memo-it-computer-point':
-        return <InvoiceTemplateComputerPoint invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateComputerPoint {...commonProps} />;
       case 'memo-motors':
-        return <InvoiceTemplateMotors invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateMotors {...commonProps} />;
       case 'memo-furniture-classic':
-        return <InvoiceTemplateFurnitureClassic invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateFurnitureClassic {...commonProps} />;
       case 'memo-door-furniture':
-        return <InvoiceTemplateDoorFurniture invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateDoorFurniture {...commonProps} />;
       case 'memo-festive-mobile':
-        return <InvoiceTemplateFestiveMobile invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateFestiveMobile {...commonProps} />;
 
       // 5 Original Templates
       case 'bengali':
-        return <InvoiceTemplateBengali invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateBengali {...commonProps} />;
       case 'modern':
-        return <InvoiceTemplateModern invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateModern {...commonProps} />;
       case 'elegant':
-        return <InvoiceTemplateElegant invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateElegant {...commonProps} />;
       case 'minimal':
-        return <InvoiceTemplateMinimal invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateMinimal {...commonProps} />;
       case 'classic':
       default:
-        return <InvoiceTemplateClassic invoice={invoice} business={business} calc={currentCalc} onEditField={handleFocusField} />;
+        return <InvoiceTemplateClassic {...commonProps} />;
     }
   };
 
@@ -1165,12 +1234,17 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
               <div className="flex items-center flex-wrap gap-2 text-xs font-bold">
                 <button
                   type="button"
-                  onClick={handleSaveInvoice}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      setMobileEditorMode((prev) => (prev === 'preview' ? 'editor' : 'preview'));
+                    }
+                    setIsPreviewModalOpen(true);
+                  }}
                   className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                  title="ইনভয়েস ব্রাউজারে সুরক্ষিত রাখুন"
+                  title="পূর্ণাঙ্গ পেজ প্রিভিউ দেখুন"
                 >
-                  <Save className="w-3.5 h-3.5" />
-                  <span>সেভ করুন</span>
+                  <Eye className="w-3.5 h-3.5 text-rose-400" />
+                  <span>প্রিভিউ</span>
                 </button>
 
                 <button
@@ -1188,7 +1262,7 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
                   onClick={() => handleDownloadPdf('invoice')}
                   disabled={isExportingPdf}
                   className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
-                  title="A4 সাইজ হাই-কোয়ালিটি PDF ডাউনলোড করুন"
+                  title="A4 সাইজ হাই-কোয়ালিটি PDF ডাউনলোড ও সংরক্ষণ করুন"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>{isExportingPdf ? 'তৈরি হচ্ছে...' : 'PDF ডাউনলোড'}</span>
@@ -1196,12 +1270,12 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
 
                 <button
                   type="button"
-                  onClick={handleShareWhatsApp}
+                  onClick={() => setIsShareModalOpen(true)}
                   className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                  title="গ্রাহকের নম্বরে সরাসরি হোয়াটসঅ্যাপে পাঠান"
+                  title="হোয়াটসঅ্যাপ বা অন্যান্য মাধ্যমে শেয়ার করুন"
                 >
                   <Share2 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">WhatsApp</span>
+                  <span>WhatsApp</span>
                 </button>
               </div>
             </div>
@@ -2956,6 +3030,190 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
           </div>
         </div>
       )}
+      {/* Fullscreen Live Preview Modal */}
+      {isPreviewModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex flex-col p-2 sm:p-4 overflow-y-auto print:hidden animate-in fade-in">
+          <div className="max-w-4xl w-full mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col my-auto border border-slate-300">
+            {/* Modal Top Bar */}
+            <div className="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-rose-400" />
+                <h3 className="font-extrabold text-sm sm:text-base">লাইভ A4 মেমো প্রিভিউ</h3>
+                <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-mono">
+                  #{invoice.invoiceNumber}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>প্রিন্ট</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPdf('invoice')}
+                  disabled={isExportingPdf}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs disabled:opacity-50 active:scale-95"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{isExportingPdf ? 'তৈরি হচ্ছে...' : 'PDF ডাউনলোড'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>শেয়ার</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPreviewModalOpen(false)}
+                  className="p-1.5 rounded-xl bg-white/10 hover:bg-rose-600 text-white transition cursor-pointer ml-1"
+                  title="প্রিভিউ বন্ধ করুন"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body Preview Document */}
+            <div className="p-3 sm:p-6 bg-slate-200/80 overflow-x-auto flex justify-center max-h-[85vh]">
+              <div className="w-full max-w-[800px] bg-white rounded-2xl shadow-xl overflow-hidden">
+                {renderInvoiceByTemplate()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Invoice Modal */}
+      {isShareModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 print:hidden animate-in fade-in zoom-in-95">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-2xs">
+                  <Share2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base">মেমো / ইনভয়েস শেয়ার</h3>
+                  <p className="text-xs text-slate-500">গ্রাহকের কাছে পাঠান বা কপি করুন</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(false)}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Invoice Quick Summary Card */}
+            <div className="my-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+              <div className="flex justify-between font-bold text-slate-800">
+                <span>মেমো নং: {invoice.invoiceNumber}</span>
+                <span className="font-mono text-emerald-700 font-black">
+                  ৳ {toBengaliNumerals(formatMoney(currentCalc.grandTotal, ''))}
+                </span>
+              </div>
+              <div className="text-slate-600 flex justify-between">
+                <span>গ্রাহক: {invoice.customer.name || 'সম্মানিত খরিদ্দার'}</span>
+                <span>তারিখ: {toBengaliNumerals(invoice.invoiceDate)}</span>
+              </div>
+              {invoice.customer.phone && (
+                <div className="text-[11px] text-slate-500 font-mono">
+                  মোবাইল: {toBengaliNumerals(invoice.customer.phone)}
+                </div>
+              )}
+            </div>
+
+            {/* Share Actions */}
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  handleShareWhatsApp();
+                  setIsShareModalOpen(false);
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>সরাসরি WhatsApp এ পাঠান</span>
+              </button>
+
+              {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.share({
+                        title: `${business.businessName || 'ইনভয়েস'} - #${invoice.invoiceNumber}`,
+                        text: `ইনভয়েস নং: ${invoice.invoiceNumber}\nপ্রতিষ্ঠান: ${business.businessName}\nগ্রাহক: ${invoice.customer.name || 'সম্মানিত গ্রাহক'}\nমোট বিল: ৳${currentCalc.grandTotal.toLocaleString()}\nপরিশোধিত: ৳${currentCalc.paidAmount.toLocaleString()}\nবকেয়া: ৳${currentCalc.dueAmount.toLocaleString()}`,
+                        url: window.location.href,
+                      });
+                      onShowToast('সফলভাবে শেয়ার করা হয়েছে!', '✅');
+                      setIsShareModalOpen(false);
+                    } catch (e) {
+                      console.log('Share canceled or failed:', e);
+                    }
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span>মোবাইলের অন্য অ্যাপে শেয়ার (Share Sheet)</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleCopySummary();
+                  setIsShareModalOpen(false);
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+              >
+                <Copy className="w-4 h-4" />
+                <span>বিবরণী কপি করুন (ক্লিপবোর্ড)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsShareModalOpen(false);
+                  handleDownloadPdf('invoice');
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
+              >
+                <Download className="w-4 h-4" />
+                <span>PDF ডাউনলোড ও সংরক্ষণ করুন</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Digital Signature Drawing Canvas Modal */}
+      <DigitalSignatureModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        currentSignature={invoice.signatureImage || business.signatureImage}
+        onSaveSignature={(dataUrl) => {
+          setInvoice((prev) => ({ ...prev, signatureImage: dataUrl }));
+          setBusiness((prev) => ({ ...prev, signatureImage: dataUrl }));
+          onShowToast('ডিজিটাল স্বাক্ষর সফলভাবে যুক্ত হয়েছে! ✍️', '✅');
+        }}
+        onClearSignature={() => {
+          setInvoice((prev) => ({ ...prev, signatureImage: undefined }));
+          setBusiness((prev) => ({ ...prev, signatureImage: undefined }));
+          onShowToast('স্বাক্ষর মুছে ফেলা হয়েছে।', '🗑️');
+        }}
+      />
     </div>
   );
 };

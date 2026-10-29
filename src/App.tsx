@@ -27,6 +27,8 @@ import {
   Shuffle,
   Share2,
   ArrowLeft,
+  Languages,
+  PenTool,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { Header } from './components/Header';
@@ -35,7 +37,7 @@ import { FloatingParticles } from './components/FloatingParticles';
 import { MobileInstallModal } from './components/MobileInstallModal';
 import { SharePortalModal } from './components/SharePortalModal';
 
-// Existing 7 Tools
+// Existing Tools
 import { LoveTest } from './components/LoveTest';
 import { TypingTest } from './components/TypingTest';
 import { AgeCalculator } from './components/AgeCalculator';
@@ -43,7 +45,7 @@ import { CoinToss } from './components/CoinToss';
 import { QuickLove } from './components/QuickLove';
 import { BanglaStatusHub } from './components/BanglaStatusHub';
 
-// 9 New Tools + Bus Fare & Prepaid Meter
+// Additional Tools
 import { PosterStudio } from './components/PosterStudio';
 import { LifeJourney } from './components/LifeJourney';
 import { FamilyTree } from './components/FamilyTree';
@@ -61,6 +63,8 @@ import { VoterTransferForm } from './components/VoterTransferForm';
 import { CVMaker } from './components/CVMaker';
 import { StudyMateBD } from './components/StudyMateBD';
 import { InvoiceMaker } from './components/InvoiceMaker';
+import { BanglaTextConverter } from './components/bangla-converter/BanglaTextConverter';
+import { ApplicationWriter } from './components/application-writer/ApplicationWriter';
 
 export type ToolId =
   | 'studymate-bd'
@@ -86,6 +90,8 @@ export type ToolId =
   | 'voter-transfer-form'
   | 'cv-maker'
   | 'invoice-maker'
+  | 'bangla-text-converter'
+  | 'application-writer'
   | null;
 
 export interface ToolCardInfo {
@@ -142,6 +148,8 @@ export default function App() {
         'voter-transfer-form',
         'cv-maker',
         'invoice-maker',
+        'bangla-text-converter',
+        'application-writer',
       ];
       if (toolParam && validToolIds.includes(toolParam)) {
         setActiveTool(toolParam as ToolId);
@@ -555,6 +563,33 @@ export default function App() {
         'চালান',
       ],
     },
+    // 24. MoSaFa Bangla Text Converter (বাংলা লেখার সহকারী)
+    {
+      id: 'bangla-text-converter',
+      title: 'MoSaFa Bangla Text Converter',
+      badge: '✍️ বাংলা টেক্সট টুল',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      category: 'typing',
+      iconBg: 'from-emerald-600 via-teal-600 to-cyan-600',
+      icon: <Languages className="w-6 h-6 text-white" />,
+      description:
+        'বাংলা ও ইংরেজি সংখ্যা কনভার্ট করুন, বাংলা লেখা পরিষ্কার ও সাজান, Unicode ও সমর্থিত Bijoy টেক্সট কনভার্ট করুন এবং প্রয়োজনীয় লেখা সহজেই কপি বা ডাউনলোড করুন।',
+      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'bangla text converter',
+        'বাংলা টেক্সট কনভার্টার',
+        'বাংলা লেখার সহকারী',
+        'unicode to bijoy',
+        'bijoy to unicode',
+        'ইউনিকোড টু বিজয়',
+        'বিজয় টু ইউনিকোড',
+        'text cleaner',
+        'text formatter',
+        'নাম্বার কনভার্টার',
+        'number converter',
+        'sutonnymj',
+      ],
+    },
   ];
 
   // Fisher-Yates shuffle algorithm: randomizes tools positions on every page reload
@@ -705,6 +740,9 @@ export default function App() {
   }
   if (activeTool === 'invoice-maker') {
     return wrapWithNavbar(<InvoiceMaker onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'bangla-text-converter') {
+    return wrapWithNavbar(<BanglaTextConverter onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'studymate-bd') {
     return wrapWithNavbar(

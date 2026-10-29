@@ -29,6 +29,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTool }) => {
           </button>
           <span>•</span>
           <button
+            onClick={() => onNavigateTool && onNavigateTool('bangla-text-converter')}
+            className="hover:text-emerald-700 font-semibold transition cursor-pointer"
+          >
+            বাংলা টেক্সট কনভার্টার
+          </button>
+          <span>•</span>
+          <button
             onClick={() => onNavigateTool && onNavigateTool('voter-transfer-form')}
             className="hover:text-emerald-700 font-semibold transition cursor-pointer"
           >
