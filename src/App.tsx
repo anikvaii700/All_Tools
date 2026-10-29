@@ -29,13 +29,20 @@ import {
   ArrowLeft,
   Languages,
   PenTool,
+  Laptop,
+  Globe,
+  Radio,
+  RefreshCw,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
+import { useAppUpdateSync } from './hooks/useAppUpdateSync';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { FloatingParticles } from './components/FloatingParticles';
 import { MobileInstallModal } from './components/MobileInstallModal';
 import { SharePortalModal } from './components/SharePortalModal';
+import { LiveUpdateModal } from './components/LiveUpdateModal';
+import { APP_VERSION_CONFIG } from './versionConfig';
 
 // Existing Tools
 import { LoveTest } from './components/LoveTest';
@@ -94,6 +101,8 @@ export type ToolId =
   | 'application-writer'
   | null;
 
+export type DeviceSector = 'all' | 'desktop' | 'mobile';
+
 export interface ToolCardInfo {
   id: ToolId;
   title: string;
@@ -103,6 +112,7 @@ export interface ToolCardInfo {
   iconBg: string;
   icon: React.ReactNode;
   description: string;
+  deviceTarget: 'desktop' | 'mobile' | 'both';
   deviceTag?: string;
   keywords: string[];
 }
@@ -111,9 +121,12 @@ export default function App() {
   const [activeTool, setActiveTool] = useState<ToolId>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [deviceSector, setDeviceSector] = useState<DeviceSector>('all');
   const [isMobileInstallOpen, setIsMobileInstallOpen] = useState<boolean>(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const [isLiveUpdateModalOpen, setIsLiveUpdateModalOpen] = useState<boolean>(false);
   const { isInstallable, isInstalled, install } = usePWAInstall();
+  const updateSync = useAppUpdateSync();
 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -182,7 +195,7 @@ export default function App() {
     }, 2800);
   };
 
-  // 15 Complete Tools Registry
+  // 25 Complete Tools Registry with Sector Categorization
   const tools: ToolCardInfo[] = [
     // 1. প্রেম টেস্ট
     {
@@ -195,7 +208,8 @@ export default function App() {
       icon: <Heart className="w-6 h-6 fill-white text-white" />,
       description:
         'দুজনের বয়স, গায়ের রং, পারিবারিক সম্মতি, বাস্তব প্রশ্ন ও স্বভাব যাচাই করে সম্পর্কের গভীরতা ও ভবিষ্যৎ উদ্দেশ্য নির্ণয় করুন। সনদপত্র ডাউনলোড সুবিধা সহ!',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ভার্সন',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (টাচ কুইজ ও শেয়ার)',
       keywords: ['প্রেম টেস্ট', 'love test', 'সম্পর্ক', 'ভালোবাসা', 'বিবাহ', 'বিচ্ছেদ', 'পরীক্ষা'],
     },
     // 2. লিপি টাইপিং টেস্ট
@@ -209,7 +223,8 @@ export default function App() {
       icon: <Keyboard className="w-6 h-6 text-white" />,
       description:
         '১ মিনিটে বাংলা টাইপিংয়ের গতি ও নির্ভুলতা পরীক্ষা করুন। লাইভ WPM, CPM ও সঠিকতার হিসাবসহ তাৎক্ষণিক ফলাফল ও অ্যানালিটিক্স।',
-      deviceTag: '💻 শুধু কম্পিউটার / ল্যাপটপ',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 শুধু কম্পিউটার / ল্যাপটপ (কীবোর্ড স্পিড)',
       keywords: ['টাইপিং টেস্ট', 'typing speed test', 'বাংলা টাইপিং', 'wpm', 'cpm', 'লিপি টাইপিং'],
     },
     // 3. বয়স ক্যালকুলেটর
@@ -223,6 +238,8 @@ export default function App() {
       icon: <Calendar className="w-6 h-6 text-white" />,
       description:
         'জন্মতারিখ নির্বাচন করে এক ক্লিকে বের করুন আপনার বর্তমান বয়স — বছর, মাস, দিন, মোট সপ্তাহ, এবং আগামী জন্মদিনের কাউন্টডাউন।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
       keywords: ['বয়স ক্যালকুলেটর', 'age calculator', 'জন্ম তারিখ', 'হিসাব', 'দিন', 'মাস', 'বছর'],
     },
     // 4. কয়েন টস ও সিদ্ধান্ত
@@ -236,6 +253,8 @@ export default function App() {
       icon: <Coins className="w-6 h-6 text-white" />,
       description:
         'যেকোনো দ্বিধাদ্বন্দ্বে হেড বা টেল টস করুন। আসল মুদ্রার মতো বাস্তবসম্মত ৩D ঘূর্ণন ও রুদ্ধশ্বাস স্পিন অ্যানিমেশন সহ!',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (৩ডি কয়েন টস)',
       keywords: ['কয়েন টস', 'coin toss', 'decision maker', 'র‍্যান্ডম সিদ্ধান্ত', 'হেড টেল'],
     },
     // 6. কুইক লাভ পারসেন্টেজ
@@ -249,6 +268,8 @@ export default function App() {
       icon: <Sparkles className="w-6 h-6 text-white" />,
       description:
         'দুজনের নাম লিখে এক ক্লিকে ভালোবাসার শতকরা হার বের করুন। বন্ধুদের সাথে শেয়ার করার জন্য মজার লাভ মিটার স্কোর ও অ্যানিমেশন।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (ইনস্ট্যান্ট লাভ %)',
       keywords: ['লাভ পারসেন্টেজ', 'love percentage calculator', 'ভালোবাসার হার', 'শতাংশ'],
     },
     // 7. বাংলা স্ট্যাটাস ও ক্যাপশন হাব
@@ -262,6 +283,8 @@ export default function App() {
       icon: <MessageSquareHeart className="w-6 h-6 text-white" />,
       description:
         'ভালোবাসা, কষ্ট, ইসলামিক, বন্ধুত্ব, এটিটিউড, মোটিভেশন ও ফানি সহ ১০টি ক্যাটাগরির ১০০০+ সেরা বাংলা ক্যাপশন কালেকশন ও ফটো কার্ড মেকার।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (১-ক্লিক কপি ও সোশ্যাল শেয়ার)',
       keywords: ['বাংলা স্ট্যাটাস', 'ক্যাপশন', 'bangla status', 'quotes', 'caption', 'ভালোবাসা', 'কষ্ট'],
     },
     // 8. MoSaFa Poster Studio (NEW)
@@ -275,6 +298,8 @@ export default function App() {
       icon: <Palette className="w-6 h-6 text-white" />,
       description:
         'নিউজ স্টাইল পোস্টার, কোটেশন, ব্যানার, স্লোগান ও ফ্রেন্ড মিম তৈরির ব্রাউজার-বেসড ক্রিয়েটিভ স্টুডিও ও PNG এক্সপোর্ট।',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (বড় ক্যানভাস ডিজাইন)',
       keywords: ['পোস্টার', 'poster studio', 'মিম', 'meme', 'ব্যানার', 'নিউজ পোস্টার', 'ছবি'],
     },
     // 9. MoSaFa Life Journey (NEW)
@@ -288,6 +313,8 @@ export default function App() {
       icon: <Compass className="w-6 h-6 text-white" />,
       description:
         'ব্যক্তিগত জীবনের সকল স্মরণীয় মাইলফলক ও আজ পর্যন্ত ব্যবহৃত মোবাইল ফোনের ক্রমবিকাশের ভিজ্যুয়াল টাইমলাইন ও কার্ড।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
       keywords: ['life journey', 'ফোন জার্নি', 'টাইমলাইন', 'স্মৃতি', 'মোবাইল ইতিহাস', 'মাইলফলক'],
     },
     // 10. Family Tree Builder (NEW)
@@ -301,6 +328,8 @@ export default function App() {
       icon: <Users className="w-6 h-6 text-white" />,
       description:
         'দাদা-দাদী থেকে শুরু করে পরবর্তী প্রজন্মের সকল সদস্যের সম্পর্ক যুক্ত করে সুন্দর পারিবারিক বংশবৃক্ষ তৈরি ও প্রিন্ট করুন।',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (বংশবৃক্ষ চার্ট ও প্রিন্ট)',
       keywords: ['family tree', 'বংশলতিকা', 'বংশবৃক্ষ', 'পরিবার', 'আত্মীয়স্বজন', 'দাদা', 'বাবা'],
     },
     // 11. Random Picker Wheel (NEW)
@@ -314,6 +343,8 @@ export default function App() {
       icon: <RotateCw className="w-6 h-6 text-white" />,
       description:
         'খাবার পছন্দ, ভ্রমণ বা যেকোনো দ্বিধাদ্বন্দ্বে কাস্টমাইজড চাকা ঘুরিয়ে শতভাগ নিরপেক্ষ ও র‍্যান্ডম সিদ্ধান্ত নিন।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (টাচ স্ক্রিন চাকা স্পিন)',
       keywords: ['random picker', 'wheel', 'চাকা', 'র‍্যান্ডম', 'সিদ্ধান্ত', 'হুইল', 'স্পিন'],
     },
     // 12. Bangla Riddles & Quiz Challenge (NEW)
@@ -327,6 +358,8 @@ export default function App() {
       icon: <Brain className="w-6 h-6 text-white" />,
       description:
         'মজার বাংলা ধাঁধা, সাধারণ জ্ঞান, সাহিত্য ও বিজ্ঞানের কুইজ চ্যালেঞ্জ। তাৎক্ষণিক ব্যাখ্যা ও স্কোর শেয়ার সুবিধা।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (স্মার্টফোন কুইজ ও ধাঁধা)',
       keywords: ['ধাঁধা', 'quiz', 'কুইজ', 'সাধারণ জ্ঞান', 'আইকিউ', 'বাংলা কুইজ', 'সাহিত্য'],
     },
     // 13. Daily Hishab (NEW)
@@ -340,6 +373,8 @@ export default function App() {
       icon: <Wallet className="w-6 h-6 text-white" />,
       description:
         'প্রতিদিনের আয়-ব্যয় হিসাব রাখুন বাংলাদেশী টাকায় (৳)। ব্যালেন্স সামারি, ক্যাটাগরি ফিল্টার ও CSV এক্সপোর্ট।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
       keywords: ['daily hishab', 'হিসাব', 'আয় ব্যয়', 'টাকা', 'বাজেট', 'ব্যালেন্স', 'খরচ'],
     },
     // 14. MoSaFa Life Receipt (NEW)
@@ -353,6 +388,8 @@ export default function App() {
       icon: <Receipt className="w-6 h-6 text-white" />,
       description:
         'ঘুম, মোবাইল ব্যবহার, কাজ ও অবসরে জীবনের কত বছর পার করেছেন? তৈরি করুন ডিজিটাল মেমো ও রিসিট কার্ড।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (থার্মাল রিসিট ও কার্ড)',
       keywords: ['life receipt', 'রশিদ', 'জীবন হিসাব', 'মেমো', 'সময় ব্যয়', 'বয়স হিসাব'],
     },
     // 15. MoSaFa Personality Reveal (NEW)
@@ -366,6 +403,8 @@ export default function App() {
       icon: <UserCheck className="w-6 h-6 text-white" />,
       description:
         '১০টি মনস্তাত্ত্বিক প্রশ্নে জেনে নিন আপনার আসল ব্যক্তিত্ব, শক্তি ও সম্ভাবনা। গোপনীয়তা সহ রেজাল্ট কার্ড ডাউনলোড।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (ব্যক্তিত্ব কার্ড ও শেয়ার)',
       keywords: ['personality', 'ব্যক্তিত্ব', 'টেস্ট', 'মনস্তত্ত্ব', 'চরিত্র', 'স্বভাব'],
     },
     // 16. MoSaFa Name Reveal (NEW)
@@ -379,6 +418,8 @@ export default function App() {
       icon: <Sparkles className="w-6 h-6 text-white" />,
       description:
         'নিজের নামের অর্থ, উৎস, রাশি, ব্যক্তিত্ব ও ভবিষ্যৎ সম্ভাবনা জানুন ৪টি সহজ অধ্যায়ে। আকর্ষণীয় ফলাফল কার্ড তৈরি ও শেয়ার করুন।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (নামের গল্প ও স্ট্যাটাস)',
       keywords: ['name reveal', 'নামের গোপন গল্প', 'নামের অর্থ', 'রাশি', 'নাম', 'ব্যক্তিত্ব', 'ভবিষ্যৎ'],
     },
     // 17. MoSaFa Golpo Ghor (NEW)
@@ -392,7 +433,8 @@ export default function App() {
       icon: <BookOpen className="w-6 h-6 text-white" />,
       description:
         'বাংলা ডিজিটাল গল্পের লাইব্রেরি। রবীন্দ্রনাথ ও শরৎচন্দ্রের অমর ক্লাসিক সাহিত্য এবং নতুন মৌলিক থ্রিলার, রোমান্টিক ও রহস্য গল্প পড়ার আধুনিক পাঠকক্ষ।',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (পকেট ডিজিটাল পাঠকক্ষ)',
       keywords: ['গল্পের ঘর', 'golpo ghor', 'বাংলা গল্প', 'রবীন্দ্রনাথ', 'শরৎচন্দ্র', 'উপন্যাস', 'ছোটগল্প', 'বই', 'লাইব্রেরি', 'story'],
     },
     // 18. MoSaFa Bus Fare Finder (NEW)
@@ -406,7 +448,8 @@ export default function App() {
       icon: <Bus className="w-6 h-6 text-white" />,
       description:
         'বাংলাদেশের বিভিন্ন রুটের বাসের সঠিক ভাড়া, এসি/নন-এসি শ্রেণি, টার্মিনাল, অপারেটর ও বিআরটিএ নির্ধারিত ভাড়ার তথ্য খুঁজুন এবং তুলনা করুন।',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (ভ্রমণের সময় পকেট গাইড)',
       keywords: ['বাস ভাড়া', 'bus fare', 'কোন বাসে কত ভাড়া', 'বাস রুট', 'হানিফ', 'এনা', 'শ্যামলী', 'বিআরটিএ', 'dhaka bus fare', 'fare chart'],
     },
     // 19. MoSaFa Prepaid Meter Helper (NEW)
@@ -420,7 +463,8 @@ export default function App() {
       icon: <Zap className="w-6 h-6 text-white" />,
       description:
         'বাংলাদেশের সকল বিতরণ কোম্পানি (DPDC, DESCO, BPDB, BREB, WZPDCL, NESCO) প্রিপেইড মিটারের শর্ট কোড, রিচার্জ হিসাব, ব্যালেন্স রানওয়ে ও সমস্যার সমাধান।',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (মিটার বক্স কোড ও রিচার্জ)',
       keywords: [
         'প্রিপেইড মিটার',
         'prepaid meter',
@@ -435,6 +479,7 @@ export default function App() {
         'বিদ্যুৎ মিটার',
       ],
     },
+    // 20. MoSaFa My Bangladesh Map (বাংলাদেশ ভ্রমণ ম্যাপ)
     {
       id: 'bangladesh-map',
       title: 'MoSaFa My Bangladesh Map (বাংলাদেশ ভ্রমণ ম্যাপ)',
@@ -444,7 +489,8 @@ export default function App() {
       iconBg: 'from-emerald-600 via-teal-600 to-indigo-600',
       icon: <Compass className="w-6 h-6 text-white" />,
       description: 'বাংলাদেশের ৬৪টি জেলার সীমানাসহ ইন্টারেক্টিভ মানচিত্র। নিজের জেলা, ঘুরে দেখা জেলা ও ভ্রমণের ইচ্ছা নির্বাচন করে সোশ্যাল মিডিয়ার জন্য আকর্ষণীয় এইচডি পোস্টার কার্ড তৈরি ও ডাউনলোড করুন!',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ভার্সন',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (৬৪ জেলা বড় ম্যাপ)',
       keywords: [
         'বাংলাদেশ ম্যাপ',
         'bangladesh map',
@@ -456,7 +502,7 @@ export default function App() {
         'পোস্টার',
       ],
     },
-    // 20. ভোটার স্থানান্তর ফরম ফিলাপ (Form-13)
+    // 21. ভোটার স্থানান্তর ফরম ফিলাপ (Form-13)
     {
       id: 'voter-transfer-form',
       title: 'ভোটার স্থানান্তর ফরম ফিলাপ (Form-13)',
@@ -467,7 +513,8 @@ export default function App() {
       icon: <FileText className="w-6 h-6 text-white" />,
       description:
         'বাংলাদেশ নির্বাচন কমিশন নির্ধারিত ফরম-১৩ (ভোটার এলাকা স্থানান্তর আবেদন)। সহজ ফিল্ড এডিট, ২-পৃষ্ঠার লাইভ প্রিভিউ, নির্ভুল A4 প্রিন্ট ও অফিশিয়াল PDF ডাউনলোড!',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (২-পৃষ্ঠা লিগ্যাল ফরম-১৩)',
       keywords: [
         'ভোটার স্থানান্তর ফরম',
         'voter transfer form',
@@ -480,7 +527,7 @@ export default function App() {
         'nid স্থানান্তর',
       ],
     },
-    // 21. The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার)
+    // 22. The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার)
     {
       id: 'cv-maker',
       title: 'The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার)',
@@ -491,7 +538,8 @@ export default function App() {
       icon: <FileText className="w-6 h-6 text-white" />,
       description:
         '১০০টি প্রফেশনাল CV ও রেজিউম টেমপ্লেট থেকে পছন্দ করুন, তথ্য এডিট করুন এবং সম্পূর্ণ ফ্রিতে ওয়াটারমার্ক ছাড়া প্রফেশনাল PDF ডাউনলোড ও প্রিন্ট করুন! ATS-ফ্রেন্ডলি ও ইউরোপাস স্টাইল সহ।',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (প্রফেশনাল সিভি ও A4 প্রিন্ট)',
       keywords: [
         'cv maker',
         'the mosafa cv maker',
@@ -507,7 +555,7 @@ export default function App() {
         'চাকরির সিভি',
       ],
     },
-    // 22. The MoSaFa StudyMate BD 🎓 (AI পার্সোনাল টিউটর ও প্রশ্ন সমাধানকারী)
+    // 23. The MoSaFa StudyMate BD 🎓 (AI পার্সোনাল টিউটর ও প্রশ্ন সমাধানকারী)
     {
       id: 'studymate-bd',
       title: 'The MoSaFa StudyMate BD 🎓 (AI পার্সোনাল টিউটর)',
@@ -518,7 +566,8 @@ export default function App() {
       icon: <GraduationCap className="w-6 h-6 text-white" />,
       description:
         'বাংলাদেশের ৬ষ্ঠ-১২শ শ্রেণি, SSC, HSC, বিশ্ববিদ্যালয়/মেডিকেল ভর্তি ও BCS শিক্ষার্থীদের অল-ইন-ওয়ান AI প্রাইভেট টিউটর। ছবি তুলে বা লিখে যেকোনো অঙ্ক ও জটিল প্রশ্নের সহজ সমাধান, লাইভ MCQ কুইজ ও পড়ার রুটিন!',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
       keywords: [
         'studymate',
         'studymate bd',
@@ -538,6 +587,7 @@ export default function App() {
         'শিক্ষক',
       ],
     },
+    // 24. MoSaFa Invoice Maker
     {
       id: 'invoice-maker',
       title: 'MoSaFa Invoice Maker — ইনভয়েস ও রিসিট মেকার',
@@ -548,7 +598,8 @@ export default function App() {
       icon: <Receipt className="w-6 h-6 text-white" />,
       description:
         'সহজেই তৈরি করুন প্রফেশনাল ইনভয়েস, মানি রিসিট ও ব্যবসার বিল। স্বয়ংক্রিয় হিসাব, PDF ডাউনলোড এবং প্রিন্ট সুবিধা।',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (ক্যাশ মেমো ও প্রিন্ট)',
       keywords: [
         'invoice',
         'invoice maker',
@@ -563,7 +614,7 @@ export default function App() {
         'চালান',
       ],
     },
-    // 24. MoSaFa Bangla Text Converter (বাংলা লেখার সহকারী)
+    // 25. MoSaFa Bangla Text Converter (বাংলা লেখার সহকারী)
     {
       id: 'bangla-text-converter',
       title: 'MoSaFa Bangla Text Converter',
@@ -574,7 +625,8 @@ export default function App() {
       icon: <Languages className="w-6 h-6 text-white" />,
       description:
         'বাংলা ও ইংরেজি সংখ্যা কনভার্ট করুন, বাংলা লেখা পরিষ্কার ও সাজান, Unicode ও সমর্থিত Bijoy টেক্সট কনভার্ট করুন এবং প্রয়োজনীয় লেখা সহজেই কপি বা ডাউনলোড করুন।',
-      deviceTag: '📱💻 কম্পিউটার + মোবাইল ফ্রেন্ডলি',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (বিজয়-ইউনিকোড ও ডিটিপি)',
       keywords: [
         'bangla text converter',
         'বাংলা টেক্সট কনভার্টার',
@@ -590,7 +642,43 @@ export default function App() {
         'sutonnymj',
       ],
     },
+    // 26. MoSaFa Application Writer (দরখাস্ত ও অফিসিয়াল চিঠি)
+    {
+      id: 'application-writer',
+      title: 'MoSaFa Application Writer',
+      badge: '📝 অফিসিয়াল ডকুমেন্ট',
+      badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+      category: 'calculator',
+      iconBg: 'from-blue-600 via-indigo-600 to-violet-600',
+      icon: <FileText className="w-6 h-6 text-white" />,
+      description:
+        'বাংলা ও ইংরেজিতে ছুটির আবেদন, অফিসিয়াল চিঠি, অভিযোগপত্র, চাকরির আবেদন ও প্রয়োজনীয় দরখাস্ত তৈরি করুন। সম্পাদনা, PDF/Word ডাউনলোড ও প্রিন্ট সুবিধা।',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (দরখাস্ত ও প্রমিত প্রিন্ট)',
+      keywords: [
+        'application writer',
+        'mosafa application writer',
+        'দরখাস্ত',
+        'দরখাস্ত লেখার সহকারী',
+        'অফিসিয়াল চিঠি',
+        'ছুটির আবেদন',
+        'অভিযোগপত্র',
+        'চাকরির আবেদন',
+        'প্রত্যয়নপত্র',
+        'রেজিগনেশন লেটার',
+        'লেটার',
+        'দাপ্তরিক চিঠি',
+        'চিঠি',
+        'tc আবেদন',
+        'leave application',
+        'official letter',
+      ],
+    },
   ];
+
+  // Master Short Prompt Flag: 'Random ON' / 'Random OFF'
+  // Currently set to: 'Random OFF' (Fixed canonical creation order, MoSaFa Application Writer at the end)
+  const IS_RANDOM_MODE = false;
 
   // Fisher-Yates shuffle algorithm: randomizes tools positions on every page reload
   const shuffleTools = (list: ToolCardInfo[]): ToolCardInfo[] => {
@@ -602,24 +690,30 @@ export default function App() {
     return shuffled;
   };
 
-  // Randomized tool list on every page reload/visit
-  const [shuffledTools, setShuffledTools] = useState<ToolCardInfo[]>(() => shuffleTools(tools));
+  // Tool list (ordered or shuffled depending on IS_RANDOM_MODE)
+  const [activeToolsList, setActiveToolsList] = useState<ToolCardInfo[]>(() =>
+    IS_RANDOM_MODE ? shuffleTools(tools) : tools
+  );
 
   // Manual shuffle handler
   const handleShuffle = () => {
-    setShuffledTools(shuffleTools(tools));
+    setActiveToolsList(shuffleTools(tools));
     showToast('টুলসগুলোর জায়গা পরিবর্তন (Shuffle) করা হয়েছে! 🔀', '🎲');
   };
 
-  // Filter tools by category and search query from the dynamically shuffled list
-  const filteredTools = shuffledTools.filter((tool) => {
+  // Filter tools by device sector, category, and search query from active tools list
+  const filteredTools = activeToolsList.filter((tool) => {
+    const matchesSector =
+      deviceSector === 'all' ||
+      tool.deviceTarget === deviceSector ||
+      tool.deviceTarget === 'both';
     const matchesCat = activeCategory === 'all' || tool.category === activeCategory;
     const matchesQuery =
       !searchQuery.trim() ||
       tool.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tool.keywords.some((kw) => kw.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCat && matchesQuery;
+    return matchesSector && matchesCat && matchesQuery;
   });
 
   // Helper to find the active tool metadata
@@ -633,23 +727,51 @@ export default function App() {
           type="button"
           onClick={() => navigateToTool(null)}
           className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 text-white font-bold transition shadow-xs cursor-pointer active:scale-95"
-          title="সকল ২২টি টুলস দেখতে হোম পেজে যান"
+          title="সকল ২৫টি টুলস দেখতে হোম পেজে যান"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>← সকল ২২টি টুলস (All Tools)</span>
+          <span>← সকল ২৫টি টুলস (All Tools)</span>
         </button>
 
         <div className="hidden md:flex items-center gap-2 text-slate-300 font-medium">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>The MoSaFa Tools • সকল ২২টি অনলাইন টুলস এক ক্লিকে</span>
+          <span>The MoSaFa Tools • সকল ২৫টি অনলাইন টুলস এক ক্লিকে</span>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* লাইভ অটো-আপডেট স্ট্যাটাস বাটন */}
+          <button
+            type="button"
+            onClick={() => setIsLiveUpdateModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 ${
+              updateSync.updateAvailable
+                ? 'bg-rose-500/20 border-rose-400 text-rose-300 animate-pulse'
+                : updateSync.isUpdateOn
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20'
+                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+            }`}
+            title="লাইভ অটো-আপডেট স্ট্যাটাস"
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                updateSync.updateAvailable
+                  ? 'bg-rose-400 animate-ping'
+                  : updateSync.isUpdateOn
+                  ? 'bg-emerald-400'
+                  : 'bg-slate-500'
+              }`}
+            />
+            <span className="hidden sm:inline">
+              {updateSync.isUpdateOn ? 'Update ON' : 'Update OFF'}
+            </span>
+            <span className="font-mono text-[10px] opacity-80">v{updateSync.currentVersion}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsShareModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 font-bold transition cursor-pointer active:scale-95"
-            title="সকল ২২টি টুলসের মূল লিংক শেয়ার করুন"
+            title="সকল ২৫টি টুলসের মূল লিংক শেয়ার করুন"
           >
             <Share2 className="w-3.5 h-3.5 text-rose-400" />
             <span>সকল টুলস শেয়ার</span>
@@ -668,6 +790,54 @@ export default function App() {
         activeToolTitle={currentActiveToolInfo?.title || ''}
         onShowToast={showToast}
       />
+
+      {/* Live Update Modal */}
+      <LiveUpdateModal
+        isOpen={isLiveUpdateModalOpen}
+        onClose={() => setIsLiveUpdateModalOpen(false)}
+        updateSync={updateSync}
+      />
+
+      {/* Floating Auto-Update Banner for Online/Offline Sync */}
+      {updateSync.updateAvailable && !updateSync.isBannerDismissed && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 rounded-3xl shadow-2xl border border-rose-500/40 animate-in slide-in-from-bottom duration-300">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30">
+              <Sparkles className="w-5 h-5 animate-spin" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="text-xs font-bold text-white">
+                  নতুন সংস্করণ প্রস্তুত! (v{updateSync.latestVersion})
+                </h4>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded-full font-mono">
+                  লাইভ সিঙ্ক
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 mt-1 leading-snug">
+                The MoSaFa Tools-এ নতুন পরিবর্তন এসেছে। নতুন সংস্করণ পেতে এখনই রিলোড করুন।
+              </p>
+              <div className="mt-2.5 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={updateSync.applyUpdateNow}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1 active:scale-95"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>এখনই আপডেট করুন</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={updateSync.dismissUpdateBanner}
+                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 text-xs font-medium transition cursor-pointer"
+                >
+                  পরে
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -744,6 +914,9 @@ export default function App() {
   if (activeTool === 'bangla-text-converter') {
     return wrapWithNavbar(<BanglaTextConverter onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
+  if (activeTool === 'application-writer') {
+    return wrapWithNavbar(<ApplicationWriter onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
   if (activeTool === 'studymate-bd') {
     return wrapWithNavbar(
       <>
@@ -771,6 +944,12 @@ export default function App() {
         onNavigateTool={(tool) => navigateToTool(tool)}
         onOpenMobileInstall={() => setIsMobileInstallOpen(true)}
         onOpenShare={() => setIsShareModalOpen(true)}
+        deviceSector={deviceSector}
+        onSelectDeviceSector={(sector) => setDeviceSector(sector)}
+        onOpenLiveUpdate={() => setIsLiveUpdateModalOpen(true)}
+        isUpdateOn={updateSync.isUpdateOn}
+        currentVersion={updateSync.currentVersion}
+        updateAvailable={updateSync.updateAvailable}
       />
 
       {/* Hero Section */}
@@ -874,10 +1053,10 @@ export default function App() {
             type="button"
             onClick={() => setIsShareModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-rose-200 transition cursor-pointer active:scale-95"
-            title="সকল ২২টি টুলসের মূল লিংক কপি ও বন্ধুদের শেয়ার করুন"
+            title="সকল ২৫টি টুলসের মূল লিংক কপি ও বন্ধুদের শেয়ার করুন"
           >
             <Share2 className="w-3.5 h-3.5" />
-            <span>সকল ২২টি টুলসের পাবলিক লিংক শেয়ার করুন 🔗</span>
+            <span>সকল ২৫টি টুলসের পাবলিক লিংক শেয়ার করুন 🔗</span>
           </button>
         </div>
       </section>
@@ -892,7 +1071,7 @@ export default function App() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-base sm:text-lg leading-tight">
+                  <h3 className="font-bold text-base sm:lg leading-tight">
                     The MoSaFa মোবাইল অ্যাপ ইনস্টল করুন
                   </h3>
                   <span className="text-[10px] bg-white text-rose-700 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -938,25 +1117,145 @@ export default function App() {
 
       {/* Tools Grid Section */}
       <main className="max-w-6xl mx-auto px-4 pb-16 w-full flex-1 relative z-10">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500">টুলস তালিকা:</span>
-            <span className="inline-flex items-center gap-1.5 text-[11px] bg-rose-50 text-rose-700 font-bold px-2.5 py-0.5 rounded-full border border-rose-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-              <span>প্রতি রিলোডে অবস্থান পরিবর্তিত 🎲</span>
+        {/* Sector Control Bar & Corner Switcher */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 bg-white/95 backdrop-blur-sm p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 shadow-xs">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+              {deviceSector === 'all' && (
+                <>
+                  <Globe className="w-4 h-4 text-slate-700" />
+                  <span>সকল অনলাইন টুলস ({tools.length}টি)</span>
+                </>
+              )}
+              {deviceSector === 'desktop' && (
+                <>
+                  <Laptop className="w-4 h-4 text-indigo-600" />
+                  <span>কম্পিউটার/ল্যাপটপ টুলস ({filteredTools.length}টি)</span>
+                </>
+              )}
+              {deviceSector === 'mobile' && (
+                <>
+                  <Smartphone className="w-4 h-4 text-rose-600" />
+                  <span>মোবাইল টুলস ({filteredTools.length}টি)</span>
+                </>
+              )}
             </span>
+
+            {deviceSector !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setDeviceSector('all')}
+                className="inline-flex items-center gap-1 text-[11px] bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold px-2.5 py-0.5 rounded-full border border-rose-200 transition cursor-pointer"
+                title="সবগুলো টুলসে ফেরত যান"
+              >
+                <span>✕ সবগুলো দেখুন</span>
+              </button>
+            )}
+
+            {IS_RANDOM_MODE ? (
+              <span className="inline-flex items-center gap-1.5 text-[10px] bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                <span>র‍্যান্ডম মোড</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full border border-slate-200">
+                <span>📌 ধারাবাহিক ক্রম</span>
+              </span>
+            )}
           </div>
 
-          <button
-            type="button"
-            onClick={handleShuffle}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-700 hover:text-rose-600 text-xs font-bold transition shadow-2xs active:scale-95 cursor-pointer"
-            title="টুলসের জায়গা পরিবর্তন (শাফল) করুন"
-          >
-            <Shuffle className="w-3.5 h-3.5 text-rose-500" />
-            <span>জায়গা শাফল করুন 🔀</span>
-          </button>
+          {/* Corner Switcher: কম্পিউটার/ল্যাপটপ ও মোবাইল */}
+          <div className="flex items-center gap-2 self-end md:self-auto flex-wrap">
+            <div className="inline-flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/90 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setDeviceSector('all')}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                  deviceSector === 'all'
+                    ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="সকল ২৫টি টুলস একসাথে দেখুন"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>সবগুলো ({tools.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeviceSector('desktop')}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                  deviceSector === 'desktop'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-indigo-600 hover:bg-white/60'
+                }`}
+                title="কম্পিউটার ও ল্যাপটপে সেরা ফলাফল দেওয়া টুলস"
+              >
+                <Laptop className="w-3.5 h-3.5" />
+                <span>কম্পিউটার/ল্যাপটপ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeviceSector('mobile')}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                  deviceSector === 'mobile'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-rose-600 hover:bg-white/60'
+                }`}
+                title="মোবাইলে দ্রুত ও সহজ ব্যবহারের সেরা টুলস"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>মোবাইল</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleShuffle}
+              className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-rose-600 text-xs font-bold transition shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1"
+              title="টুলসের জায়গা পরিবর্তন (শাফল) করুন"
+            >
+              <Shuffle className="w-3.5 h-3.5 text-rose-500" />
+              <span className="hidden sm:inline">শাফল</span>
+            </button>
+          </div>
         </div>
+
+        {/* Sector Explanatory Banner when filtered */}
+        {deviceSector === 'desktop' && (
+          <div className="mb-5 p-3.5 rounded-2xl bg-indigo-50/90 border border-indigo-200 text-indigo-900 flex items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in duration-200">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">💻</span>
+              <p className="leading-snug">
+                <span className="font-bold">কম্পিউটার/ল্যাপটপ সেক্টর:</span> ফিজিক্যাল কীবোর্ড টাইপিং, প্রফেশনাল CV মেকার, অফিশিয়াল দরখাস্ত A4 প্রিন্ট, ফরম-১৩ ও বড় ক্যানভাস ডিজাইনে সেরা ফলাফল পাওয়া টুলসগুলো দেখানো হচ্ছে।
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDeviceSector('all')}
+              className="text-indigo-700 hover:text-indigo-950 font-bold shrink-0 underline cursor-pointer"
+            >
+              সবগুলো দেখুন
+            </button>
+          </div>
+        )}
+
+        {deviceSector === 'mobile' && (
+          <div className="mb-5 p-3.5 rounded-2xl bg-rose-50/90 border border-rose-200 text-rose-900 flex items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in duration-200">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">📱</span>
+              <p className="leading-snug">
+                <span className="font-bold">মোবাইল সেক্টর:</span> টাচ স্ক্রিন কুইজ, ১-ক্লিক হোয়াটসঅ্যাপ/ফেসবুক স্ট্যাটাস, বাসের ভাড়া, প্রিপেইড মিটার শর্ট কোড ও পকেট রিডারের সেরা অভিজ্ঞতার টুলসগুলো দেখানো হচ্ছে।
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDeviceSector('all')}
+              className="text-rose-700 hover:text-rose-950 font-bold shrink-0 underline cursor-pointer"
+            >
+              সবগুলো দেখুন
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredTools.map((tool) => (
@@ -981,7 +1280,15 @@ export default function App() {
                   {tool.title}
                 </h3>
                 {tool.deviceTag && (
-                  <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-bold">
+                  <div
+                    className={`inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
+                      tool.deviceTarget === 'desktop'
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                        : tool.deviceTarget === 'mobile'
+                        ? 'bg-rose-50 border-rose-200 text-rose-700'
+                        : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    }`}
+                  >
                     <span>{tool.deviceTag}</span>
                   </div>
                 )}
@@ -1073,6 +1380,54 @@ export default function App() {
         activeToolTitle=""
         onShowToast={showToast}
       />
+
+      {/* Live Update Modal */}
+      <LiveUpdateModal
+        isOpen={isLiveUpdateModalOpen}
+        onClose={() => setIsLiveUpdateModalOpen(false)}
+        updateSync={updateSync}
+      />
+
+      {/* Floating Auto-Update Banner for Hub View */}
+      {updateSync.updateAvailable && !updateSync.isBannerDismissed && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 rounded-3xl shadow-2xl border border-rose-500/40 animate-in slide-in-from-bottom duration-300">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/30">
+              <Sparkles className="w-5 h-5 animate-spin" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="text-xs font-bold text-white">
+                  নতুন সংস্করণ প্রস্তুত! (v{updateSync.latestVersion})
+                </h4>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded-full font-mono">
+                  লাইভ সিঙ্ক
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300 mt-1 leading-snug">
+                The MoSaFa Tools-এ নতুন পরিবর্তন এসেছে। নতুন সংস্করণ পেতে এখনই রিলোড করুন।
+              </p>
+              <div className="mt-2.5 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={updateSync.applyUpdateNow}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1 active:scale-95"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>এখনই আপডেট করুন</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={updateSync.dismissUpdateBanner}
+                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 text-xs font-medium transition cursor-pointer"
+                >
+                  পরে
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toastMessage && (

@@ -22,6 +22,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateTool }) => {
           </button>
           <span>•</span>
           <button
+            onClick={() => onNavigateTool && onNavigateTool('application-writer')}
+            className="hover:text-blue-700 font-semibold transition cursor-pointer"
+          >
+            MoSaFa Application Writer
+          </button>
+          <span>•</span>
+          <button
             onClick={() => onNavigateTool && onNavigateTool('invoice-maker')}
             className="hover:text-emerald-700 font-semibold transition cursor-pointer"
           >

@@ -11,6 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import { STUDYMATE_MASTER_SYSTEM_PROMPT } from './src/data/studymateMasterPrompt.ts';
+import { APP_VERSION_CONFIG } from './src/versionConfig.ts';
 
 const STUDYMATE_SYSTEM_INSTRUCTION = STUDYMATE_MASTER_SYSTEM_PROMPT;
 
@@ -21,9 +22,15 @@ async function startServer() {
   // JSON parser with 25MB limit for high-res photo uploads of questions/textbooks
   app.use(express.json({ limit: '25mb' }));
 
-  // Strictly prevent stale service workers & cached HTML in iFrame dev previews
+  // Strictly prevent stale service workers & cached HTML/version in iFrame dev previews and production
   app.use((req, res, next) => {
-    if (req.path === '/' || req.path === '/index.html' || req.path === '/sw.js') {
+    if (
+      req.path === '/' ||
+      req.path === '/index.html' ||
+      req.path === '/sw.js' ||
+      req.path === '/version.json' ||
+      req.path.startsWith('/api/system/version')
+    ) {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
@@ -45,12 +52,26 @@ async function startServer() {
     });
   }
 
+  // Live System Version Broadcast API (Controlled by master command 'Update ON' / 'Update OFF')
+  app.get('/api/system/version', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.json({
+      success: true,
+      ...APP_VERSION_CONFIG,
+      serverTime: new Date().toISOString(),
+    });
+  });
+
   // Health check API
   app.get('/api/health', (_req, res) => {
     res.json({
       status: 'ok',
       hasGeminiKey: Boolean(apiKey),
       model: 'gemini-3.8-flash',
+      version: APP_VERSION_CONFIG.version,
+      isUpdateOn: APP_VERSION_CONFIG.isUpdateOn,
     });
   });
 

@@ -83,6 +83,12 @@ export interface DocumentStyle {
   italic: boolean;
   underline: boolean;
   showPageNumber: boolean;
+  // Optional Signature & Recommendation/Approval blocks
+  showApplicantSign?: boolean;
+  showDeptHeadSign?: boolean;
+  showApprovalSign?: boolean;
+  showGuardianSign?: boolean;
+  showTeacherSign?: boolean;
 }
 
 export interface SavedDocument {

@@ -1,6 +1,6 @@
 {
   "name": "The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল",
-  "description": "সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - The MoSaFa StudyMate BD (AI পার্সোনাল টিউটর ও প্রশ্ন সমাধানকারী), The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার), ভোটার স্থানান্তর ফরম (Form-13), বাংলাদেশ ভ্রমণ ম্যাপ, কোন বাসে কত ভাড়া সহ ২২টি কার্যকরী টুলস।",
+  "description": "সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - MoSaFa Application Writer (দরখাস্ত ও অফিসিয়াল চিঠি), The MoSaFa StudyMate BD (AI পার্সোনাল টিউটর), The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার), ভোটার স্থানান্তর ফরম (Form-13) সহ ২৩টি কার্যকরী টুলস।",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

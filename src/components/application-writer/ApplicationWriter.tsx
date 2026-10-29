@@ -103,6 +103,11 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
     italic: false,
     underline: false,
     showPageNumber: true,
+    showApplicantSign: true,
+    showDeptHeadSign: false,
+    showApprovalSign: false,
+    showGuardianSign: false,
+    showTeacherSign: false,
   });
 
   // Saved Documents
@@ -375,15 +380,19 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
       return;
     }
     setIsExportingPdf(true);
-    const filename = `${formData.subject || selectedType.name || 'Application'}.pdf`;
+    const safeTitle = (formData.subject || selectedType.name || 'Application')
+      .replace(/[/\\?%*:|"<>]/g, '_')
+      .trim();
+    const filename = `${safeTitle || 'Application'}.pdf`;
+
     try {
       await exportToPdf('a4-application-document-sheet', filename, (msg) => {
         onShowToast?.(msg, '⏳');
       });
-      onShowToast?.('PDF ডাউনলোড সম্পন্ন হয়েছে!', '📄');
-    } catch (err) {
-      console.error(err);
-      onShowToast?.('PDF তৈরিতে সমস্যা হয়েছে', '❌');
+      onShowToast?.('PDF সফলভাবে ডাউনলোড হয়েছে!', '📄');
+    } catch (err: any) {
+      console.error('PDF export error:', err);
+      onShowToast?.('PDF তৈরিতে সমস্যা হয়েছে। সরাসরি প্রিন্ট উইন্ডো চেষ্টা করুন।', '⚠️');
     } finally {
       setIsExportingPdf(false);
     }
@@ -743,6 +752,7 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
                   style={style}
                   language={formData.language}
                   isAiEnhanced={isAiEnhanced}
+                  onChangeStyle={(newStyle) => setStyle((prev) => ({ ...prev, ...newStyle }))}
                 />
               </div>
             </div>

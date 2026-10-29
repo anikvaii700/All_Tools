@@ -191,6 +191,40 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         </div>
       </div>
 
+      {/* Optional Signature Blocks Quick Toggles */}
+      <div className="px-3 py-2 bg-slate-100/70 border-b border-slate-200 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+        <span className="font-bold text-slate-700 text-[11px] flex items-center gap-1">
+          <span>✍️ স্বাক্ষর অপশন:</span>
+        </span>
+        <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-900 select-none">
+          <input
+            type="checkbox"
+            checked={style.showApplicantSign !== false}
+            onChange={(e) => onChangeStyle({ showApplicantSign: e.target.checked })}
+            className="w-3.5 h-3.5 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+          />
+          <span className="text-[11px] font-semibold">আবেদনকারীর স্বাক্ষর</span>
+        </label>
+        <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-900 select-none">
+          <input
+            type="checkbox"
+            checked={Boolean(style.showDeptHeadSign)}
+            onChange={(e) => onChangeStyle({ showDeptHeadSign: e.target.checked })}
+            className="w-3.5 h-3.5 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+          />
+          <span className="text-[11px] font-semibold">বিভাগীয় প্রধানের সুপারিশ</span>
+        </label>
+        <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-700 hover:text-slate-900 select-none">
+          <input
+            type="checkbox"
+            checked={Boolean(style.showApprovalSign)}
+            onChange={(e) => onChangeStyle({ showApprovalSign: e.target.checked })}
+            className="w-3.5 h-3.5 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
+          />
+          <span className="text-[11px] font-semibold">মানবসম্পদ / সিইও অনুমোদন</span>
+        </label>
+      </div>
+
       {/* Editor Content Textarea */}
       <div className="flex-1 p-3 sm:p-4 bg-white relative">
         <textarea

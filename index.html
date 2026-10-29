@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল</title>
-    <meta name="description" content="সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - The MoSaFa StudyMate BD (AI পার্সোনাল টিউটর ও প্রশ্ন সমাধানকারী), The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার), ভোটার স্থানান্তর ফরম (Form-13), বাংলাদেশ ভ্রমণ ম্যাপ, কোন বাসে কত ভাড়া সহ ২২টি কার্যকরী টুলস।" />
+    <meta name="description" content="সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - MoSaFa Application Writer (দরখাস্ত ও অফিসিয়াল চিঠি), The MoSaFa StudyMate BD (AI পার্সোনাল টিউটর), The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার), ভোটার স্থানান্তর ফরম (Form-13) সহ ২৩টি কার্যকরী টুলস।" />
     <meta property="og:title" content="The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল" />
-    <meta property="og:description" content="সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - The MoSaFa StudyMate BD (AI পার্সোনাল টিউটর ও প্রশ্ন সমাধানকারী), The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার), ভোটার স্থানান্তর ফরম (Form-13), বাংলাদেশ ভ্রমণ ম্যাপ, কোন বাসে কত ভাড়া সহ ২২টি কার্যকরী টুলস।" />
+    <meta property="og:description" content="সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - MoSaFa Application Writer (দরখাস্ত ও অফিসিয়াল চিঠি), The MoSaFa StudyMate BD (AI পার্সোনাল টিউটর), The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার), ভোটার স্থানান্তর ফরম (Form-13) সহ ২৩টি কার্যকরী টুলস।" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="manifest" href="/manifest.json" />
@@ -20,29 +20,45 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <!-- Immediate Service Worker & Cache Purge to prevent blank-screen loading in iframe -->
+    <!-- Smart Service Worker Registration: Safe in Dev iFrames, Full Offline & Auto-Update in Production/Mobile App -->
     <script>
       (function() {
         try {
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(regs) {
-              for (var i = 0; i < regs.length; i++) {
-                regs[i].unregister();
-              }
-            }).catch(function() {});
-            if (navigator.serviceWorker.controller) {
-              navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+          var isInsideIframe = window.self !== window.top;
+          if (isInsideIframe) {
+            // In dev preview iframe, prevent aggressive caching
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(regs) {
+                for (var i = 0; i < regs.length; i++) {
+                  regs[i].unregister();
+                }
+              }).catch(function() {});
+            }
+          } else {
+            // In production, custom domain (https://themedosafe.blogspot.com/) or mobile app: Register Service Worker
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                  // Listen for updates
+                  reg.addEventListener('updatefound', function() {
+                    var newWorker = reg.installing;
+                    if (newWorker) {
+                      newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                          // New version available
+                          window.dispatchEvent(new CustomEvent('mosafa:new-version-available'));
+                        }
+                      });
+                    }
+                  });
+                }).catch(function(err) {
+                  console.warn('SW registration info:', err);
+                });
+              });
             }
           }
-          if ('caches' in window) {
-            caches.keys().then(function(keys) {
-              for (var i = 0; i < keys.length; i++) {
-                caches.delete(keys[i]);
-              }
-            }).catch(function() {});
-          }
         } catch (e) {
-          console.warn('Storage/SW purge notice:', e);
+          console.warn('SW setup info:', e);
         }
       })();
     </script>
