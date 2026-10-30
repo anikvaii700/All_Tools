@@ -214,24 +214,28 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
   // Select Type handler
   const handleSelectType = (type: DocumentTypeInfo) => {
     setSelectedType(type);
-    // Pre-populate default subject and recipient if empty
     setFormData((prev) => ({
       ...prev,
       recipientDesignation:
-        prev.recipientDesignation ||
-        (prev.language === 'bn'
+        prev.language === 'bn'
           ? type.defaultRecipientDesignationBn
-          : type.defaultRecipientDesignationEn),
+          : type.defaultRecipientDesignationEn,
       subject:
-        prev.subject ||
-        (prev.language === 'bn' ? type.defaultSubjectBn : type.defaultSubjectEn),
-      reason: prev.reason || (prev.language === 'bn' ? (type.defaultReasonBn || '') : (type.defaultReasonEn || '')),
+        prev.language === 'bn' ? type.defaultSubjectBn : type.defaultSubjectEn,
+      reason:
+        prev.language === 'bn'
+          ? (type.defaultReasonBn || '')
+          : (type.defaultReasonEn || ''),
+      lostOrItemDetails:
+        type.documentFormat === 'gd' && !prev.lostOrItemDetails
+          ? (type.defaultReasonBn || '')
+          : prev.lostOrItemDetails,
     }));
 
     // Auto set best matching template
     if (type.categoryId === 'education') {
       setSelectedTemplateId('school-college');
-    } else if (type.categoryId === 'complaint') {
+    } else if (type.categoryId === 'police' || type.documentFormat === 'police_complaint') {
       setSelectedTemplateId('complaint-letter');
     } else if (type.id === 'job-application-cover') {
       setSelectedTemplateId('job-application');

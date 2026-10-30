@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import { AuthProvider } from './context/AuthContext.tsx';
 import './index.css';
 
 interface Props {
@@ -66,6 +67,8 @@ class RootErrorBoundary extends Component<Props, State> {
 
 createRoot(document.getElementById('root')!).render(
   <RootErrorBoundary>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </RootErrorBoundary>
 );

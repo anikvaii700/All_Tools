@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with registered email/phone and coin wallet balance",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique user ID matching Auth UID"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Full display name"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "User mobile phone number"
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "User avatar image URL"
+        },
+        "coins": {
+          "type": "number",
+          "description": "Current active coin wallet balance"
+        },
+        "totalEarnedCoins": {
+          "type": "number",
+          "description": "Cumulative coins earned"
+        },
+        "lastSpinDate": {
+          "type": "string",
+          "description": "Date of latest daily spin in YYYY-MM-DD"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["userId", "coins"]
+    },
+    "CoinTransaction": {
+      "title": "CoinTransaction",
+      "description": "Ledger of coin credits earned from spins or rewards",
+      "type": "object",
+      "properties": {
+        "transactionId": {
+          "type": "string",
+          "description": "Unique transaction ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Coins added"
+        },
+        "type": {
+          "type": "string",
+          "description": "Transaction category"
+        },
+        "description": {
+          "type": "string",
+          "description": "Transaction note in Bangla"
+        },
+        "date": {
+          "type": "string",
+          "description": "Date in YYYY-MM-DD"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp"
+        }
+      },
+      "required": ["transactionId", "userId", "amount", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile and coin wallet"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "CoinTransaction",
+      "description": "User coin transaction history"
+    }
+  }
+}

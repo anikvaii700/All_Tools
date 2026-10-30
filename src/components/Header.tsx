@@ -17,6 +17,7 @@ import {
   Calendar,
   Coins,
   Sparkles,
+  MessageSquare,
   MessageSquareHeart,
   Palette,
   Users,
@@ -27,8 +28,12 @@ import {
   Search,
   Home,
   Languages,
-  Radio,
+  RotateCw,
+  Gift,
+  User,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { BanglaLiveDateTimeWidget } from './BanglaLiveDateTimeWidget';
 
 export type DeviceSector = 'all' | 'desktop' | 'mobile';
 
@@ -36,6 +41,7 @@ interface HeaderProps {
   onNavigateHome: () => void;
   onNavigateTool?: (tool: any) => void;
   onOpenMobileInstall: () => void;
+  onDirectInstall?: () => void;
   onOpenShare?: () => void;
   deviceSector?: DeviceSector;
   onSelectDeviceSector?: (sector: DeviceSector) => void;
@@ -43,23 +49,35 @@ interface HeaderProps {
   isUpdateOn?: boolean;
   currentVersion?: string;
   updateAvailable?: boolean;
+  onOpenSpinModal?: () => void;
+  onOpenAuthModal?: () => void;
+  onOpenWalletModal?: () => void;
+  onOpenDeveloperContact?: () => void;
+  onOpenAdminPanel?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onNavigateHome,
   onNavigateTool,
   onOpenMobileInstall,
+  onDirectInstall,
   onOpenShare,
+  onOpenDeveloperContact,
+  onOpenAdminPanel,
   deviceSector = 'all',
   onSelectDeviceSector,
   onOpenLiveUpdate,
   isUpdateOn = true,
   currentVersion = '3.0.0',
   updateAvailable = false,
+  onOpenSpinModal,
+  onOpenAuthModal,
+  onOpenWalletModal,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [menuSearch, setMenuSearch] = React.useState('');
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const { user, isLoggedIn, canSpinToday } = useAuth();
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -75,7 +93,12 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, [isMenuOpen]);
 
-  // All 22 Complete Tools in categorized list
+  const toBanglaNum = (n: number | string): string => {
+    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return String(n).replace(/\d/g, (d) => bnDigits[Number(d)]);
+  };
+
+  // Complete Tools in categorized list
   const allToolsList = [
     // 1. শিক্ষা ও ক্যারিয়ার
     { id: 'studymate-bd', name: 'StudyMate BD 🎓 (AI প্রাইভেট টিউটর)', icon: <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />, category: 'শিক্ষা ও ক্যারিয়ার', badge: 'AI টিউটর' },
@@ -84,6 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'voter-transfer-form', name: 'ভোটার স্থানান্তর ফরম (ফরম-১৩ অটো ফিল)', icon: <FileText className="w-3.5 h-3.5 text-emerald-600" />, category: 'শিক্ষা ও ক্যারিয়ার', badge: 'অফিসিয়াল' },
 
     // 2. কন্টেন্ট, পোস্টার ও বই
+    { id: 'pdf-toolkit', name: 'MoSaFa PDF Toolkit (PDF টুলবক্স)', icon: <FileText className="w-3.5 h-3.5 text-rose-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'PDF টুলস' },
     { id: 'poster-studio', name: 'MoSaFa Poster Studio (পোস্টার ও স্লোগান)', icon: <Palette className="w-3.5 h-3.5 text-rose-500" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ডিজাইন' },
     { id: 'golpo-ghor', name: 'গল্পের ঘর (জনপ্রিয় সকল বই ও গল্প)', icon: <BookOpen className="w-3.5 h-3.5 text-amber-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'বই ও গল্প' },
     { id: 'bangla-status', name: 'বাংলা স্ট্যাটাস ও ক্যাপশন হাব (১০০০+)', icon: <MessageSquareHeart className="w-3.5 h-3.5 text-violet-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ক্যাপশন' },
@@ -97,7 +121,6 @@ export const Header: React.FC<HeaderProps> = ({
 
     // 4. বিনোদন, প্রেম ও কুইজ
     { id: 'love-test', name: 'প্রেম টেস্ট (বাস্তব পরীক্ষা ও সনদপত্র)', icon: <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-600" />, category: 'বিনোদন ও কুইজ', badge: 'ভাইরাল' },
-    { id: 'love-calc', name: 'কুইক লাভ পারসেন্টেজ (লাভ % স্কোর)', icon: <Sparkles className="w-3.5 h-3.5 text-pink-600" />, category: 'বিনোদন ও কুইজ', badge: 'স্কোর' },
     { id: 'bangla-quiz', name: 'বাংলা সাধারণ জ্ঞান ও মেধা কুইজ', icon: <Brain className="w-3.5 h-3.5 text-indigo-600" />, category: 'বিনোদন ও কুইজ', badge: 'কুইজ' },
     { id: 'random-picker', name: 'র‍্যান্ডম পিকার হুইল (ভাগ্যের চাকা)', icon: <Compass className="w-3.5 h-3.5 text-purple-600" />, category: 'বিনোদন ও কুইজ', badge: 'চাকা' },
     { id: 'decision-maker', name: 'কয়েন টস ও সিদ্ধান্ত (৩ডি স্পিন)', icon: <Coins className="w-3.5 h-3.5 text-amber-600" />, category: 'বিনোদন ও কুইজ', badge: '৩ডি টস' },
@@ -108,8 +131,6 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'invoice-maker', name: 'MoSaFa Invoice Maker (ইনভয়েস ও মানি রিসিট)', icon: <Receipt className="w-3.5 h-3.5 text-emerald-600" />, category: 'হিসাব ও পরিবার', badge: 'ইনভয়েস' },
     { id: 'daily-hishab', name: 'দৈনিক হিসাব খাতা (আয়-ব্যয় ট্র্যাকার)', icon: <Wallet className="w-3.5 h-3.5 text-emerald-600" />, category: 'হিসাব ও পরিবার', badge: 'হিসাব' },
     { id: 'age-calc', name: 'বয়স ক্যালকুলেটর (নিখুঁত দিনক্ষণ)', icon: <Calendar className="w-3.5 h-3.5 text-cyan-600" />, category: 'হিসাব ও পরিবার', badge: 'বয়স' },
-    { id: 'family-tree', name: 'ফ্যামিলি ট্রি (বংশলতিকা বিল্ডার)', icon: <Users className="w-3.5 h-3.5 text-blue-600" />, category: 'হিসাব ও পরিবার', badge: 'পরিবার' },
-    { id: 'life-journey', name: 'জীবন জার্নি ও লাইফ ইভেন্টস', icon: <Sparkles className="w-3.5 h-3.5 text-indigo-600" />, category: 'হিসাব ও পরিবার', badge: 'স্মৃতি' },
     { id: 'life-receipt', name: 'লাইফ রসিদ মেকার (মজার রসিদ)', icon: <Receipt className="w-3.5 h-3.5 text-slate-700" />, category: 'হিসাব ও পরিবার', badge: 'রসিদ' },
   ];
 
@@ -119,16 +140,51 @@ export const Header: React.FC<HeaderProps> = ({
       item.category.toLowerCase().includes(menuSearch.toLowerCase())
   );
 
+  // 5-Click Easter Egg trigger on "The MoSaFa" to open Admin Panel (mobile & desktop)
+  const clickCountRef = React.useRef(0);
+  const clickTimerRef = React.useRef<any>(null);
+  const [easterEggActive, setEasterEggActive] = React.useState(false);
+
+  const handleBrandClick = () => {
+    clickCountRef.current += 1;
+
+    // First click always navigates home
+    if (clickCountRef.current === 1) {
+      onNavigateHome();
+    }
+
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+
+    if (clickCountRef.current >= 5) {
+      clickCountRef.current = 0;
+      setEasterEggActive(true);
+      setTimeout(() => setEasterEggActive(false), 2000);
+      onOpenAdminPanel?.();
+      return;
+    }
+
+    // Reset after 1.6 seconds without clicks
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, 1600);
+  };
+
   return (
     <header className="w-full pt-4 sm:pt-6 pb-2 z-40">
-      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-4">
-        {/* Brand / Logo (১। The MoSaFa Tools - সকল ফ্রি অনলাইন টুলস এক ক্লিকে) */}
-        <div className="flex items-center gap-3">
+      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-3 sm:gap-4">
+        {/* Brand / Logo - Clicking 5 times rapidly unlocks Admin Panel */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
-            onClick={onNavigateHome}
-            className="flex items-center gap-2.5 sm:gap-3 group text-left cursor-pointer"
+            onClick={handleBrandClick}
+            type="button"
+            className={`flex items-center gap-2 sm:gap-3 group text-left cursor-pointer transition select-none active:scale-95 ${
+              easterEggActive ? 'ring-2 ring-indigo-500 rounded-2xl p-1 bg-indigo-50/50' : ''
+            }`}
+            title="The MoSaFa Tools"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-200 group-hover:scale-105 transition">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-200 group-hover:scale-105 transition shrink-0">
               <Layers className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -140,107 +196,39 @@ export const Header: React.FC<HeaderProps> = ({
                   Tools
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium hidden xs:block">
                 সকল ফ্রি অনলাইন টুলস এক ক্লিকে
               </p>
             </div>
           </button>
         </div>
 
-        {/* Action Buttons: 💻 কম্পিউটার/ল্যাপটপ ও 📱 মোবাইল কর্নার অপশন + 🔗 Share + ☰ Menu */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* কর্নারে দুইটা অপশন: কম্পিউটার/ল্যাপটপ ও মোবাইল */}
-          {onSelectDeviceSector && (
-            <div className="flex items-center bg-slate-100/90 border border-slate-200/90 p-0.5 sm:p-1 rounded-2xl shadow-2xs">
-              <button
-                type="button"
-                onClick={() => onSelectDeviceSector(deviceSector === 'desktop' ? 'all' : 'desktop')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95 ${
-                  deviceSector === 'desktop'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-700 hover:text-indigo-600 hover:bg-white'
-                }`}
-                title="কম্পিউটার/ল্যাপটপে সেরা ফলাফল দেওয়া টুলসগুলো দেখুন (ক্লিক করে অন/অফ)"
-              >
-                <Laptop className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">কম্পিউটার/ল্যাপটপ</span>
-                <span className="sm:hidden">পিসি</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => onSelectDeviceSector(deviceSector === 'mobile' ? 'all' : 'mobile')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95 ${
-                  deviceSector === 'mobile'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-slate-700 hover:text-rose-600 hover:bg-white'
-                }`}
-                title="স্মার্টফোনে সবচেয়ে ভালো অভিজ্ঞতা দেওয়া টুলসগুলো দেখুন (ক্লিক করে অন/অফ)"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>মোবাইল</span>
-              </button>
-            </div>
-          )}
-
-          {onOpenShare && (
-            <button
-              onClick={onOpenShare}
-              type="button"
-              className="h-9 sm:h-10 px-2.5 sm:px-3 rounded-2xl bg-white hover:bg-rose-50 text-slate-800 hover:text-rose-600 border border-slate-200 shadow-2xs flex items-center gap-1.5 transition cursor-pointer text-xs font-bold active:scale-95"
-              title="সকল ২৫টি টুলসের মূল লিংক বন্ধুদের শেয়ার করুন"
-            >
-              <Share2 className="w-4 h-4 text-rose-500" />
-              <span className="hidden md:inline">লিংক শেয়ার</span>
-            </button>
-          )}
-
-          {/* লাইভ অটো-আপডেট স্ট্যাটাস বাটন (Update ON / OFF) */}
-          {onOpenLiveUpdate && (
-            <button
-              onClick={onOpenLiveUpdate}
-              type="button"
-              className={`h-9 sm:h-10 px-2 sm:px-2.5 rounded-2xl border shadow-2xs flex items-center gap-1.5 transition cursor-pointer text-xs font-bold active:scale-95 ${
-                updateAvailable
-                  ? 'bg-rose-50 hover:bg-rose-100 border-rose-300 text-rose-700 animate-pulse'
-                  : isUpdateOn
-                  ? 'bg-emerald-50/90 hover:bg-emerald-100 border-emerald-200/90 text-emerald-800'
-                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
-              }`}
-              title="লাইভ অনলাইন ও অফলাইন অটো-আপডেট স্ট্যাটাস দেখুন"
-            >
-              <span
-                className={`w-2 h-2 rounded-full shrink-0 ${
-                  updateAvailable
-                    ? 'bg-rose-500 animate-ping'
-                    : isUpdateOn
-                    ? 'bg-emerald-500'
-                    : 'bg-slate-400'
-                }`}
-              />
-              <span className="hidden md:inline">
-                {updateAvailable ? 'নতুন আপডেট!' : isUpdateOn ? 'Update ON' : 'Update OFF'}
-              </span>
-              <span className="text-[10px] font-mono opacity-80">v{currentVersion}</span>
-            </button>
-          )}
-
-          {/* ২। থ্রি লাইন মেনু (☰) */}
+        {/* Right Corner: Only Hamburger Menu (☰) — All options inside as requested */}
+        <div className="flex items-center gap-2">
+          {/* থ্রি লাইন মেনু (☰) */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               type="button"
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center transition cursor-pointer shadow-xs ${
+              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center transition cursor-pointer shadow-xs relative ${
                 isMenuOpen
                   ? 'bg-rose-100 text-rose-700 ring-2 ring-rose-400'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 shadow-2xs'
+                  : 'bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 shadow-2xs hover:border-slate-300'
               }`}
-              title="সকল টুলস মেনু (☰)"
+              title="সকল অপশন ও টুলস মেনু (☰)"
               aria-label="Toggle navigation menu"
             >
               <Menu className="w-5 h-5 text-slate-800" />
+              {/* Notification dot if daily spin is available or update is ready */}
+              {(canSpinToday() || updateAvailable) && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 border-2 border-white rounded-full animate-ping"></span>
+              )}
+              {(canSpinToday() || updateAvailable) && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-rose-500 border-2 border-white rounded-full"></span>
+              )}
             </button>
 
-            {/* ☰ Dropdown Menu (Contains All 25 Tools) */}
+            {/* ☰ Dropdown Menu */}
             {isMenuOpen && (
               <div className="absolute right-0 top-12 mt-2 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-200 p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 px-1">
@@ -259,6 +247,55 @@ export const Header: React.FC<HeaderProps> = ({
                   >
                     <Home className="w-3 h-3" />
                     <span>হোম পেজ</span>
+                  </button>
+                </div>
+
+                {/* Quick Spin & Account inside Menu */}
+                <div className="grid grid-cols-2 gap-1.5 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onOpenSpinModal?.();
+                    }}
+                    className="p-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 border border-amber-200 text-left cursor-pointer flex items-center gap-2"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
+                      <Gift className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-900 block leading-tight">
+                        লাকি স্পিন
+                      </span>
+                      <span className="text-[9px] text-amber-700 font-semibold">
+                        {canSpinToday() ? '১০০-১০০০ কয়েন' : 'সম্পন্ন ✅'}
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      if (isLoggedIn) {
+                        onOpenWalletModal?.();
+                      } else {
+                        onOpenAuthModal?.();
+                      }
+                    }}
+                    className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left cursor-pointer flex items-center gap-2"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center shrink-0">
+                      <Wallet className="w-3.5 h-3.5 text-yellow-300" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-900 block leading-tight">
+                        {isLoggedIn ? 'আমার ওয়ালেট' : 'লগইন / একাউন্ট'}
+                      </span>
+                      <span className="text-[9px] text-slate-500 font-semibold">
+                        {isLoggedIn ? `${user?.coins || 0} কয়েন` : 'বোনাস নিন'}
+                      </span>
+                    </div>
                   </button>
                 </div>
 
@@ -319,54 +356,68 @@ export const Header: React.FC<HeaderProps> = ({
                     type="text"
                     value={menuSearch}
                     onChange={(e) => setMenuSearch(e.target.value)}
-                    placeholder="টুল খুঁজুন... (২৫টির মধ্যে)"
+                    placeholder={`টুল খুঁজুন... (${toBanglaNum(allToolsList.length)}টির মধ্যে)`}
                     className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                 </div>
 
-                {/* মোবাইল অ্যাপ নামান ও শেয়ার অপশন */}
-                <div className="grid grid-cols-2 gap-1.5 mb-2">
+                {/* সরাসরি অ্যাপ ইনস্টল অপশন (ত্রি লাইনের ভিতরে) */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    if (onDirectInstall) {
+                      onDirectInstall();
+                    } else {
+                      onOpenMobileInstall();
+                    }
+                  }}
+                  className="w-full mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white shadow-sm flex items-center justify-between gap-2.5 transition cursor-pointer active:scale-98 text-left"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
+                      <Smartphone className="w-4 h-4 text-white animate-pulse" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold leading-tight block">
+                        সরাসরি অ্যাপ ইনস্টল 📲
+                      </span>
+                      <span className="text-[10px] text-rose-100 block">
+                        হোম স্ক্রিনে ইনস্টল ও QR কোড
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-extrabold bg-white text-rose-600 px-2.5 py-1 rounded-xl shadow-xs shrink-0">
+                    ইনস্টল
+                  </span>
+                </button>
+
+                {onOpenDeveloperContact && (
                   <button
                     type="button"
                     onClick={() => {
                       setIsMenuOpen(false);
-                      onOpenMobileInstall();
+                      onOpenDeveloperContact();
                     }}
-                    className="p-2 rounded-xl bg-gradient-to-r from-rose-50 to-indigo-50 hover:from-rose-100 hover:to-indigo-100 border border-rose-200/80 transition flex items-center gap-2 group cursor-pointer text-left"
+                    className="w-full mb-2 p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 transition flex items-center justify-between gap-2 group cursor-pointer text-left"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center shrink-0">
-                      <Smartphone className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-bold text-slate-900 block leading-tight">
-                        মোবাইল অ্যাপ
-                      </span>
-                      <span className="text-[9px] text-slate-500">QR ও APK</span>
-                    </div>
-                  </button>
-
-                  {onOpenShare && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        onOpenShare();
-                      }}
-                      className="p-2 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition flex items-center gap-2 group cursor-pointer text-left"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-slate-800 group-hover:bg-rose-600 text-white flex items-center justify-center shrink-0 transition">
-                        <Share2 className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 transition">
+                        <MessageSquare className="w-3.5 h-3.5 text-white" />
                       </div>
                       <div>
-                        <span className="text-[11px] font-bold text-slate-900 block leading-tight">
-                          লিংক শেয়ার
+                        <span className="text-xs font-bold text-slate-800 block leading-tight">
+                          সরাসরি ডেভেলপার সাপোর্ট
                         </span>
-                        <span className="text-[9px] text-slate-500">সকল ২৫টি টুলস</span>
+                        <span className="text-[9px] text-slate-500">মেসেজ ও সহায়তা</span>
                       </div>
-                    </button>
-                  )}
-                </div>
+                    </div>
+                    <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                      মেসেজ দিন
+                    </span>
+                  </button>
+                )}
 
                 {/* লাইভ অটো-আপডেট স্ট্যাটাস মেনু আইটেম */}
                 {onOpenLiveUpdate && (
@@ -448,13 +499,18 @@ export const Header: React.FC<HeaderProps> = ({
                     }}
                     className="text-xs font-bold text-slate-700 hover:text-rose-600 transition cursor-pointer"
                   >
-                    🏠 সকল ২৫টি টুলস গ্রিড ভিউ
+                    🏠 সকল {toBanglaNum(allToolsList.length)}টি টুলস গ্রিড ভিউ
                   </button>
                 </div>
               </div>
             )}
           </div>
         </div>
+      </div>
+
+      {/* লাইভ বর্তমান ডেট, টাইম, বার ও বঙ্গাব্দ-হিজরি ক্যালেন্ডার উইজেট */}
+      <div className="max-w-6xl mx-auto px-4 mt-3 sm:mt-4 flex justify-center">
+        <BanglaLiveDateTimeWidget />
       </div>
     </header>
   );

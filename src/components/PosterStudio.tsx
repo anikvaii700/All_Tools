@@ -13,7 +13,22 @@ import {
   Type,
   Check,
   Copy,
+  Scissors,
+  Maximize2,
+  MoveVertical,
+  MoveHorizontal,
+  RefreshCw,
+  Sparkles,
+  Move,
+  Crosshair,
+  Eye,
+  EyeOff,
+  ChevronsUp,
+  ChevronsDown,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
+import { removeImageBackground } from '../utils/imageCutout';
 
 interface PosterStudioProps {
   onBackToHub: () => void;
@@ -40,15 +55,29 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
     new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' })
   );
 
-  // Photos
+  // Photos & Cutout Engine
   const [uploadedImage1, setUploadedImage1] = useState<string | null>(null);
+  const [rawUploadedImage1, setRawUploadedImage1] = useState<string | null>(null);
   const [uploadedImage2, setUploadedImage2] = useState<string | null>(null);
+  const [isRemovingBg, setIsRemovingBg] = useState<boolean>(false);
+  const [autoCutout, setAutoCutout] = useState<boolean>(true);
+  const [cutoutTolerance, setCutoutTolerance] = useState<number>(42);
+  const [imageAspect, setImageAspect] = useState<number>(0.85);
+
+  // 4-Way Photo Scale, Stretch and Position (for slogan & leader portraits)
+  const [photoScale, setPhotoScale] = useState<number>(100);
+  const [photoWidthScale, setPhotoWidthScale] = useState<number>(100);
+  const [photoHeightScale, setPhotoHeightScale] = useState<number>(100);
+  const [photoPosY, setPhotoPosY] = useState<number>(15);
+  const [photoPosX, setPhotoPosX] = useState<number>(0);
+  const [showTransformOverlay, setShowTransformOverlay] = useState<boolean>(true);
 
   // Controls
   const [fontSize, setFontSize] = useState<number>(28);
   const [quoteBgTheme, setQuoteBgTheme] = useState<'gold_dark' | 'vintage_rose' | 'deep_blue'>('gold_dark');
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const previewContainerRef = useRef<HTMLDivElement | null>(null);
 
   const handleTemplateChange = (tmpl: PosterTemplate) => {
     setTemplate(tmpl);
@@ -81,16 +110,190 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, slot: 1 | 2) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, slot: 1 | 2) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      if (slot === 1) setUploadedImage1(reader.result as string);
-      else if (slot === 2) setUploadedImage2(reader.result as string);
-      onShowToast('ছবি আপলোড সম্পন্ন! 🖼️', '✅');
+    reader.onload = async () => {
+      const result = reader.result as string;
+      if (slot === 1) {
+        setRawUploadedImage1(result);
+        const tempImg = new Image();
+        tempImg.onload = () => {
+          if (tempImg.width && tempImg.height) {
+            setImageAspect(tempImg.width / tempImg.height);
+          }
+        };
+        tempImg.src = result;
+
+        if (autoCutout) {
+          setIsRemovingBg(true);
+          onShowToast('ছবির ব্যাকগ্রাউন্ড রিমুভ ও কাটআউট প্রসেস হচ্ছে... ✂️', '⏳');
+          try {
+            const cutout = await removeImageBackground(result, { tolerance: cutoutTolerance });
+            setUploadedImage1(cutout);
+            onShowToast('ব্যাকগ্রাউন্ড রিমুভ সম্পন্ন! ছবি সেট করা হয়েছে 🖼️✨', '✅');
+          } catch (err) {
+            console.error('Cutout error:', err);
+            setUploadedImage1(result);
+            onShowToast('ছবি আপলোড সম্পন্ন! 🖼️', '✅');
+          } finally {
+            setIsRemovingBg(false);
+          }
+        } else {
+          setUploadedImage1(result);
+          onShowToast('ছবি আপলোড সম্পন্ন! 🖼️', '✅');
+        }
+      } else if (slot === 2) {
+        setUploadedImage2(result);
+        if (template === 'slogan') {
+          onShowToast('২য় ছবি পেছনের ব্যাকগ্রাউন্ড হিসেবে যুক্ত হয়েছে! 🌄✨', '✅');
+        } else {
+          onShowToast('২য় ছবি আপলোড সম্পন্ন! 🖼️', '✅');
+        }
+      }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleRecutout = async (newTolerance?: number, forceRaw?: boolean) => {
+    if (!rawUploadedImage1) return;
+    if (forceRaw) {
+      setUploadedImage1(rawUploadedImage1);
+      return;
+    }
+    setIsRemovingBg(true);
+    const tol = newTolerance !== undefined ? newTolerance : cutoutTolerance;
+    try {
+      const cutout = await removeImageBackground(rawUploadedImage1, { tolerance: tol });
+      setUploadedImage1(cutout);
+      onShowToast('ব্যাকগ্রাউন্ড রিমুভ আপডেট সম্পন্ন! ✂️', '✅');
+    } catch {
+      setUploadedImage1(rawUploadedImage1);
+    } finally {
+      setIsRemovingBg(false);
+    }
+  };
+
+  // Synchronous portrait dimensions & coordinates calculation (Used by both Canvas and UI overlay)
+  const getPortraitBox = () => {
+    const cw = 900;
+    let ch = 900;
+    if (aspectRatio === '4:5') ch = 1125;
+    if (aspectRatio === '16:9') ch = 506;
+
+    const totalScale = (photoScale || 100) / 100;
+    const wScale = (photoWidthScale || 100) / 100;
+    const hScale = (photoHeightScale || 100) / 100;
+
+    const baseW = cw * 0.70;
+    const baseH = baseW / (imageAspect || 0.85);
+
+    const targetW = baseW * totalScale * wScale;
+    const targetH = baseH * totalScale * hScale;
+
+    const targetX = (cw - targetW) / 2 + (photoPosX || 0);
+    const targetY = 25 + (photoPosY || 0);
+
+    return { x: targetX, y: targetY, w: targetW, h: targetH, cw, ch };
+  };
+
+  // 4-Directional & Corner interactive drag & resize engine
+  const startDrag = (
+    e: React.PointerEvent,
+    action: 'move' | 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'se' | 'sw'
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startClientX = e.clientX;
+    const startClientY = e.clientY;
+    const initX = photoPosX;
+    const initY = photoPosY;
+    const initWScale = photoWidthScale;
+    const initHScale = photoHeightScale;
+
+    const container = previewContainerRef.current;
+    const rect = container?.getBoundingClientRect();
+    const containerW = rect ? rect.width : 400;
+    const containerH = rect ? rect.height : 400;
+
+    const currentBox = getPortraitBox();
+    const pxRatioX = currentBox.cw / containerW;
+    const pxRatioY = currentBox.ch / containerH;
+
+    const onPointerMove = (ev: PointerEvent) => {
+      const dx = (ev.clientX - startClientX) * pxRatioX;
+      const dy = (ev.clientY - startClientY) * pxRatioY;
+
+      if (action === 'move') {
+        setPhotoPosX(Math.round(initX + dx));
+        setPhotoPosY(Math.round(initY + dy));
+      } else if (action === 'e') {
+        const deltaPercent = (dx / (currentBox.w || 1)) * 100;
+        setPhotoWidthScale(Math.max(30, Math.min(260, Math.round(initWScale + deltaPercent))));
+      } else if (action === 'w') {
+        const deltaPercent = (-dx / (currentBox.w || 1)) * 100;
+        setPhotoWidthScale(Math.max(30, Math.min(260, Math.round(initWScale + deltaPercent))));
+        setPhotoPosX(Math.round(initX + dx / 2));
+      } else if (action === 's') {
+        const deltaPercent = (dy / (currentBox.h || 1)) * 100;
+        setPhotoHeightScale(Math.max(30, Math.min(260, Math.round(initHScale + deltaPercent))));
+      } else if (action === 'n') {
+        const deltaPercent = (-dy / (currentBox.h || 1)) * 100;
+        setPhotoHeightScale(Math.max(30, Math.min(260, Math.round(initHScale + deltaPercent))));
+        setPhotoPosY(Math.round(initY + dy));
+      } else if (action === 'se') {
+        const deltaPercentX = (dx / (currentBox.w || 1)) * 100;
+        const deltaPercentY = (dy / (currentBox.h || 1)) * 100;
+        setPhotoWidthScale(Math.max(30, Math.min(260, Math.round(initWScale + deltaPercentX))));
+        setPhotoHeightScale(Math.max(30, Math.min(260, Math.round(initHScale + deltaPercentY))));
+      } else if (action === 'sw') {
+        const deltaPercentX = (-dx / (currentBox.w || 1)) * 100;
+        const deltaPercentY = (dy / (currentBox.h || 1)) * 100;
+        setPhotoWidthScale(Math.max(30, Math.min(260, Math.round(initWScale + deltaPercentX))));
+        setPhotoHeightScale(Math.max(30, Math.min(260, Math.round(initHScale + deltaPercentY))));
+        setPhotoPosX(Math.round(initX + dx / 2));
+      } else if (action === 'ne') {
+        const deltaPercentX = (dx / (currentBox.w || 1)) * 100;
+        const deltaPercentY = (-dy / (currentBox.h || 1)) * 100;
+        setPhotoWidthScale(Math.max(30, Math.min(260, Math.round(initWScale + deltaPercentX))));
+        setPhotoHeightScale(Math.max(30, Math.min(260, Math.round(initHScale + deltaPercentY))));
+        setPhotoPosY(Math.round(initY + dy));
+      } else if (action === 'nw') {
+        const deltaPercentX = (-dx / (currentBox.w || 1)) * 100;
+        const deltaPercentY = (-dy / (currentBox.h || 1)) * 100;
+        setPhotoWidthScale(Math.max(30, Math.min(260, Math.round(initWScale + deltaPercentX))));
+        setPhotoHeightScale(Math.max(30, Math.min(260, Math.round(initHScale + deltaPercentY))));
+        setPhotoPosX(Math.round(initX + dx / 2));
+        setPhotoPosY(Math.round(initY + dy));
+      }
+    };
+
+    const onPointerUp = () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  };
+
+  const handleFitFacePreset = () => {
+    setPhotoScale(100);
+    setPhotoWidthScale(100);
+    setPhotoHeightScale(100);
+    setPhotoPosY(15);
+    setPhotoPosX(0);
+    onShowToast('মুখ ও মাথা ফ্রেমের মাঝখানে পারফেক্ট ফিট করা হয়েছে! 🎯✨', '✅');
+  };
+
+  const handleResetTransforms = () => {
+    setPhotoScale(100);
+    setPhotoWidthScale(100);
+    setPhotoHeightScale(100);
+    setPhotoPosY(15);
+    setPhotoPosX(0);
+    onShowToast('ছবির সাইজ ও পজিশন ডিফল্টে রিসেট করা হয়েছে! 🔄', '✅');
   };
 
   // Canvas Drawing Engine for 5 distinct templates
@@ -450,85 +653,114 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
       else if (template === 'slogan') {
         const upperHeight = height * 0.51;
 
-        // 1. Upper background gradient (Deep royal navy)
-        const topBg = ctx.createLinearGradient(0, 0, width, upperHeight);
-        topBg.addColorStop(0, '#04162e');
-        topBg.addColorStop(0.5, '#0a2345');
-        topBg.addColorStop(1, '#0e2f5b');
-        ctx.fillStyle = topBg;
-        ctx.fillRect(0, 0, width, height);
+        // 1. Upper background: Custom photo (Slot 2) if uploaded, otherwise Bangladesh National Flag & Navy
+        let customBgDrawn = false;
+        if (uploadedImage2) {
+          try {
+            const bgImg = await loadImage(uploadedImage2);
+            const targetBgH = upperHeight + 50;
+            const bImgAspect = bgImg.width / bgImg.height;
+            const targetAspect = width / targetBgH;
+            let sx = 0, sy = 0, sw = bgImg.width, sh = bgImg.height;
+            if (bImgAspect > targetAspect) {
+              sw = bgImg.height * targetAspect;
+              sx = (bgImg.width - sw) / 2;
+            } else {
+              sh = bgImg.width / targetAspect;
+              sy = (bgImg.height - sh) / 2;
+            }
+            ctx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, width, targetBgH);
+            customBgDrawn = true;
+          } catch (e) {
+            console.error('Failed to draw custom background:', e);
+          }
+        }
 
-        // Bangladesh National Flag Waving in top-left
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(width * 0.52, 0);
-        ctx.bezierCurveTo(
-          width * 0.44, upperHeight * 0.25,
-          width * 0.26, upperHeight * 0.55,
-          0, upperHeight * 0.65
-        );
-        ctx.closePath();
-        const flagGrad = ctx.createLinearGradient(0, 0, width * 0.45, upperHeight * 0.5);
-        flagGrad.addColorStop(0, '#006a4e');
-        flagGrad.addColorStop(0.5, '#014d38');
-        flagGrad.addColorStop(1, '#002619');
-        ctx.fillStyle = flagGrad;
-        ctx.fill();
+        if (!customBgDrawn) {
+          // Upper background gradient (Deep royal navy)
+          const topBg = ctx.createLinearGradient(0, 0, width, upperHeight);
+          topBg.addColorStop(0, '#04162e');
+          topBg.addColorStop(0.5, '#0a2345');
+          topBg.addColorStop(1, '#0e2f5b');
+          ctx.fillStyle = topBg;
+          ctx.fillRect(0, 0, width, height);
 
-        // Flag Glowing Red Sun Disk
-        const sunX = width * 0.17;
-        const sunY = upperHeight * 0.38;
-        const sunR = width * 0.14;
-        const sunGrad = ctx.createRadialGradient(sunX, sunY, sunR * 0.2, sunX, sunY, sunR);
-        sunGrad.addColorStop(0, '#f43f5e');
-        sunGrad.addColorStop(0.7, '#e11d48');
-        sunGrad.addColorStop(1, '#9f1239');
-        ctx.fillStyle = sunGrad;
-        ctx.beginPath();
-        ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+          // Bangladesh National Flag Waving in top-left
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(width * 0.52, 0);
+          ctx.bezierCurveTo(
+            width * 0.44, upperHeight * 0.25,
+            width * 0.26, upperHeight * 0.55,
+            0, upperHeight * 0.65
+          );
+          ctx.closePath();
+          const flagGrad = ctx.createLinearGradient(0, 0, width * 0.45, upperHeight * 0.5);
+          flagGrad.addColorStop(0, '#006a4e');
+          flagGrad.addColorStop(0.5, '#014d38');
+          flagGrad.addColorStop(1, '#002619');
+          ctx.fillStyle = flagGrad;
+          ctx.fill();
 
-        // Bangladesh Map Watermark Silhouette on top-right
-        ctx.save();
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
-        ctx.fillStyle = 'rgba(14, 165, 233, 0.12)';
-        ctx.lineWidth = 3;
-        const mapX = width * 0.66;
-        const mapY = upperHeight * 0.08;
-        const mapW = width * 0.28;
-        const mapH = upperHeight * 0.75;
-        ctx.beginPath();
-        ctx.moveTo(mapX + mapW * 0.45, mapY);
-        ctx.lineTo(mapX + mapW * 0.72, mapY + mapH * 0.14);
-        ctx.lineTo(mapX + mapW * 0.88, mapY + mapH * 0.28);
-        ctx.lineTo(mapX + mapW * 0.96, mapY + mapH * 0.48);
-        ctx.lineTo(mapX + mapW * 0.84, mapY + mapH * 0.74);
-        ctx.lineTo(mapX + mapW * 0.96, mapY + mapH * 0.92);
-        ctx.lineTo(mapX + mapW * 0.75, mapY + mapH * 0.98);
-        ctx.lineTo(mapX + mapW * 0.58, mapY + mapH * 0.84);
-        ctx.lineTo(mapX + mapW * 0.38, mapY + mapH * 0.94);
-        ctx.lineTo(mapX + mapW * 0.18, mapY + mapH * 0.80);
-        ctx.lineTo(mapX + mapW * 0.04, mapY + mapH * 0.54);
-        ctx.lineTo(mapX + mapW * 0.14, mapY + mapH * 0.30);
-        ctx.lineTo(mapX + mapW * 0.32, mapY + mapH * 0.16);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
+          // Flag Glowing Red Sun Disk
+          const sunX = width * 0.17;
+          const sunY = upperHeight * 0.38;
+          const sunR = width * 0.14;
+          const sunGrad = ctx.createRadialGradient(sunX, sunY, sunR * 0.2, sunX, sunY, sunR);
+          sunGrad.addColorStop(0, '#f43f5e');
+          sunGrad.addColorStop(0.7, '#e11d48');
+          sunGrad.addColorStop(1, '#9f1239');
+          ctx.fillStyle = sunGrad;
+          ctx.beginPath();
+          ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          // Bangladesh Map Watermark Silhouette on top-right
+          ctx.save();
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+          ctx.fillStyle = 'rgba(14, 165, 233, 0.12)';
+          ctx.lineWidth = 3;
+          const mapX = width * 0.66;
+          const mapY = upperHeight * 0.08;
+          const mapW = width * 0.28;
+          const mapH = upperHeight * 0.75;
+          ctx.beginPath();
+          ctx.moveTo(mapX + mapW * 0.45, mapY);
+          ctx.lineTo(mapX + mapW * 0.72, mapY + mapH * 0.14);
+          ctx.lineTo(mapX + mapW * 0.88, mapY + mapH * 0.28);
+          ctx.lineTo(mapX + mapW * 0.96, mapY + mapH * 0.48);
+          ctx.lineTo(mapX + mapW * 0.84, mapY + mapH * 0.74);
+          ctx.lineTo(mapX + mapW * 0.96, mapY + mapH * 0.92);
+          ctx.lineTo(mapX + mapW * 0.75, mapY + mapH * 0.98);
+          ctx.lineTo(mapX + mapW * 0.58, mapY + mapH * 0.84);
+          ctx.lineTo(mapX + mapW * 0.38, mapY + mapH * 0.94);
+          ctx.lineTo(mapX + mapW * 0.18, mapY + mapH * 0.80);
+          ctx.lineTo(mapX + mapW * 0.04, mapY + mapH * 0.54);
+          ctx.lineTo(mapX + mapW * 0.14, mapY + mapH * 0.30);
+          ctx.lineTo(mapX + mapW * 0.32, mapY + mapH * 0.16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
 
         // 2. Leader / Speaker Portrait Photo
         let portraitDrawn = false;
         if (uploadedImage1) {
           try {
             const userImg = await loadImage(uploadedImage1);
-            const imgAspect = userImg.width / userImg.height;
-            const targetH = upperHeight * 1.05;
-            const targetW = targetH * imgAspect;
-            const targetX = (width - targetW) / 2;
-            const targetY = upperHeight - targetH + 10;
-            ctx.drawImage(userImg, targetX, targetY, targetW, targetH);
+            const pBox = getPortraitBox();
+
+            ctx.save();
+            // Soft cinematic drop shadow behind cutout
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.50)';
+            ctx.shadowBlur = 28;
+            ctx.shadowOffsetY = 8;
+            ctx.drawImage(userImg, pBox.x, pBox.y, pBox.w, pBox.h);
+            ctx.restore();
+
             portraitDrawn = true;
           } catch {}
         }
@@ -855,6 +1087,9 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
     quoteBgTheme,
     uploadedImage1,
     uploadedImage2,
+    photoScale,
+    photoPosY,
+    photoPosX,
   ]);
 
   const handleDownload = () => {
@@ -957,9 +1192,114 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
       <main className="max-w-6xl w-full mx-auto px-4 py-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Canvas Preview */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center bg-slate-950/70 p-4 sm:p-6 rounded-3xl border border-slate-800">
-          <div className="w-full max-w-[460px] aspect-square rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex items-center justify-center bg-black">
-            <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
+          <div
+            ref={previewContainerRef}
+            className="w-full max-w-[460px] rounded-2xl overflow-hidden shadow-2xl border border-slate-700 flex items-center justify-center bg-black relative select-none"
+            style={{ aspectRatio: aspectRatio === '4:5' ? '4/5' : aspectRatio === '16:9' ? '16/9' : '1/1' }}
+          >
+            <canvas ref={canvasRef} className="w-full h-full object-contain pointer-events-none" />
+
+            {/* Interactive 4-Way & Corner Drag & Resize Overlay (Active in slogan template or with portrait photo) */}
+            {template === 'slogan' && (uploadedImage1 || rawUploadedImage1) && showTransformOverlay && (() => {
+              const pBox = getPortraitBox();
+              const leftPct = (pBox.x / pBox.cw) * 100;
+              const topPct = (pBox.y / pBox.ch) * 100;
+              const widthPct = (pBox.w / pBox.cw) * 100;
+              const heightPct = (pBox.h / pBox.ch) * 100;
+
+              return (
+                <div
+                  className="absolute border-2 border-rose-500/80 bg-rose-500/10 cursor-move touch-none group transition-shadow shadow-[0_0_15px_rgba(244,63,94,0.3)] z-10"
+                  style={{
+                    left: `${leftPct}%`,
+                    top: `${topPct}%`,
+                    width: `${widthPct}%`,
+                    height: `${heightPct}%`,
+                  }}
+                  onPointerDown={(e) => startDrag(e, 'move')}
+                  title="ছবিটি টেনে যেকোনো স্থানে সরান"
+                >
+                  {/* Center Hint Badge */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 py-0.5 rounded-full bg-black/75 text-rose-300 text-[9px] font-bold pointer-events-none backdrop-blur-sm whitespace-nowrap flex items-center gap-1 border border-rose-500/40">
+                    <Move className="w-2.5 h-2.5 text-rose-400" />
+                    <span>টেনে সরান (Move)</span>
+                  </div>
+
+                  {/* 4 Corner Handles (NW, NE, SE, SW) */}
+                  <div
+                    className="absolute -top-2 -left-2 w-4 h-4 rounded-full bg-rose-500 border-2 border-white shadow cursor-nwse-resize hover:scale-125 transition-transform"
+                    onPointerDown={(e) => startDrag(e, 'nw')}
+                    title="টেনে কোণা থেকে বড়/ছোট করুন (NW)"
+                  />
+                  <div
+                    className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-rose-500 border-2 border-white shadow cursor-nesw-resize hover:scale-125 transition-transform"
+                    onPointerDown={(e) => startDrag(e, 'ne')}
+                    title="টেনে কোণা থেকে বড়/ছোট করুন (NE)"
+                  />
+                  <div
+                    className="absolute -bottom-2 -right-2 w-4 h-4 rounded-full bg-rose-500 border-2 border-white shadow cursor-nwse-resize hover:scale-125 transition-transform"
+                    onPointerDown={(e) => startDrag(e, 'se')}
+                    title="টেনে কোণা থেকে বড়/ছোট করুন (SE)"
+                  />
+                  <div
+                    className="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-rose-500 border-2 border-white shadow cursor-nesw-resize hover:scale-125 transition-transform"
+                    onPointerDown={(e) => startDrag(e, 'sw')}
+                    title="টেনে কোণা থেকে বড়/ছোট করুন (SW)"
+                  />
+
+                  {/* 4 Edge Handles (N, E, S, W) for stretching 4 sides */}
+                  <div
+                    className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-3 rounded-full bg-amber-400 border border-white shadow cursor-ns-resize hover:scale-125 transition-transform flex items-center justify-center"
+                    onPointerDown={(e) => startDrag(e, 'n')}
+                    title="উপরের দিক থেকে টেনে লম্বা করুন / উচ্চতা বাড়ান (Top)"
+                  />
+                  <div
+                    className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-6 h-3 rounded-full bg-amber-400 border border-white shadow cursor-ns-resize hover:scale-125 transition-transform flex items-center justify-center"
+                    onPointerDown={(e) => startDrag(e, 's')}
+                    title="নিচের দিক থেকে টেনে লম্বা করুন / উচ্চতা বাড়ান (Bottom)"
+                  />
+                  <div
+                    className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-6 rounded-full bg-cyan-400 border border-white shadow cursor-ew-resize hover:scale-125 transition-transform flex items-center justify-center"
+                    onPointerDown={(e) => startDrag(e, 'w')}
+                    title="বামের দিক থেকে টেনে চওড়া করুন / প্রসারিত করুন (Left)"
+                  />
+                  <div
+                    className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-6 rounded-full bg-cyan-400 border border-white shadow cursor-ew-resize hover:scale-125 transition-transform flex items-center justify-center"
+                    onPointerDown={(e) => startDrag(e, 'e')}
+                    title="ডানের দিক থেকে টেনে চওড়া করুন / প্রসারিত করুন (Right)"
+                  />
+                </div>
+              );
+            })()}
           </div>
+
+          {/* Guide & Overlay Toggle */}
+          {template === 'slogan' && (uploadedImage1 || rawUploadedImage1) && (
+            <div className="mt-2.5 flex items-center justify-between w-full max-w-[460px] text-[11px] text-slate-400 px-1">
+              <span className="flex items-center gap-1 text-slate-300">
+                <Crosshair className="w-3.5 h-3.5 text-rose-400" />
+                <span>হ্যান্ডেল বা বর্ডার টেনে সাইজ ও পজিশন পরিবর্তন করুন</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowTransformOverlay(!showTransformOverlay)}
+                className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1 cursor-pointer transition text-[10px]"
+              >
+                {showTransformOverlay ? (
+                  <>
+                    <EyeOff className="w-3 h-3 text-slate-400" />
+                    <span>ফ্রেম লুকান</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-3 h-3 text-rose-400" />
+                    <span>ফ্রেম দেখান</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
           <div className="mt-4 flex items-center gap-3 text-xs text-slate-400">
             <span>অনুপাত:</span>
             {(['1:1', '4:5', '16:9'] as AspectRatio[]).map((ar) => (
@@ -1056,16 +1396,22 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-slate-200 flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-rose-400" />
-                <span>ছবি আপলোড:</span>
+                <span>ছবি আপলোড ও ব্যাকগ্রাউন্ড কন্ট্রোল:</span>
               </h4>
-              {template === 'slogan' && uploadedImage1 && (
+              {template === 'slogan' && (uploadedImage1 || rawUploadedImage1) && (
                 <button
                   type="button"
                   onClick={() => {
                     setUploadedImage1(null);
+                    setRawUploadedImage1(null);
+                    setPhotoScale(100);
+                    setPhotoWidthScale(100);
+                    setPhotoHeightScale(100);
+                    setPhotoPosY(15);
+                    setPhotoPosX(0);
                     onShowToast('ডিফল্ট নেতার ছবিতে ফিরে যাওয়া হয়েছে! 🔄', '🇧🇩');
                   }}
-                  className="px-2 py-0.5 rounded-md bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer shadow-sm transition"
                 >
                   ডিফল্ট ছবিতে ফিরুন
                 </button>
@@ -1073,11 +1419,18 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
             </div>
 
             {template === 'slogan' && (
-              <div className="p-2 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-[11px] text-emerald-300 flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-[11px] text-emerald-300 flex items-center justify-between">
                 <span>🇧🇩 রেফারেন্স জাতীয় নেতা ও বিজয় স্লোগান ফ্রেম সক্রিয়</span>
-                <span className="text-[10px] text-emerald-400/80 font-bold">
-                  {uploadedImage1 ? 'কাস্টম ছবি যুক্ত' : 'ডিফল্ট ছবি'}
+                <span className="text-[10px] text-emerald-400/90 font-bold">
+                  {uploadedImage1 ? 'কাস্টম ছবি (কাটআউট)' : 'ডিফল্ট ছবি'}
                 </span>
+              </div>
+            )}
+
+            {isRemovingBg && (
+              <div className="p-2.5 rounded-xl bg-amber-950/70 border border-amber-500/60 text-amber-200 text-xs font-bold flex items-center gap-2 animate-pulse shadow-md">
+                <Sparkles className="w-4 h-4 text-amber-400 animate-spin shrink-0" />
+                <span>ছবির ব্যাকগ্রাউন্ড স্বয়ংক্রিয়ভাবে রিমুভ ও কাটআউট হচ্ছে...</span>
               </div>
             )}
 
@@ -1094,7 +1447,13 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
                 />
               </div>
               <div>
-                <span className="text-[11px] text-slate-400 block mb-1">২য় ছবি (মিম রিঅ্যাকশন):</span>
+                <span className="text-[11px] text-slate-400 block mb-1">
+                  {template === 'slogan'
+                    ? '২য় ছবি (পেছনের ব্যাকগ্রাউন্ড পরিবর্তন):'
+                    : template === 'meme'
+                    ? '২য় ছবি (মিম রিঅ্যাকশন):'
+                    : '২য় ছবি (কাস্টম ব্যাকগ্রাউন্ড):'}
+                </span>
                 <input
                   type="file"
                   accept="image/*"
@@ -1103,6 +1462,245 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
                 />
               </div>
             </div>
+
+            {/* Custom Background Status Card */}
+            {uploadedImage2 && (
+              <div className="p-2.5 rounded-xl bg-purple-950/60 border border-purple-600/60 text-[11px] text-purple-200 flex items-center justify-between shadow-sm">
+                <span className="flex items-center gap-1.5 font-bold">
+                  <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
+                  <span>🌄 কাস্টম পেছনের ব্যাকগ্রাউন্ড সক্রিয়</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadedImage2(null);
+                    onShowToast('কাস্টম ব্যাকগ্রাউন্ড মুছে ডিফল্ট ব্যাকগ্রাউন্ডে ফিরে যাওয়া হয়েছে! 🔄', '🇧🇩');
+                  }}
+                  className="px-2 py-0.5 rounded-lg bg-rose-800 hover:bg-rose-700 text-white font-bold text-[10px] cursor-pointer transition shadow-sm"
+                >
+                  ❌ ব্যাকগ্রাউন্ড মুছুন / রিসেট
+                </button>
+              </div>
+            )}
+
+            {/* Smart Cutout & Photo Scaling Controls */}
+            {rawUploadedImage1 && (
+              <div className="pt-2 border-t border-slate-700/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-300 flex items-center gap-1">
+                    <Scissors className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>অটো ব্যাকগ্রাউন্ড রিমুভার (AI Cutout):</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !autoCutout;
+                      setAutoCutout(next);
+                      handleRecutout(cutoutTolerance, !next);
+                    }}
+                    className={`px-2.5 py-0.5 rounded-full font-black text-[10px] cursor-pointer transition ${
+                      autoCutout
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50'
+                        : 'bg-slate-700 text-slate-400 border border-slate-600'
+                    }`}
+                  >
+                    {autoCutout ? '🟢 কাটআউট সক্রিয়' : '⚪ মূল ছবি'}
+                  </button>
+                </div>
+
+                {autoCutout && (
+                  <div className="space-y-1.5 p-2 rounded-xl bg-slate-900/60 border border-slate-700/60">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400">কাটআউট সংবেদনশীলতা (Tolerance):</span>
+                      <span className="text-emerald-400 font-bold">{cutoutTolerance}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="range"
+                        min="20"
+                        max="80"
+                        value={cutoutTolerance}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          setCutoutTolerance(val);
+                        }}
+                        onMouseUp={() => handleRecutout(cutoutTolerance)}
+                        onTouchEnd={() => handleRecutout(cutoutTolerance)}
+                        className="w-full accent-emerald-500 cursor-pointer"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRecutout(cutoutTolerance)}
+                        className="px-2 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-[10px] font-bold cursor-pointer shrink-0"
+                      >
+                        রি-কাট
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4-Directional & Proportional Transform Controls */}
+                <div className="space-y-2.5 p-3 rounded-2xl bg-slate-900/80 border border-slate-700/70 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+                      <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>চারদিক থেকে ছবির সাইজ ও অবস্থান:</span>
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleFitFacePreset}
+                        className="px-2 py-0.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-[10px] cursor-pointer shadow-sm transition flex items-center gap-1"
+                        title="মাথা ও পুরো মুখ ফ্রেমের মাঝে সুন্দরভাবে ফিট করুন"
+                      >
+                        <span>🎯 পারফেক্ট ফেস ফিট</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResetTransforms}
+                        className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold text-[10px] cursor-pointer transition"
+                        title="রিসেট"
+                      >
+                        <RefreshCw className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Overall Zoom / Scale */}
+                  <div>
+                    <div className="flex items-center justify-between text-[11px] mb-0.5">
+                      <span className="text-slate-300 font-semibold">মোট আকার (Overall Zoom):</span>
+                      <span className="text-cyan-400 font-bold">{photoScale}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="180"
+                      value={photoScale}
+                      onChange={(e) => setPhotoScale(parseInt(e.target.value, 10))}
+                      className="w-full accent-cyan-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* 4-Way Stretch: Width (চওড়া) & Height (লম্বা) */}
+                  <div className="grid grid-cols-2 gap-2.5 pt-1">
+                    <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                      <div className="flex items-center justify-between text-[10px] text-slate-300 mb-1">
+                        <span className="flex items-center gap-1 font-semibold text-cyan-300">
+                          <MoveHorizontal className="w-3 h-3 text-cyan-400" />
+                          <span>চওড়া প্রসারিত:</span>
+                        </span>
+                        <span className="text-cyan-400 font-bold">{photoWidthScale}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="40"
+                        max="220"
+                        value={photoWidthScale}
+                        onChange={(e) => setPhotoWidthScale(parseInt(e.target.value, 10))}
+                        className="w-full accent-cyan-400 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                      <div className="flex items-center justify-between text-[10px] text-slate-300 mb-1">
+                        <span className="flex items-center gap-1 font-semibold text-amber-300">
+                          <MoveVertical className="w-3 h-3 text-amber-400" />
+                          <span>লম্বা প্রসারিত:</span>
+                        </span>
+                        <span className="text-amber-400 font-bold">{photoHeightScale}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="40"
+                        max="220"
+                        value={photoHeightScale}
+                        onChange={(e) => setPhotoHeightScale(parseInt(e.target.value, 10))}
+                        className="w-full accent-amber-400 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Position Y and Position X */}
+                  <div className="grid grid-cols-2 gap-2.5 pt-1">
+                    <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                      <div className="flex items-center justify-between text-[10px] text-slate-300 mb-1">
+                        <span className="flex items-center gap-1 font-semibold">
+                          <ChevronsUp className="w-3 h-3 text-rose-400" />
+                          <span>উপরে / নিচে:</span>
+                        </span>
+                        <span className="text-rose-400 font-bold">{photoPosY}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-120"
+                        max="220"
+                        value={photoPosY}
+                        onChange={(e) => setPhotoPosY(parseInt(e.target.value, 10))}
+                        className="w-full accent-rose-500 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                      <div className="flex items-center justify-between text-[10px] text-slate-300 mb-1">
+                        <span className="flex items-center gap-1 font-semibold">
+                          <ChevronsLeft className="w-3 h-3 text-purple-400" />
+                          <span>ডানে / বামে:</span>
+                        </span>
+                        <span className="text-purple-400 font-bold">{photoPosX}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="-140"
+                        max="140"
+                        value={photoPosX}
+                        onChange={(e) => setPhotoPosX(parseInt(e.target.value, 10))}
+                        className="w-full accent-purple-500 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick 4-Direction Nudge Buttons */}
+                  <div className="flex items-center justify-between gap-1 pt-1 text-[10px]">
+                    <span className="text-slate-400">এক ক্লিকে সরানো:</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPhotoPosY((p) => p - 10)}
+                        className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer font-bold"
+                        title="উপরে সরান"
+                      >
+                        ⬆️ উপরে
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoPosY((p) => p + 10)}
+                        className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer font-bold"
+                        title="নিচে সরান"
+                      >
+                        ⬇️ নিচে
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoPosX((p) => p - 10)}
+                        className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer font-bold"
+                        title="বামে সরান"
+                      >
+                        ⬅️ বামে
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPhotoPosX((p) => p + 10)}
+                        className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer font-bold"
+                        title="ডানে সরান"
+                      >
+                        ➡️ ডানে
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Font & Color controls */}

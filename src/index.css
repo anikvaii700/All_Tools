@@ -39,6 +39,48 @@
   background: #94a3b8;
 }
 
+/* Infinite Marquee Animation for User Reviews */
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-slow {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 150s linear infinite;
+}
+
+.animate-marquee-slow:hover {
+  animation-play-state: paused;
+}
+
+/* Very Slow Seamless Marquee Animation for Notice Banner (Right to Left) */
+@keyframes noticeMarquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-notice-marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: noticeMarquee 42s linear infinite;
+  will-change: transform;
+}
+
+.animate-notice-marquee:hover,
+.animate-notice-marquee:active {
+  animation-play-state: paused;
+}
+
 /* Print Styles for Voter Transfer Form-13 & The MoSaFa CV Maker */
 @media print {
   @page {

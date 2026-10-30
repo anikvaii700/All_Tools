@@ -17,14 +17,21 @@ interface SharePortalModalProps {
   onClose: () => void;
   activeToolId?: string | null;
   activeToolTitle?: string;
+  totalToolsCount?: number;
   onShowToast: (message: string, icon?: string) => void;
 }
+
+const toBanglaNum = (n: number | string): string => {
+  const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return String(n).replace(/\d/g, (d) => bnDigits[Number(d)]);
+};
 
 export const SharePortalModal: React.FC<SharePortalModalProps> = ({
   isOpen,
   onClose,
   activeToolId,
   activeToolTitle,
+  totalToolsCount = 23,
   onShowToast,
 }) => {
   const [copiedType, setCopiedType] = useState<'all' | 'single' | null>(null);
@@ -107,7 +114,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
               The MoSaFa Tools শেয়ার করুন
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              সকল ২২টি ফ্রি অনলাইন টুলস এক ক্লিকে বন্ধুদের পাঠান
+              সকল {toBanglaNum(totalToolsCount)}টি ফ্রি অনলাইন টুলস এক ক্লিকে বন্ধুদের পাঠান
             </p>
           </div>
         </div>
@@ -122,19 +129,19 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
               </strong>
               <span>
                 আপনি যদি কোনো নির্দিষ্ট টুলে (যেমন: CV Maker, পোস্টার বা স্টাডিমেট) থাকাকালীন ব্রাউজারের লিংক কপি করেন, তবে প্রাপক শুধুমাত্র সেই একটা টুলে প্রবেশ করবে।{' '}
-                <strong className="text-rose-700">সকল ২২টি টুলস</strong> একসাথে দেখতে নিচের <strong>"সকল ২২টি টুলসের মূল লিংক"</strong> শেয়ার করুন।
+                <strong className="text-rose-700">সকল {toBanglaNum(totalToolsCount)}টি টুলস</strong> একসাথে দেখতে নিচের <strong>"সকল {toBanglaNum(totalToolsCount)}টি টুলসের মূল লিংক"</strong> শেয়ার করুন।
               </span>
             </div>
           </div>
         </div>
 
-        {/* Option 1: Share All 22 Tools (Primary) */}
+        {/* Option 1: Share All Tools (Primary) */}
         <div className="p-4 rounded-2xl bg-slate-50 border-2 border-indigo-200/80 mb-4 relative">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse" />
               <span className="font-extrabold text-sm text-slate-900">
-                ১। সকল ২২টি টুলসের মূল পোর্টাল লিংক
+                ১। সকল {toBanglaNum(totalToolsCount)}টি টুলসের মূল পোর্টাল লিংক
               </span>
             </div>
             <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full uppercase">
@@ -143,7 +150,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
           </div>
 
           <p className="text-xs text-slate-600 mb-3 leading-relaxed">
-            এই লিংক ওপেন করলে প্রাপক সরাসরি প্রবেশ করে <strong>সকল ২২টি টুলসের পূর্ণাঙ্গ তালিকা</strong> পাবে এবং কোনো লগইন ছাড়াই যেকোনো টুল চালু করতে পারবে।
+            এই লিংক ওপেন করলে প্রাপক সরাসরি প্রবেশ করে <strong>সকল {toBanglaNum(totalToolsCount)}টি টুলসের পূর্ণাঙ্গ তালিকা</strong> পাবে এবং কোনো লগইন ছাড়াই যেকোনো টুল চালু করতে পারবে।
           </p>
 
           <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-200 mb-3">
@@ -163,7 +170,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
                 handleCopy(
                   'all',
                   publicPortalUrl,
-                  'সকল ২২টি টুলসের পাবলিক লিংক কপি হয়েছে! 📋'
+                  `সকল ${toBanglaNum(totalToolsCount)}টি টুলসের পাবলিক লিংক কপি হয়েছে! 📋`
                 )
               }
               className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs ${
@@ -189,7 +196,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
               type="button"
               onClick={() =>
                 handleWhatsAppShare(
-                  'The MoSaFa Tools - সকল ফ্রি বাংলা অনলাইন টুলস এক ক্লিকে (StudyMate BD, CV Maker, ভোটার স্থানান্তর, পোস্টার স্টুডিও সহ ২২টি কার্যকরী টুলস)',
+                  `The MoSaFa Tools - সকল ফ্রি বাংলা অনলাইন টুলস এক ক্লিকে (StudyMate BD, CV Maker, ভোটার স্থানান্তর, পোস্টার স্টুডিও সহ ${toBanglaNum(totalToolsCount)}টি কার্যকরী টুলস)`,
                   publicPortalUrl
                 )
               }

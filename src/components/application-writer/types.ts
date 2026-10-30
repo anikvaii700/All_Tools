@@ -1,9 +1,16 @@
 export type CategoryId =
-  | 'education'
-  | 'office'
-  | 'government'
-  | 'complaint'
-  | 'business'
+  | 'police'      // ১. থানা ও পুলিশ সংক্রান্ত আবেদন (১-১৫)
+  | 'municipal'   // ২. ইউনিয়ন পরিষদ, পৌরসভা ও সিটি কর্পোরেশন সংক্রান্ত আবেদন (১৬-৩৫)
+  | 'education'   // ৩. স্কুল, কলেজ ও শিক্ষা প্রতিষ্ঠান সংক্রান্ত দরখাস্ত (৩৬-৫৫)
+  | 'office'      // ৪. চাকরি ও অফিস সংক্রান্ত দরখাস্ত (৫৬-৭৫)
+  | 'land'        // ৫. জমি, সম্পত্তি ও ভূমি অফিস সংক্রান্ত আবেদন (৭৬-৮৭)
+  | 'bank'        // ৬. ব্যাংক, আর্থিক প্রতিষ্ঠান ও ঋণ সংক্রান্ত আবেদন (৮৮-১০০)
+  | 'utility'     // ৭. বিদ্যুৎ, গ্যাস, পানি ও অন্যান্য ইউটিলিটি সংক্রান্ত আবেদন (১০১-১১১)
+  | 'personal'    // ৮. ব্যক্তিগত ও পারিবারিক প্রয়োজনে দরখাস্ত (১১২-১২৪)
+  | 'business'    // ৯. ব্যবসা-বাণিজ্য ও দোকানপাট সংক্রান্ত আবেদন (১২৫-১৩৫)
+  | 'other'       // ১০. অন্যান্য দরকারি আবেদনপত্র (১৩৬-১৫০)
+  | 'government'  // Backward compatibility alias for municipal/govt
+  | 'complaint'   // Backward compatibility alias for complaints
   | 'custom';
 
 export type Language = 'bn' | 'en';
@@ -28,17 +35,20 @@ export type TemplateId =
 export interface DocumentFieldConfig {
   key: string;
   label: string;
-  placeholder: string;
+  placeholder?: string;
   type?: 'text' | 'date' | 'textarea' | 'number';
   required?: boolean;
 }
 
 export interface DocumentTypeInfo {
   id: string;
+  serialNo?: number;
   categoryId: CategoryId;
   name: string;
   nameEn: string;
   badge?: string;
+  isPopular?: boolean;
+  documentFormat?: 'gd' | 'police_complaint' | 'office' | 'education' | 'municipal' | 'standard';
   description: string;
   defaultRecipientDesignationBn: string;
   defaultRecipientDesignationEn: string;
@@ -51,6 +61,7 @@ export interface DocumentTypeInfo {
 
 export interface ApplicationFormData {
   applicantName: string;
+  applicantFatherOrHusband?: string; // পিতা / স্বামীর নাম
   applicantDesignation: string; // শ্রেণি/রোল অথবা পদবি/ডিপার্টমেন্ট
   applicantAddress: string;
   applicantPhone: string;
@@ -64,6 +75,10 @@ export interface ApplicationFormData {
   startDate: string;
   endDate: string;
   reason: string;
+  incidentDateTime?: string; // ঘটনার তারিখ ও সময় (জিডি ও অভিযোগের জন্য)
+  incidentPlace?: string; // ঘটনার স্থান
+  lostOrItemDetails?: string; // হারানো জিনিস বা দলিলের বিবরণ
+  accountOrMeterNo?: string; // ব্যাংক একাউন্ট / মিটার / খতিয়ান / হোল্ডিং নম্বর
   education: string;
   experience: string;
   skills: string;

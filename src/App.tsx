@@ -33,6 +33,7 @@ import {
   Globe,
   Radio,
   RefreshCw,
+  Files,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useAppUpdateSync } from './hooks/useAppUpdateSync';
@@ -42,6 +43,13 @@ import { FloatingParticles } from './components/FloatingParticles';
 import { MobileInstallModal } from './components/MobileInstallModal';
 import { SharePortalModal } from './components/SharePortalModal';
 import { LiveUpdateModal } from './components/LiveUpdateModal';
+import { DailySpinModal } from './components/DailySpinModal';
+import { AuthModal } from './components/AuthModal';
+import { WalletModal } from './components/WalletModal';
+import { DeveloperContactModal } from './components/DeveloperContactModal';
+import { AdminPanelModal } from './components/AdminPanelModal';
+import { ToolsNoticeBanner } from './components/ToolsNoticeBanner';
+import { useAuth } from './context/AuthContext';
 import { APP_VERSION_CONFIG } from './versionConfig';
 
 // Existing Tools
@@ -49,13 +57,9 @@ import { LoveTest } from './components/LoveTest';
 import { TypingTest } from './components/TypingTest';
 import { AgeCalculator } from './components/AgeCalculator';
 import { CoinToss } from './components/CoinToss';
-import { QuickLove } from './components/QuickLove';
 import { BanglaStatusHub } from './components/BanglaStatusHub';
 
-// Additional Tools
 import { PosterStudio } from './components/PosterStudio';
-import { LifeJourney } from './components/LifeJourney';
-import { FamilyTree } from './components/FamilyTree';
 import { RandomPickerWheel } from './components/RandomPickerWheel';
 import { BanglaQuiz } from './components/BanglaQuiz';
 import { DailyHishab } from './components/DailyHishab';
@@ -72,6 +76,7 @@ import { StudyMateBD } from './components/StudyMateBD';
 import { InvoiceMaker } from './components/InvoiceMaker';
 import { BanglaTextConverter } from './components/bangla-converter/BanglaTextConverter';
 import { ApplicationWriter } from './components/application-writer/ApplicationWriter';
+import { PDFToolkit } from './components/pdf-toolkit/PDFToolkit';
 
 export type ToolId =
   | 'studymate-bd'
@@ -79,11 +84,8 @@ export type ToolId =
   | 'typing-test'
   | 'age-calc'
   | 'decision-maker'
-  | 'love-calc'
   | 'bangla-status'
   | 'poster-studio'
-  | 'life-journey'
-  | 'family-tree'
   | 'random-picker'
   | 'bangla-quiz'
   | 'daily-hishab'
@@ -99,6 +101,7 @@ export type ToolId =
   | 'invoice-maker'
   | 'bangla-text-converter'
   | 'application-writer'
+  | 'pdf-toolkit'
   | null;
 
 export type DeviceSector = 'all' | 'desktop' | 'mobile';
@@ -125,8 +128,32 @@ export default function App() {
   const [isMobileInstallOpen, setIsMobileInstallOpen] = useState<boolean>(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [isLiveUpdateModalOpen, setIsLiveUpdateModalOpen] = useState<boolean>(false);
+  const [isSpinModalOpen, setIsSpinModalOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
+  const [authBonusPrompt, setAuthBonusPrompt] = useState<number | null>(null);
+  const [isDeveloperModalOpen, setIsDeveloperModalOpen] = useState<boolean>(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
+
+  const { user, isLoggedIn, canSpinToday } = useAuth();
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const updateSync = useAppUpdateSync();
+
+  // Auto-open lucky spin wheel on app open if user hasn't seen it this session
+  useEffect(() => {
+    try {
+      const hasAutoOpened = sessionStorage.getItem('mosafa_spin_auto_opened');
+      if (!hasAutoOpened && !activeTool) {
+        sessionStorage.setItem('mosafa_spin_auto_opened', 'true');
+        const timer = setTimeout(() => {
+          setIsSpinModalOpen(true);
+        }, 800);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // SessionStorage fallback
+    }
+  }, [activeTool]);
 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -143,10 +170,8 @@ export default function App() {
         'typing-test',
         'age-calc',
         'decision-maker',
-        'love-calc',
         'bangla-status',
         'poster-studio',
-        'life-journey',
         'family-tree',
         'random-picker',
         'bangla-quiz',
@@ -257,22 +282,7 @@ export default function App() {
       deviceTag: '📱 মোবাইলে সেরা (৩ডি কয়েন টস)',
       keywords: ['কয়েন টস', 'coin toss', 'decision maker', 'র‍্যান্ডম সিদ্ধান্ত', 'হেড টেল'],
     },
-    // 6. কুইক লাভ পারসেন্টেজ
-    {
-      id: 'love-calc',
-      title: 'কুইক লাভ পারসেন্টেজ (Love %)',
-      badge: '💖 ইনস্ট্যান্ট স্কোর',
-      badgeColor: 'bg-pink-50 text-pink-600 border-pink-200',
-      category: 'entertainment',
-      iconBg: 'from-pink-500 to-rose-600',
-      icon: <Sparkles className="w-6 h-6 text-white" />,
-      description:
-        'দুজনের নাম লিখে এক ক্লিকে ভালোবাসার শতকরা হার বের করুন। বন্ধুদের সাথে শেয়ার করার জন্য মজার লাভ মিটার স্কোর ও অ্যানিমেশন।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (ইনস্ট্যান্ট লাভ %)',
-      keywords: ['লাভ পারসেন্টেজ', 'love percentage calculator', 'ভালোবাসার হার', 'শতাংশ'],
-    },
-    // 7. বাংলা স্ট্যাটাস ও ক্যাপশন হাব
+    // 5. বাংলা স্ট্যাটাস ও ক্যাপশন হাব
     {
       id: 'bangla-status',
       title: 'বাংলা স্ট্যাটাস ও ক্যাপশন হাব',
@@ -302,37 +312,7 @@ export default function App() {
       deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (বড় ক্যানভাস ডিজাইন)',
       keywords: ['পোস্টার', 'poster studio', 'মিম', 'meme', 'ব্যানার', 'নিউজ পোস্টার', 'ছবি'],
     },
-    // 9. MoSaFa Life Journey (NEW)
-    {
-      id: 'life-journey',
-      title: 'MoSaFa Life Journey (জীবন ও ফোন জার্নি)',
-      badge: '⏳ টাইমলাইন',
-      badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-      category: 'calculator',
-      iconBg: 'from-cyan-500 to-blue-600',
-      icon: <Compass className="w-6 h-6 text-white" />,
-      description:
-        'ব্যক্তিগত জীবনের সকল স্মরণীয় মাইলফলক ও আজ পর্যন্ত ব্যবহৃত মোবাইল ফোনের ক্রমবিকাশের ভিজ্যুয়াল টাইমলাইন ও কার্ড।',
-      deviceTarget: 'both',
-      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
-      keywords: ['life journey', 'ফোন জার্নি', 'টাইমলাইন', 'স্মৃতি', 'মোবাইল ইতিহাস', 'মাইলফলক'],
-    },
-    // 10. Family Tree Builder (NEW)
-    {
-      id: 'family-tree',
-      title: 'Family Tree Builder (পারিবারিক বংশলতিকা)',
-      badge: '🌳 বংশবৃক্ষ',
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      category: 'entertainment',
-      iconBg: 'from-emerald-500 to-teal-600',
-      icon: <Users className="w-6 h-6 text-white" />,
-      description:
-        'দাদা-দাদী থেকে শুরু করে পরবর্তী প্রজন্মের সকল সদস্যের সম্পর্ক যুক্ত করে সুন্দর পারিবারিক বংশবৃক্ষ তৈরি ও প্রিন্ট করুন।',
-      deviceTarget: 'desktop',
-      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (বংশবৃক্ষ চার্ট ও প্রিন্ট)',
-      keywords: ['family tree', 'বংশলতিকা', 'বংশবৃক্ষ', 'পরিবার', 'আত্মীয়স্বজন', 'দাদা', 'বাবা'],
-    },
-    // 11. Random Picker Wheel (NEW)
+    // 9. Random Picker Wheel (NEW)
     {
       id: 'random-picker',
       title: 'Random Picker Wheel (সিদ্ধান্ত চাকা)',
@@ -674,6 +654,32 @@ export default function App() {
         'official letter',
       ],
     },
+    // 28. MoSaFa PDF Toolkit (PDF টুলবক্স)
+    {
+      id: 'pdf-toolkit',
+      title: 'MoSaFa PDF Toolkit (PDF টুলবক্স)',
+      badge: '📄 PDF ইউটিলিটি',
+      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+      category: 'calculator',
+      iconBg: 'from-rose-500 via-pink-600 to-indigo-600',
+      icon: <Files className="w-6 h-6 text-white" />,
+      description:
+        'PDF Merge, Split, Compress, Rotate, Image to PDF, PDF থেকে ছবি তৈরি, পৃষ্ঠা সাজানো ও সরাসরি টেক্সট এডিটর টুল ব্যবহার করুন সহজেই।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'pdf toolkit',
+        'pdf টুলবক্স',
+        'pdf merge',
+        'pdf split',
+        'pdf compress',
+        'image to pdf',
+        'pdf to image',
+        'pdf editor',
+        'pdf এডিটর',
+        'পিডিএফ',
+      ],
+    },
   ];
 
   // Master Short Prompt Flag: 'Random ON' / 'Random OFF'
@@ -719,6 +725,11 @@ export default function App() {
   // Helper to find the active tool metadata
   const currentActiveToolInfo = tools.find((t) => t.id === activeTool);
 
+  const toBanglaNum = (n: number | string): string => {
+    const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return String(n).replace(/\d/g, (d) => bnDigits[Number(d)]);
+  };
+
   const wrapWithNavbar = (component: React.ReactNode) => (
     <div className="flex flex-col min-h-screen relative text-slate-800">
       {/* Universal Top Hub Navigation Bar for Shared Links & Quick Back */}
@@ -727,18 +738,57 @@ export default function App() {
           type="button"
           onClick={() => navigateToTool(null)}
           className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 text-white font-bold transition shadow-xs cursor-pointer active:scale-95"
-          title="সকল ২৫টি টুলস দেখতে হোম পেজে যান"
+          title={`সকল ${toBanglaNum(tools.length)}টি টুলস দেখতে হোম পেজে যান`}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>← সকল ২৫টি টুলস (All Tools)</span>
+          <span>← সকল {toBanglaNum(tools.length)}টি টুলস (All Tools)</span>
         </button>
 
         <div className="hidden md:flex items-center gap-2 text-slate-300 font-medium">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>The MoSaFa Tools • সকল ২৫টি অনলাইন টুলস এক ক্লিকে</span>
+          <span>The MoSaFa Tools • সকল {toBanglaNum(tools.length)}টি অনলাইন টুলস এক ক্লিকে</span>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* দৈনিক লাকি স্পিন */}
+          <button
+            type="button"
+            onClick={() => setIsSpinModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-600 hover:to-rose-700 text-white font-bold transition shadow-xs cursor-pointer active:scale-95 text-xs"
+            title="দৈনিক লাকি স্পিন"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-yellow-200" />
+            <span className="hidden sm:inline">স্পিন</span>
+          </button>
+
+          {/* কয়েন ব্যালেন্স বা লগইন */}
+          {isLoggedIn && user ? (
+            <button
+              type="button"
+              onClick={() => setIsWalletModalOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 text-amber-300 border border-amber-400/40 font-bold transition cursor-pointer active:scale-95 text-xs"
+              title="কয়েন ওয়ালেট"
+            >
+              <Coins className="w-3.5 h-3.5 text-amber-400" />
+              <span>{user.coins.toLocaleString('bn-BD')}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setAuthBonusPrompt(null);
+                setIsAuthModalOpen(true);
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-rose-300 border border-slate-700 font-bold transition cursor-pointer active:scale-95 text-xs"
+              title="লগইন বা একাউন্ট তৈরি"
+            >
+              <span>লগইন</span>
+              <span className="text-[9px] bg-rose-500/20 text-rose-300 px-1 py-0.2 rounded">
+                +১৫০
+              </span>
+            </button>
+          )}
+
           {/* লাইভ অটো-আপডেট স্ট্যাটাস বাটন */}
           <button
             type="button"
@@ -771,10 +821,10 @@ export default function App() {
             type="button"
             onClick={() => setIsShareModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 font-bold transition cursor-pointer active:scale-95"
-            title="সকল ২৫টি টুলসের মূল লিংক শেয়ার করুন"
+            title={`সকল ${toBanglaNum(tools.length)}টি টুলসের মূল লিংক শেয়ার করুন`}
           >
             <Share2 className="w-3.5 h-3.5 text-rose-400" />
-            <span>সকল টুলস শেয়ার</span>
+            <span className="hidden md:inline">সকল টুলস শেয়ার</span>
           </button>
         </div>
       </nav>
@@ -782,12 +832,47 @@ export default function App() {
       {/* The Selected Tool Content */}
       <div className="flex-1 flex flex-col">{component}</div>
 
+      {/* Daily Lucky Spin Modal */}
+      <DailySpinModal
+        isOpen={isSpinModalOpen}
+        onClose={() => setIsSpinModalOpen(false)}
+        onOpenAuthWithBonus={(bonus) => {
+          setAuthBonusPrompt(bonus);
+          setIsAuthModalOpen(true);
+        }}
+      />
+
+      {/* User Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthBonusPrompt(null);
+        }}
+        initialBonusPrompt={authBonusPrompt}
+        onSuccess={() => {
+          showToast('অ্যাকাউন্টে সফলভাবে প্রবেশ করেছেন! 🎉', '👤');
+        }}
+      />
+
+      {/* User Coin Wallet Modal */}
+      <WalletModal
+        isOpen={isWalletModalOpen}
+        onClose={() => setIsWalletModalOpen(false)}
+        onOpenSpinner={() => setIsSpinModalOpen(true)}
+        onOpenAuth={() => {
+          setAuthBonusPrompt(null);
+          setIsAuthModalOpen(true);
+        }}
+      />
+
       {/* Share Modal */}
       <SharePortalModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         activeToolId={activeTool}
         activeToolTitle={currentActiveToolInfo?.title || ''}
+        totalToolsCount={tools.length}
         onShowToast={showToast}
       />
 
@@ -855,9 +940,6 @@ export default function App() {
   if (activeTool === 'decision-maker') {
     return wrapWithNavbar(<CoinToss onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
-  if (activeTool === 'love-calc') {
-    return wrapWithNavbar(<QuickLove onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
-  }
   if (activeTool === 'bangla-status') {
     return wrapWithNavbar(<BanglaStatusHub onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
@@ -865,12 +947,6 @@ export default function App() {
   // 8 New tools:
   if (activeTool === 'poster-studio') {
     return wrapWithNavbar(<PosterStudio onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
-  }
-  if (activeTool === 'life-journey') {
-    return wrapWithNavbar(<LifeJourney onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
-  }
-  if (activeTool === 'family-tree') {
-    return wrapWithNavbar(<FamilyTree onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'random-picker') {
     return wrapWithNavbar(<RandomPickerWheel onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
@@ -917,6 +993,9 @@ export default function App() {
   if (activeTool === 'application-writer') {
     return wrapWithNavbar(<ApplicationWriter onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
+  if (activeTool === 'pdf-toolkit') {
+    return wrapWithNavbar(<PDFToolkit onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
   if (activeTool === 'studymate-bd') {
     return wrapWithNavbar(
       <>
@@ -943,6 +1022,14 @@ export default function App() {
         onNavigateHome={() => navigateToTool(null)}
         onNavigateTool={(tool) => navigateToTool(tool)}
         onOpenMobileInstall={() => setIsMobileInstallOpen(true)}
+        onDirectInstall={async () => {
+          if (isInstallable) {
+            const ok = await install();
+            if (ok) showToast('The MoSaFa অ্যাপ সফলভাবে ফোনে ইনস্টল হয়েছে! 📲', '✅');
+          } else {
+            setIsMobileInstallOpen(true);
+          }
+        }}
         onOpenShare={() => setIsShareModalOpen(true)}
         deviceSector={deviceSector}
         onSelectDeviceSector={(sector) => setDeviceSector(sector)}
@@ -950,16 +1037,23 @@ export default function App() {
         isUpdateOn={updateSync.isUpdateOn}
         currentVersion={updateSync.currentVersion}
         updateAvailable={updateSync.updateAvailable}
+        onOpenSpinModal={() => setIsSpinModalOpen(true)}
+        onOpenAuthModal={() => {
+          setAuthBonusPrompt(null);
+          setIsAuthModalOpen(true);
+        }}
+        onOpenWalletModal={() => setIsWalletModalOpen(true)}
+        onOpenDeveloperContact={() => {
+          setIsDeveloperModalOpen(true);
+        }}
+        onOpenAdminPanel={() => {
+          setIsAdminModalOpen(true);
+          showToast('The MoSaFa এডমিন কন্ট্রোল প্যানেল খোলা হয়েছে 🔓', '⚙️');
+        }}
       />
 
-      {/* Hero Section */}
-      <section className="max-w-6xl mx-auto px-4 pt-4 pb-6 sm:pt-6 sm:pb-8 text-center w-full relative z-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200/80 text-rose-700 text-xs font-semibold mb-4">
-          <span>✨ ১০০% ফ্রি ও বিজ্ঞাপনমুক্ত ইউটিলিটি</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-          <span>মোট {tools.length}টি দারুণ অনলাইন টুলস</span>
-        </div>
-
+      {/* Hero Section — শুধু সার্চ অপশন ও টুলসের পাবলিক লিংক রাখা হয়েছে */}
+      <section className="max-w-6xl mx-auto px-4 pt-4 pb-4 sm:pt-6 sm:pb-6 text-center w-full relative z-10">
         <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight max-w-3xl mx-auto">
           আপনার প্রয়োজনীয় সকল{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600">
@@ -967,13 +1061,9 @@ export default function App() {
           </span>{' '}
           এক জায়গায়
         </h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-3 max-w-2xl mx-auto">
-          পোস্টার স্টুডিও, নামের গোপন গল্প, কোন বাসে কত ভাড়া, প্রিপেইড মিটার সহকারী, লাইফ জার্নি, ফ্যামিলি ট্রি, কুইজ ও প্রেম টেস্ট সহ {tools.length}টি প্রয়োজনীয় ডিজিটাল টুলস।
-          যেকোনো টুলে ক্লিক করলেই তা সরাসরি চালু হবে এবং নির্বিঘ্নে কাজ করবে।
-        </p>
 
         {/* Search Bar */}
-        <div className="max-w-lg mx-auto mt-6 relative">
+        <div className="max-w-lg mx-auto mt-5 sm:mt-6 relative">
           <div className="relative">
             <input
               type="text"
@@ -986,137 +1076,19 @@ export default function App() {
                   showToast('🔐 সিক্রেট কোড অ্যাক্টিভেটেড (ALL_OK_15): গল্পের ঘরে আপনাকে সরাসরি নিয়ে আসা হয়েছে!', '📚');
                 }
               }}
-              placeholder="টুল খুঁজুন... যেমন: নাম, পোস্টার, কুইজ, হিসাব, জার্নি, প্রেম, বয়স"
+              placeholder="টুল খুঁজুন... যেমন: নাম, পোস্টার, কুইজ, হিসাব, প্রেম, বয়স"
               className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white border border-slate-300 shadow-md shadow-slate-100 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
             />
             <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
           </div>
         </div>
-
-        {/* Category Filter Pills */}
-        <div className="flex items-center justify-center gap-2 flex-wrap mt-5 text-xs font-semibold">
-          <button
-            onClick={() => setActiveCategory('all')}
-            className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-              activeCategory === 'all'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            সকল টুলস ({tools.length}টি)
-          </button>
-          <button
-            onClick={() => setActiveCategory('entertainment')}
-            className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-              activeCategory === 'entertainment'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            ❤️ সম্পর্ক, পরিবার ও বিনোদন
-          </button>
-          <button
-            onClick={() => setActiveCategory('status')}
-            className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-              activeCategory === 'status'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            💬 স্ট্যাটাস, পোস্টার ও ক্যাপশন
-          </button>
-          <button
-            onClick={() => setActiveCategory('typing')}
-            className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-              activeCategory === 'typing'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            ⌨️ টাইপিং ও কন্টেন্ট
-          </button>
-          <button
-            onClick={() => setActiveCategory('calculator')}
-            className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-              activeCategory === 'calculator'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            🔢 হিসাব, জার্নি ও ক্যালকুলেটর
-          </button>
-        </div>
-
-        {/* Quick Portal Share Bar */}
-        <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setIsShareModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-rose-200 transition cursor-pointer active:scale-95"
-            title="সকল ২৫টি টুলসের মূল লিংক কপি ও বন্ধুদের শেয়ার করুন"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span>সকল ২৫টি টুলসের পাবলিক লিংক শেয়ার করুন 🔗</span>
-          </button>
-        </div>
       </section>
-
-      {/* Mobile App Install Card / Banner */}
-      {!isInstalled && (
-        <section className="max-w-6xl mx-auto px-4 mb-8 w-full relative z-10">
-          <div className="bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 rounded-3xl p-5 sm:p-6 text-white shadow-xl shadow-rose-200/50 flex flex-col md:flex-row items-center justify-between gap-5 border border-white/20">
-            <div className="flex items-center gap-4 text-left">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 shadow-inner">
-                <Smartphone className="w-7 h-7 text-white animate-pulse" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-base sm:lg leading-tight">
-                    The MoSaFa মোবাইল অ্যাপ ইনস্টল করুন
-                  </h3>
-                  <span className="text-[10px] bg-white text-rose-700 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    মোবাইল রেডি
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm text-rose-100 mt-1 leading-relaxed">
-                  কোনো প্লেস্টোর ছাড়া সরাসরি আপনার ফোনের হোম স্ক্রিনে ইনস্টল করে ফুলস্ক্রিন ও দ্রুত গতিতে সব টুলস ব্যবহার করুন।
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
-              <button
-                type="button"
-                onClick={async () => {
-                  if (isInstallable) {
-                    const ok = await install();
-                    if (ok) showToast('The MoSaFa অ্যাপ সফলভাবে ফোনে ইনস্টল হয়েছে! 📲', '✅');
-                  } else {
-                    setIsMobileInstallOpen(true);
-                  }
-                }}
-                className="flex-1 md:flex-initial px-5 py-3 rounded-2xl bg-white text-rose-600 hover:bg-rose-50 font-bold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-              >
-                <Smartphone className="w-4 h-4" />
-                <span>সরাসরি অ্যাপ ইনস্টল 📲</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsMobileInstallOpen(true)}
-                className="px-4 py-3 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/25 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                title="বড় QR কোড ও ইনস্টল গাইড"
-              >
-                <QrCode className="w-4 h-4" />
-                <span>QR কোড স্ক্যান</span>
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Tools Grid Section */}
       <main className="max-w-6xl mx-auto px-4 pb-16 w-full flex-1 relative z-10">
+        {/* Tools Notice & Announcement Banner (Editable from Secret Admin Panel) */}
+        <ToolsNoticeBanner onOpenAdmin={() => setIsAdminModalOpen(true)} />
+
         {/* Sector Control Bar & Corner Switcher */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 bg-white/95 backdrop-blur-sm p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 shadow-xs">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -1175,7 +1147,7 @@ export default function App() {
                     ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="সকল ২৫টি টুলস একসাথে দেখুন"
+                title={`সকল ${toBanglaNum(tools.length)}টি টুলস একসাথে দেখুন`}
               >
                 <Globe className="w-3.5 h-3.5" />
                 <span>সবগুলো ({tools.length})</span>
@@ -1363,7 +1335,25 @@ export default function App() {
         </div>
       </main>
 
-      <Footer onNavigateTool={(tool) => navigateToTool(tool)} />
+      <Footer
+        onNavigateTool={(tool) => navigateToTool(tool)}
+        onOpenDeveloperModal={() => {
+          setIsDeveloperModalOpen(true);
+        }}
+      />
+
+      {/* Developer Contact & Inquiry Modal (Clean User View) */}
+      <DeveloperContactModal
+        isOpen={isDeveloperModalOpen}
+        onClose={() => setIsDeveloperModalOpen(false)}
+      />
+
+      {/* Secret Admin Control Panel Modal (Triggered by 5 clicks on "The MoSaFa") */}
+      <AdminPanelModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onShowToast={showToast}
+      />
 
       {/* Mobile App Install & QR Modal */}
       <MobileInstallModal
@@ -1378,6 +1368,7 @@ export default function App() {
         onClose={() => setIsShareModalOpen(false)}
         activeToolId={null}
         activeToolTitle=""
+        totalToolsCount={tools.length}
         onShowToast={showToast}
       />
 
@@ -1386,6 +1377,40 @@ export default function App() {
         isOpen={isLiveUpdateModalOpen}
         onClose={() => setIsLiveUpdateModalOpen(false)}
         updateSync={updateSync}
+      />
+
+      {/* Daily Lucky Spin Modal */}
+      <DailySpinModal
+        isOpen={isSpinModalOpen}
+        onClose={() => setIsSpinModalOpen(false)}
+        onOpenAuthWithBonus={(bonus) => {
+          setAuthBonusPrompt(bonus);
+          setIsAuthModalOpen(true);
+        }}
+      />
+
+      {/* User Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthBonusPrompt(null);
+        }}
+        initialBonusPrompt={authBonusPrompt}
+        onSuccess={() => {
+          showToast('অ্যাকাউন্টে সফলভাবে প্রবেশ করেছেন! 🎉', '👤');
+        }}
+      />
+
+      {/* User Coin Wallet Modal */}
+      <WalletModal
+        isOpen={isWalletModalOpen}
+        onClose={() => setIsWalletModalOpen(false)}
+        onOpenSpinner={() => setIsSpinModalOpen(true)}
+        onOpenAuth={() => {
+          setAuthBonusPrompt(null);
+          setIsAuthModalOpen(true);
+        }}
       />
 
       {/* Floating Auto-Update Banner for Hub View */}
