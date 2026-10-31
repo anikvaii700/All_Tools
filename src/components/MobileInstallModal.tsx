@@ -100,8 +100,8 @@ export const MobileInstallModal: React.FC<MobileInstallModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-200">
-              <Smartphone className="w-6 h-6" />
+            <div className="w-11 h-11 rounded-2xl bg-white p-0.5 border border-slate-200 shadow-md shadow-rose-200/50 flex items-center justify-center overflow-hidden shrink-0">
+              <img src="/logo.png" alt="The MoSaFa Tools" className="w-full h-full object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">

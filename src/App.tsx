@@ -59,7 +59,6 @@ import { APP_VERSION_CONFIG } from './versionConfig';
 import { LoveTest } from './components/LoveTest';
 import { TypingTest } from './components/TypingTest';
 import { AgeCalculator } from './components/AgeCalculator';
-import { CoinToss } from './components/CoinToss';
 import { BanglaStatusHub } from './components/BanglaStatusHub';
 
 import { PosterStudio } from './components/PosterStudio';
@@ -67,10 +66,8 @@ import { RandomPickerWheel } from './components/RandomPickerWheel';
 import { BanglaQuiz } from './components/BanglaQuiz';
 import { DailyHishab } from './components/DailyHishab';
 import { LifeReceipt } from './components/LifeReceipt';
-import { PersonalityReveal } from './components/PersonalityReveal';
 import { NameReveal } from './components/NameReveal';
 import { GolpoGhor } from './components/GolpoGhor';
-import { BusFareFinder } from './components/BusFareFinder';
 import { PrepaidMeterHelper } from './components/PrepaidMeterHelper';
 import { BangladeshMap } from './components/BangladeshMap';
 import { VoterTransferForm } from './components/VoterTransferForm';
@@ -91,17 +88,14 @@ export type ToolId =
   | 'love-test'
   | 'typing-test'
   | 'age-calc'
-  | 'decision-maker'
   | 'bangla-status'
   | 'poster-studio'
   | 'random-picker'
   | 'bangla-quiz'
   | 'daily-hishab'
   | 'life-receipt'
-  | 'personality-reveal'
   | 'name-reveal'
   | 'golpo-ghor'
-  | 'bus-fare'
   | 'prepaid-meter'
   | 'bangladesh-map'
   | 'voter-transfer-form'
@@ -180,18 +174,14 @@ export default function App() {
         'love-test',
         'typing-test',
         'age-calc',
-        'decision-maker',
         'bangla-status',
         'poster-studio',
-        'family-tree',
         'random-picker',
         'bangla-quiz',
         'daily-hishab',
         'life-receipt',
-        'personality-reveal',
         'name-reveal',
         'golpo-ghor',
-        'bus-fare',
         'prepaid-meter',
         'bangladesh-map',
         'voter-transfer-form',
@@ -283,21 +273,6 @@ export default function App() {
       deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
       keywords: ['বয়স ক্যালকুলেটর', 'age calculator', 'জন্ম তারিখ', 'হিসাব', 'দিন', 'মাস', 'বছর'],
     },
-    // 4. কয়েন টস ও সিদ্ধান্ত
-    {
-      id: 'decision-maker',
-      title: 'কয়েন টস ও সিদ্ধান্ত (Coin Toss)',
-      badge: '🪙 ৩ডি টস',
-      badgeColor: 'bg-purple-50 text-purple-600 border-purple-200',
-      category: 'calculator',
-      iconBg: 'from-purple-600 to-violet-600',
-      icon: <Coins className="w-6 h-6 text-white" />,
-      description:
-        'যেকোনো দ্বিধাদ্বন্দ্বে হেড বা টেল টস করুন। আসল মুদ্রার মতো বাস্তবসম্মত ৩D ঘূর্ণন ও রুদ্ধশ্বাস স্পিন অ্যানিমেশন সহ!',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (৩ডি কয়েন টস)',
-      keywords: ['কয়েন টস', 'coin toss', 'decision maker', 'র‍্যান্ডম সিদ্ধান্ত', 'হেড টেল'],
-    },
     // 5. বাংলা স্ট্যাটাস ও ক্যাপশন হাব
     {
       id: 'bangla-status',
@@ -388,21 +363,6 @@ export default function App() {
       deviceTag: '📱 মোবাইলে সেরা (থার্মাল রিসিট ও কার্ড)',
       keywords: ['life receipt', 'রশিদ', 'জীবন হিসাব', 'মেমো', 'সময় ব্যয়', 'বয়স হিসাব'],
     },
-    // 15. MoSaFa Personality Reveal (NEW)
-    {
-      id: 'personality-reveal',
-      title: 'MoSaFa Personality Reveal (ব্যক্তিত্ব উন্মোচন)',
-      badge: '🌟 ব্যক্তিত্ব টেস্ট',
-      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      category: 'entertainment',
-      iconBg: 'from-indigo-600 to-violet-700',
-      icon: <UserCheck className="w-6 h-6 text-white" />,
-      description:
-        '১০টি মনস্তাত্ত্বিক প্রশ্নে জেনে নিন আপনার আসল ব্যক্তিত্ব, শক্তি ও সম্ভাবনা। গোপনীয়তা সহ রেজাল্ট কার্ড ডাউনলোড।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (ব্যক্তিত্ব কার্ড ও শেয়ার)',
-      keywords: ['personality', 'ব্যক্তিত্ব', 'টেস্ট', 'মনস্তত্ত্ব', 'চরিত্র', 'স্বভাব'],
-    },
     // 16. MoSaFa Name Reveal (NEW)
     {
       id: 'name-reveal',
@@ -432,21 +392,6 @@ export default function App() {
       deviceTarget: 'mobile',
       deviceTag: '📱 মোবাইলে সেরা (পকেট ডিজিটাল পাঠকক্ষ)',
       keywords: ['গল্পের ঘর', 'golpo ghor', 'বাংলা গল্প', 'রবীন্দ্রনাথ', 'শরৎচন্দ্র', 'উপন্যাস', 'ছোটগল্প', 'বই', 'লাইব্রেরি', 'story'],
-    },
-    // 18. MoSaFa Bus Fare Finder (NEW)
-    {
-      id: 'bus-fare',
-      title: 'কোন বাসে কত ভাড়া? (Bus Fare Finder)',
-      badge: '🚌 বাস রুট ও ভাড়া',
-      badgeColor: 'bg-sky-50 text-sky-800 border-sky-200',
-      category: 'calculator',
-      iconBg: 'from-sky-500 via-blue-600 to-indigo-700',
-      icon: <Bus className="w-6 h-6 text-white" />,
-      description:
-        'বাংলাদেশের বিভিন্ন রুটের বাসের সঠিক ভাড়া, এসি/নন-এসি শ্রেণি, টার্মিনাল, অপারেটর ও বিআরটিএ নির্ধারিত ভাড়ার তথ্য খুঁজুন এবং তুলনা করুন।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (ভ্রমণের সময় পকেট গাইড)',
-      keywords: ['বাস ভাড়া', 'bus fare', 'কোন বাসে কত ভাড়া', 'বাস রুট', 'হানিফ', 'এনা', 'শ্যামলী', 'বিআরটিএ', 'dhaka bus fare', 'fare chart'],
     },
     // 19. MoSaFa Prepaid Meter Helper (NEW)
     {
@@ -816,8 +761,8 @@ export default function App() {
   ];
 
   // Master Short Prompt Flag: 'Random ON' / 'Random OFF'
-  // Currently set to: 'Random OFF' (Fixed canonical creation order, MoSaFa Application Writer at the end)
-  const IS_RANDOM_MODE = false;
+  // Currently set to: 'Random ON' (Tools positions randomized on each load)
+  const IS_RANDOM_MODE = true;
 
   // Fisher-Yates shuffle algorithm: randomizes tools positions on every page reload
   const shuffleTools = (list: ToolCardInfo[]): ToolCardInfo[] => {
@@ -1070,9 +1015,6 @@ export default function App() {
   if (activeTool === 'age-calc') {
     return wrapWithNavbar(<AgeCalculator onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
-  if (activeTool === 'decision-maker') {
-    return wrapWithNavbar(<CoinToss onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
-  }
   if (activeTool === 'bangla-status') {
     return wrapWithNavbar(<BanglaStatusHub onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
@@ -1093,17 +1035,11 @@ export default function App() {
   if (activeTool === 'life-receipt') {
     return wrapWithNavbar(<LifeReceipt onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
-  if (activeTool === 'personality-reveal') {
-    return wrapWithNavbar(<PersonalityReveal onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
-  }
   if (activeTool === 'name-reveal') {
     return wrapWithNavbar(<NameReveal onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'golpo-ghor') {
     return wrapWithNavbar(<GolpoGhor onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
-  }
-  if (activeTool === 'bus-fare') {
-    return wrapWithNavbar(<BusFareFinder onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'prepaid-meter') {
     return wrapWithNavbar(<PrepaidMeterHelper onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
@@ -1198,7 +1134,7 @@ export default function App() {
       />
 
       {/* Hero Section — শুধু সার্চ অপশন ও টুলসের পাবলিক লিংক রাখা হয়েছে */}
-      <section className="max-w-6xl mx-auto px-4 pt-4 pb-4 sm:pt-6 sm:pb-6 text-center w-full relative z-10">
+      <section className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-4 sm:pt-6 sm:pb-6 text-center w-full relative z-10">
         <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight max-w-3xl mx-auto">
           আপনার প্রয়োজনীয় সকল{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600">
@@ -1208,7 +1144,7 @@ export default function App() {
         </h1>
 
         {/* Search Bar */}
-        <div className="max-w-lg mx-auto mt-5 sm:mt-6 relative">
+        <div className="max-w-xl mx-auto mt-5 sm:mt-6 relative">
           <div className="relative">
             <input
               type="text"
@@ -1230,7 +1166,7 @@ export default function App() {
       </section>
 
       {/* Tools Grid Section */}
-      <main className="max-w-6xl mx-auto px-4 pb-16 w-full flex-1 relative z-10">
+      <main className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pb-16 w-full flex-1 relative z-10">
         {/* Tools Notice & Announcement Banner (Editable from Secret Admin Panel) */}
         <ToolsNoticeBanner onOpenAdmin={() => setIsAdminModalOpen(true)} />
 
@@ -1374,7 +1310,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filteredTools.map((tool) => (
             <div
               key={tool.id}

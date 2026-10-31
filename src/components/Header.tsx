@@ -34,6 +34,7 @@ import {
   Hand,
   Building2,
   Video,
+  Briefcase,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { BanglaLiveDateTimeWidget } from './BanglaLiveDateTimeWidget';
@@ -121,7 +122,6 @@ export const Header: React.FC<HeaderProps> = ({
     // 3. মানচিত্র, যাতায়াত ও ইউটিলিটি
     { id: 'bd-online-portal', name: 'MoSaFa BD Online Portal (বাংলাদেশ ডিরেক্টরি)', icon: <Building2 className="w-3.5 h-3.5 text-emerald-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'সার্ভিস ও জব' },
     { id: 'bangladesh-map', name: 'MoSaFa My Bangladesh Map (ভ্রমণ মানচিত্র)', icon: <Compass className="w-3.5 h-3.5 text-emerald-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'ম্যাপ' },
-    { id: 'bus-fare', name: 'ঢাকা ও আন্তঃজেলা বাস ভাড়া তালিকা', icon: <Bus className="w-3.5 h-3.5 text-sky-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'বাস ভাড়া' },
     { id: 'prepaid-meter', name: 'বিদ্যুৎ প্রিপেইড মিটার হিসাব সহকারী', icon: <Zap className="w-3.5 h-3.5 text-emerald-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'বিদ্যুৎ' },
 
     // 4. বিনোদন, প্রেম ও কুইজ
@@ -129,11 +129,10 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'love-test', name: 'প্রেম টেস্ট (বাস্তব পরীক্ষা ও সনদপত্র)', icon: <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-600" />, category: 'বিনোদন ও কুইজ', badge: 'ভাইরাল' },
     { id: 'bangla-quiz', name: 'বাংলা সাধারণ জ্ঞান ও মেধা কুইজ', icon: <Brain className="w-3.5 h-3.5 text-indigo-600" />, category: 'বিনোদন ও কুইজ', badge: 'কুইজ' },
     { id: 'random-picker', name: 'র‍্যান্ডম পিকার হুইল (ভাগ্যের চাকা)', icon: <Compass className="w-3.5 h-3.5 text-purple-600" />, category: 'বিনোদন ও কুইজ', badge: 'চাকা' },
-    { id: 'decision-maker', name: 'কয়েন টস ও সিদ্ধান্ত (৩ডি স্পিন)', icon: <Coins className="w-3.5 h-3.5 text-amber-600" />, category: 'বিনোদন ও কুইজ', badge: '৩ডি টস' },
     { id: 'name-reveal', name: 'নামের গোপন রহস্য ও বিশ্লেষণ', icon: <Sparkles className="w-3.5 h-3.5 text-rose-500" />, category: 'বিনোদন ও কুইজ', badge: 'রহস্য' },
-    { id: 'personality-reveal', name: 'ব্যক্তিত্ব টেস্ট ও স্বভাব বৈশিষ্ট্য', icon: <UserCheck className="w-3.5 h-3.5 text-teal-600" />, category: 'বিনোদন ও কুইজ', badge: 'ব্যক্তিত্ব' },
 
     // 5. হিসাব, ব্যবসা ও পরিবার
+    { id: 'entrepreneur-journey', name: 'MoSaFa Entrepreneur Journey (উদ্যোক্তা প্ল্যাটফর্ম)', icon: <Briefcase className="w-3.5 h-3.5 text-rose-600" />, category: 'হিসাব ও পরিবার', badge: 'উদ্যোক্তা' },
     { id: 'invoice-maker', name: 'MoSaFa Invoice Maker (ইনভয়েস ও মানি রিসিট)', icon: <Receipt className="w-3.5 h-3.5 text-emerald-600" />, category: 'হিসাব ও পরিবার', badge: 'ইনভয়েস' },
     { id: 'daily-hishab', name: 'দৈনিক হিসাব খাতা (আয়-ব্যয় ট্র্যাকার)', icon: <Wallet className="w-3.5 h-3.5 text-emerald-600" />, category: 'হিসাব ও পরিবার', badge: 'হিসাব' },
     { id: 'age-calc', name: 'বয়স ক্যালকুলেটর (নিখুঁত দিনক্ষণ)', icon: <Calendar className="w-3.5 h-3.5 text-cyan-600" />, category: 'হিসাব ও পরিবার', badge: 'বয়স' },
@@ -179,7 +178,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="w-full pt-4 sm:pt-6 pb-2 z-40">
-      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between gap-3 sm:gap-4">
+      <div className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 sm:gap-4">
         {/* Brand / Logo - Clicking 5 times rapidly unlocks Admin Panel */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
@@ -190,8 +189,12 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
             title="The MoSaFa Tools"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-200 group-hover:scale-105 transition shrink-0">
-              <Layers className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white p-0.5 shadow-md shadow-rose-200/60 border border-slate-200/80 group-hover:scale-105 transition shrink-0 flex items-center justify-center overflow-hidden">
+              <img
+                src="/logo.png"
+                alt="The MoSaFa Tools"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -241,7 +244,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <span>সকল টুলস ডিরেক্টরি</span>
                     <span className="bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded-full text-[10px]">
-                      ২৭টি
+                      {toBanglaNum(allToolsList.length)}টি
                     </span>
                   </span>
                   <button
@@ -515,7 +518,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* লাইভ বর্তমান ডেট, টাইম, বার ও বঙ্গাব্দ-হিজরি ক্যালেন্ডার উইজেট */}
-      <div className="max-w-6xl mx-auto px-4 mt-3 sm:mt-4 flex justify-center">
+      <div className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 mt-3 sm:mt-4 flex justify-center">
         <BanglaLiveDateTimeWidget />
       </div>
     </header>

@@ -31,6 +31,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDeveloperModal }) => {
         {/* ৩। ফুটার কপিরাইট ও ডেভেলপার সাপোর্ট লিংক */}
         <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 text-center sm:text-left">
           <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="The MoSaFa Tools" className="w-5 h-5 object-contain" />
             <span className="font-bold text-slate-800">The MoSaFa Tools</span>
             <span>• সর্বস্বত্ব সংরক্ষিত ২০২৬</span>
           </div>

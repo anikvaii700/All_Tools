@@ -1,6 +1,6 @@
 {
   "name": "The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল",
-  "description": "সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - MoSaFa Entrepreneur Journey (শূন্য থেকে ব্যবসা গড়ার গাইড), MoSaFa Content Creator Studio, MoSaFa BD Online Portal, MoSaFa Palmistry AI, StudyMate BD সহ ২৮টি কার্যকরী টুলস।",
+  "description": "সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - MoSaFa Entrepreneur Journey (শূন্য থেকে ব্যবসা গড়ার গাইড), MoSaFa Content Creator Studio, MoSaFa BD Online Portal, MoSaFa Palmistry AI, StudyMate BD সহ ২৫টি কার্যকরী টুলস।",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
