@@ -91,7 +91,7 @@ export const StoryLiveNotificationToast: React.FC<StoryLiveNotificationToastProp
             </h4>
 
             <p className="text-[11px] text-slate-300 font-medium">
-              লেখক: <span className="text-amber-300 font-bold">{activeNotification.author}</span> • এডমিন কর্তৃক অনুমোদিত
+              লেখক: <span className="text-amber-300 font-bold">{activeNotification.author}</span> • যাচাইকৃত ও প্রকাশিত
             </p>
 
             <button

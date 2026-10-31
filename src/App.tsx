@@ -1130,7 +1130,7 @@ export default function App() {
         }}
         onOpenAdminPanel={() => {
           setIsAdminModalOpen(true);
-          showToast('The MoSaFa এডমিন কন্ট্রোল প্যানেল খোলা হয়েছে 🔓', '⚙️');
+          showToast('কন্ট্রোল প্যানেল খোলা হয়েছে 🔓', '⚙️');
         }}
       />
 

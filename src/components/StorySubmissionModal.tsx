@@ -143,7 +143,7 @@ export const StorySubmissionModal: React.FC<StorySubmissionModalProps> = ({
                 গল্প জমা দিন ও প্রকাশ করুন
               </h3>
               <p className="text-[11px] text-slate-300">
-                এডমিন যাচাই ও অনুমোদনের পর সাইটে লাইভ প্রকাশিত হবে
+                পর্যালোচনা ও অনুমোদনের পর সাইটে লাইভ প্রকাশিত হবে
               </p>
             </div>
           </div>
@@ -167,7 +167,7 @@ export const StorySubmissionModal: React.FC<StorySubmissionModalProps> = ({
                 আপনার গল্পটি সফলভাবে জমা হয়েছে! 🎉
               </h4>
               <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-                ধন্যবাদ! গল্পটি বর্তমানে <span className="font-bold text-amber-600">পেন্ডিং (যাচাইয়ের অপেক্ষায়)</span> রয়েছে। এডমিন এটি পর্যালোচনা করে অনুমোদন (Approve) করলে সাইটে সবার পড়ার জন্য লাইভ হয়ে যাবে এবং একটি নোটিফিকেশন আসবে।
+                ধন্যবাদ! গল্পটি বর্তমানে <span className="font-bold text-amber-600">পেন্ডিং (পর্যালোচনার অপেক্ষায়)</span> রয়েছে। যাচাই করে অনুমোদন করা হলে সাইটে সবার পড়ার জন্য লাইভ হয়ে যাবে এবং একটি নোটিফিকেশন আসবে।
               </p>
             </div>
 
@@ -252,7 +252,7 @@ export const StorySubmissionModal: React.FC<StorySubmissionModalProps> = ({
             <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3 flex items-start gap-2 text-[11px] sm:text-xs text-amber-900 leading-relaxed">
               <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <span>
-                <strong>এডমিন যাচাই নীতি:</strong> কপিরাইটমুক্ত এবং মার্জিত গল্প লিখুন। এডমিন প্যানেল থেকে আপনার গল্পটি পর্যবেক্ষণ ও অনুমোদনের পর তা সাইটে প্রকাশিত হবে।
+                <strong>গল্প প্রকাশ নীতি:</strong> কপিরাইটমুক্ত এবং মার্জিত গল্প লিখুন। পর্যবেক্ষণ ও পর্যালোচনার পর আপনার গল্পটি সাইটে প্রকাশিত হবে।
               </span>
             </div>
 

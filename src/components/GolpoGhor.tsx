@@ -115,6 +115,33 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
     return storySubmissions.filter((s) => s.status === 'pending').length;
   }, [storySubmissions]);
 
+  // Secret 5-Click Easter Egg trigger on "MoSaFa Golpo Ghor" brand header (Zero public indication)
+  const secretAdminClicksRef = useRef<number>(0);
+  const secretAdminTimerRef = useRef<any>(null);
+
+  const handleSecretAdminTrigger = () => {
+    secretAdminClicksRef.current += 1;
+    if (secretAdminTimerRef.current) {
+      clearTimeout(secretAdminTimerRef.current);
+    }
+
+    if (secretAdminClicksRef.current >= 5) {
+      secretAdminClicksRef.current = 0;
+      const pin = prompt('গোপন নিরাপত্তা কোড দিন:');
+      if (pin === '224700' || pin === '22470') {
+        setIsAdminReviewOpen(true);
+        onShowToast('পর্যালোচনা প্যানেল সক্রিয় হয়েছে 🔓', '🔑');
+      } else if (pin !== null && pin.trim().length > 0) {
+        onShowToast('কোড সঠিক নয়!', '⚠️');
+      }
+      return;
+    }
+
+    secretAdminTimerRef.current = setTimeout(() => {
+      secretAdminClicksRef.current = 0;
+    }, 2000);
+  };
+
   // Convert approved general stories to StoryMetadata format
   const approvedGeneralStories = useMemo<StoryMetadata[]>(() => {
     return storySubmissions
@@ -1065,7 +1092,11 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2">
+            <div
+              onClick={handleSecretAdminTrigger}
+              className="flex items-center gap-2 select-none cursor-pointer"
+              title="MoSaFa Golpo Ghor"
+            >
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-rose-600 to-indigo-600 text-white flex items-center justify-center shadow-md">
                 <BookOpen className="w-5 h-5" />
               </div>
@@ -1078,30 +1109,8 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions - No public admin buttons anywhere */}
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const pin = prompt('এডমিন প্যানেলে প্রবেশের পাসওয়ার্ড দিন (ইঙ্গিত: 224700):');
-                if (pin === '224700' || pin === '22470') {
-                  setIsAdminReviewOpen(true);
-                  onShowToast('এডমিন গল্প পর্যালোচনা প্যানেল খোলা হয়েছে 🔓', '🔑');
-                } else if (pin !== null) {
-                  onShowToast('ভুল পাসওয়ার্ড! শুধুমাত্র এডমিনের জন্য সংরক্ষিত।', '⚠️');
-                }
-              }}
-              className="px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer relative"
-              title="এডমিন: জমা পড়া গল্প যাচাই ও অনুমোদন করুন"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span className="hidden sm:inline">এডমিন রিভিউ</span>
-              {pendingSubmissionsCount > 0 && (
-                <span className="w-4.5 h-4.5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-black animate-pulse">
-                  {pendingSubmissionsCount}
-                </span>
-              )}
-            </button>
-
             <button
               onClick={() => setIsBackupModalOpen(true)}
               className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
@@ -1224,7 +1233,7 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
             </button>
             <p className="text-[11px] text-slate-500 font-medium mt-2 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>যেকোনো ইউজার লিখতে পারবেন • এডমিন যাচাই ও অনুমোদনের পর সবার জন্য লাইভ হবে</span>
+              <span>যেকোনো ইউজার লিখতে পারবেন • পর্যালোচনা ও অনুমোদনের পর সবার জন্য লাইভ হবে</span>
             </p>
           </div>
         </div>
