@@ -240,9 +240,9 @@ export const UserReviewsMarquee: React.FC = () => {
   const duplicatedReviews = [...USER_REVIEWS_DATA, ...USER_REVIEWS_DATA];
 
   return (
-    <div className="w-full py-6 overflow-hidden relative">
+    <div className="w-full relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 backdrop-blur-xs p-3.5 sm:p-5 shadow-xs transition">
       {/* Section Header */}
-      <div className="max-w-6xl mx-auto px-4 mb-4 flex items-center justify-between">
+      <div className="mb-3.5 flex items-center justify-between px-1 sm:px-2">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
@@ -254,15 +254,15 @@ export const UserReviewsMarquee: React.FC = () => {
         </span>
       </div>
 
-      {/* Marquee Wrapper with soft edge gradients */}
-      <div className="relative w-full overflow-hidden">
+      {/* Marquee Wrapper strictly bounded inside the card with smooth inner edge gradients */}
+      <div className="relative w-full overflow-hidden rounded-2xl bg-slate-50/60 p-1">
         {/* Left Fade Gradient */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-slate-100 to-transparent z-10 pointer-events-none"></div>
         {/* Right Fade Gradient */}
-        <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-slate-100 to-transparent z-10 pointer-events-none"></div>
 
         {/* Moving Track */}
-        <div className="animate-marquee-slow flex gap-3.5 sm:gap-4 py-2 px-4 cursor-default">
+        <div className="animate-marquee-slow flex gap-3.5 sm:gap-4 py-2 px-3 cursor-default">
           {duplicatedReviews.map((review, idx) => (
             <div
               key={`${review.id}-${idx}`}

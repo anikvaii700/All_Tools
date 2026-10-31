@@ -31,7 +31,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
   onClose,
   activeToolId,
   activeToolTitle,
-  totalToolsCount = 23,
+  totalToolsCount = 25,
   onShowToast,
 }) => {
   const [copiedType, setCopiedType] = useState<'all' | 'single' | null>(null);
@@ -106,8 +106,8 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-200 shrink-0">
-            <Share2 className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-white p-0.5 border border-slate-200 shadow-md shadow-rose-200/50 flex items-center justify-center overflow-hidden shrink-0">
+            <img src="/logo.png" alt="The MoSaFa Tools" className="w-full h-full object-contain" />
           </div>
           <div>
             <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">

@@ -52,6 +52,7 @@ import { WalletModal } from './components/WalletModal';
 import { DeveloperContactModal } from './components/DeveloperContactModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
 import { ToolsNoticeBanner } from './components/ToolsNoticeBanner';
+import { UserReviewsMarquee } from './components/UserReviewsMarquee';
 import { useAuth } from './context/AuthContext';
 import { APP_VERSION_CONFIG } from './versionConfig';
 
@@ -1413,6 +1414,11 @@ export default function App() {
             <div className="text-xs font-bold text-slate-800">মোবাইল ও পিসি</div>
             <p className="text-[11px] text-slate-500 mt-0.5">সব ডিভাইসে কাজ করে</p>
           </div>
+        </div>
+
+        {/* User Reviews Section - Bounded strictly within tools boundary like Notice Board */}
+        <div className="mt-8 sm:mt-10">
+          <UserReviewsMarquee />
         </div>
       </main>
 

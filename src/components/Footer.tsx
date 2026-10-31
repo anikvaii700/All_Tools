@@ -1,6 +1,5 @@
 import React from 'react';
 import { MessageSquare, ArrowUpRight } from 'lucide-react';
-import { UserReviewsMarquee } from './UserReviewsMarquee';
 
 interface FooterProps {
   onNavigateTool?: (tool: any) => void;
@@ -9,12 +8,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onOpenDeveloperModal }) => {
   return (
-    <footer className="w-full bg-white border-t border-slate-200 pt-2 pb-8 px-4 mt-auto relative z-10">
-      {/* ১। চলমান ইউজার রিভিউ মারকুই (ডান থেকে বামে স্ক্রল) */}
-      <div className="w-full mb-6">
-        <UserReviewsMarquee />
-      </div>
-
+    <footer className="w-full bg-white border-t border-slate-200 pt-6 pb-8 px-4 mt-auto relative z-10">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* ২। শুধু সরাসরি ডেভেলপারকে মেসেজ দিন বাটন কার্ড — ক্লিক করলে পপআপ ওপেন হবে */}
         <div className="bg-slate-50/90 border border-slate-200 rounded-3xl p-5 sm:p-7 text-center shadow-xs max-w-2xl mx-auto">
