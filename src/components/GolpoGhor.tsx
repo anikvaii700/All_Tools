@@ -43,6 +43,12 @@ import {
 import { StoryShareModal } from './StoryShareModal';
 import { CustomStoryModal } from './CustomStoryModal';
 import { PdfBookshelf } from './PdfBookshelf';
+import { IstighfarStories } from './IstighfarStories';
+import { TasbihBorderButton } from './TasbihBorderButton';
+import { StorySubmissionModal } from './StorySubmissionModal';
+import { AdminStoriesReviewModal } from './AdminStoriesReviewModal';
+import { StoryLiveNotificationToast } from './StoryLiveNotificationToast';
+import { storySubmissionService, SubmittedStory } from '../services/storySubmissionService';
 
 interface GolpoGhorProps {
   onBackToHub: () => void;
@@ -64,8 +70,8 @@ interface ReadingProgressRecord {
 }
 
 export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }) => {
-  // Main Tab Navigation: library (গল্পের ঘর) | pdf-shelf (পিডিএফ বইঘর) | custom-stories (স্বরচিত গল্প)
-  const [currentTab, setCurrentTab] = useState<'library' | 'pdf-shelf' | 'custom-stories'>('library');
+  // Main Tab Navigation: library (গল্পের ঘর) | pdf-shelf (পিডিএফ বইঘর) | custom-stories (স্বরচিত গল্প) | istighfar (ইস্তেগফার আমলের গল্প)
+  const [currentTab, setCurrentTab] = useState<'library' | 'pdf-shelf' | 'custom-stories' | 'istighfar'>('library');
 
   // Navigation & Active Story State
   const [activeStory, setActiveStory] = useState<StoryMetadata | null>(null);
@@ -88,10 +94,64 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
 
   // Custom Story & Share Modals
   const [isWriteModalOpen, setIsWriteModalOpen] = useState<boolean>(false);
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState<boolean>(false);
+  const [isAdminReviewOpen, setIsAdminReviewOpen] = useState<boolean>(false);
   const [editingStory, setEditingStory] = useState<StoryMetadata | null>(null);
   const [sharingStory, setSharingStory] = useState<StoryMetadata | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [importCode, setImportCode] = useState<string>('');
+
+  // Story Submissions from users (Reviewed & Approved by admin)
+  const [storySubmissions, setStorySubmissions] = useState<SubmittedStory[]>([]);
+
+  useEffect(() => {
+    const unsub = storySubmissionService.subscribe((list) => {
+      setStorySubmissions(list);
+    });
+    return () => unsub();
+  }, []);
+
+  const pendingSubmissionsCount = useMemo(() => {
+    return storySubmissions.filter((s) => s.status === 'pending').length;
+  }, [storySubmissions]);
+
+  // Convert approved general stories to StoryMetadata format
+  const approvedGeneralStories = useMemo<StoryMetadata[]>(() => {
+    return storySubmissions
+      .filter((s) => s.status === 'approved' && s.storyType === 'general')
+      .map((s) => ({
+        id: s.id,
+        slug: s.id,
+        title: s.title,
+        author: s.author,
+        categorySlug: s.category || 'social',
+        category: s.categoryLabel || 'স্বরচিত গল্প',
+        language: 'bn' as const,
+        shortDescription: s.shortDescription,
+        coverIcon: s.coverIcon || '✍️',
+        coverGradient: s.coverGradient || 'from-purple-900 to-indigo-950',
+        estimatedReadingMinutes: Math.max(2, Math.ceil(s.content.join(' ').length / 400)),
+        contentType: 'original',
+        copyrightStatus: 'permission-granted',
+        sourceName: 'The MoSaFa কমিউনিটি লেখক মঞ্চ',
+        licenseName: 'ক্রিয়েটিভ কমন্স (CC BY-NC 4.0)',
+        permissionNote: 'The MoSaFa প্ল্যাটফর্মে পাঠকের জন্য স্বরচিত উন্মুক্ত রচনা।',
+        publicationYear: new Date(s.submittedAt).getFullYear(),
+        authorBio: `${s.author} — গল্পের ঘরের একজন সৃষ্টিশীল সাহিত্য অনুরাগী লেখক।`,
+        tags: [s.categoryLabel || 'স্বরচিত গল্প', s.author, 'কমিউনিটি গল্প'],
+        featured: true,
+        editorialPick: false,
+        publicationStatus: 'published',
+        chapters: [
+          {
+            id: `ch-1-${s.id}`,
+            chapterNumber: 1,
+            title: s.title,
+            content: s.content,
+          },
+        ],
+      }));
+  }, [storySubmissions]);
 
   // Search & Filtering States
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -107,10 +167,10 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
     } catch {}
   }, [customStories]);
 
-  // Combined Stories list (Custom Stories + Pre-loaded Stories)
+  // Combined Stories list (Approved Community Stories + Custom Stories + Pre-loaded Stories)
   const allCombinedStories = useMemo(() => {
-    return [...customStories, ...STORIES_DATA];
-  }, [customStories]);
+    return [...approvedGeneralStories, ...customStories, ...STORIES_DATA];
+  }, [approvedGeneralStories, customStories]);
 
   // Reset pagination when category, search, or filters change
   useEffect(() => {
@@ -1021,6 +1081,28 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
           {/* Quick Actions */}
           <div className="flex items-center gap-2">
             <button
+              onClick={() => {
+                const pin = prompt('এডমিন প্যানেলে প্রবেশের পাসওয়ার্ড দিন (ইঙ্গিত: 224700):');
+                if (pin === '224700' || pin === '22470') {
+                  setIsAdminReviewOpen(true);
+                  onShowToast('এডমিন গল্প পর্যালোচনা প্যানেল খোলা হয়েছে 🔓', '🔑');
+                } else if (pin !== null) {
+                  onShowToast('ভুল পাসওয়ার্ড! শুধুমাত্র এডমিনের জন্য সংরক্ষিত।', '⚠️');
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer relative"
+              title="এডমিন: জমা পড়া গল্প যাচাই ও অনুমোদন করুন"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+              <span className="hidden sm:inline">এডমিন রিভিউ</span>
+              {pendingSubmissionsCount > 0 && (
+                <span className="w-4.5 h-4.5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-black animate-pulse">
+                  {pendingSubmissionsCount}
+                </span>
+              )}
+            </button>
+
+            <button
               onClick={() => setIsBackupModalOpen(true)}
               className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
               title="ব্যক্তিগত বুকমার্ক ও রিডিং হিস্ট্রি ব্যাকআপ"
@@ -1118,25 +1200,46 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
               }`}
             >
               <Sparkles className="w-4 h-4 text-indigo-500" />
-              <span>✍️ স্বরচিত গল্প ({customStories.length})</span>
+              <span>✍️ স্বরচিত গল্প ({customStories.length + approvedGeneralStories.length})</span>
             </button>
 
+            {/* ULTRA-DYNAMIC 33-TASBIH-BEAD ANIMATED ISLAMIC TAB BUTTON */}
+            <TasbihBorderButton
+              isActive={currentTab === 'istighfar'}
+              onClick={() => setCurrentTab('istighfar')}
+            />
+          </div>
+
+          {/* Centered Large Story Submission Button (Row 2 - নিচে ঠিক মাঝখানে) */}
+          <div className="mt-5 sm:mt-6 flex flex-col items-center justify-center">
             <button
-              onClick={() => {
-                setEditingStory(null);
-                setIsWriteModalOpen(true);
-              }}
-              className="px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold flex items-center gap-2 bg-gradient-to-r from-rose-500 to-indigo-600 text-white hover:from-rose-600 hover:to-indigo-700 transition cursor-pointer shadow-md shadow-rose-200 active:scale-95"
+              onClick={() => setIsSubmissionModalOpen(true)}
+              className="px-7 sm:px-9 py-3 sm:py-3.5 rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2.5 bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white shadow-lg shadow-rose-500/25 hover:shadow-xl hover:scale-103 active:scale-95 transition-all duration-200 cursor-pointer group"
             >
-              <Plus className="w-4 h-4" />
-              <span>গল্প লিখুন ✍️</span>
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" />
+              <span className="text-sm sm:text-base">গল্প লিখুন ও শেয়ার করুন ✍️</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-white/25 text-white backdrop-blur-xs">
+                ইসলামিক বা যেকোনো গল্প
+              </span>
             </button>
+            <p className="text-[11px] text-slate-500 font-medium mt-2 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>যেকোনো ইউজার লিখতে পারবেন • এডমিন যাচাই ও অনুমোদনের পর সবার জন্য লাইভ হবে</span>
+            </p>
           </div>
         </div>
       </section>
 
       {/* Main Content Area */}
       <main className="max-w-6xl mx-auto px-4 py-8 flex-1 w-full space-y-10">
+        {/* VIEW 0: Islamic Istighfar Miracle Stories Tool */}
+        {currentTab === 'istighfar' && (
+          <IstighfarStories
+            onShowToast={onShowToast}
+            onBackToLibrary={() => setCurrentTab('library')}
+          />
+        )}
+
         {/* VIEW 1: PDF Bookshelf & In-App Reader */}
         {currentTab === 'pdf-shelf' && (
           <PdfBookshelf onShowToast={onShowToast} />
@@ -1805,6 +1908,32 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
           </div>
         </div>
       )}
+
+      {/* User Story Submission Modal (Pending state until Admin Approval) */}
+      <StorySubmissionModal
+        isOpen={isSubmissionModalOpen}
+        onClose={() => setIsSubmissionModalOpen(false)}
+        onShowToast={onShowToast}
+      />
+
+      {/* Admin Story Review & Approval Modal */}
+      <AdminStoriesReviewModal
+        isOpen={isAdminReviewOpen}
+        onClose={() => setIsAdminReviewOpen(false)}
+        onShowToast={onShowToast}
+      />
+
+      {/* Real-time Site Notification Toast when a story is approved */}
+      <StoryLiveNotificationToast
+        onOpenStory={(storyId, isIslamic) => {
+          if (isIslamic) {
+            setCurrentTab('istighfar');
+          } else {
+            setCurrentTab('custom-stories');
+          }
+          window.scrollTo({ top: 400, behavior: 'smooth' });
+        }}
+      />
     </div>
   );
 };

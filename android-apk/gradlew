@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Gradle startup script for UN*X
+# Wrapper script for The MoSaFa Tools Android APK build
+
+DIRNAME="$(dirname "$0")"
+APP_HOME="$(cd "$DIRNAME" && pwd)"
+APP_NAME="Gradle"
+
+# Attempt to locate gradle on system if wrapper jar is missing
+if command -v gradle >/dev/null 2>&1; then
+    exec gradle "$@"
+fi
+
+# Fallback to python packager if gradle is not installed
+echo "Gradle not found on host, invoking internal MoSaFa APK packager..."
+python3 "$APP_HOME/../scripts/package-apk.py"
+exit $?

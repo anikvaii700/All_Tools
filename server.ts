@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
@@ -1114,6 +1115,21 @@ Return strict JSON:
         success: false,
         error: apiErr?.message || 'Server error generating entrepreneur content',
       });
+    }
+  });
+
+  // Direct APK download route for mobile visitors & root directory access
+  app.get(['/The-MoSaFa-Tools.apk', '/app-release.apk'], (_req, res) => {
+    const rootApk = path.resolve(__dirname, 'The-MoSaFa-Tools.apk');
+    const publicApk = path.resolve(__dirname, 'public', 'The-MoSaFa-Tools.apk');
+    const targetFile = fs.existsSync(rootApk) ? rootApk : (fs.existsSync(publicApk) ? publicApk : null);
+
+    if (targetFile) {
+      res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+      res.setHeader('Content-Disposition', 'attachment; filename="The-MoSaFa-Tools.apk"');
+      return res.sendFile(targetFile);
+    } else {
+      return res.status(404).json({ error: 'APK file not found on server' });
     }
   });
 

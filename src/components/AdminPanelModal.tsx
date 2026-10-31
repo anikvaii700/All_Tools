@@ -21,8 +21,13 @@ import {
   Palette,
   Check,
   MessageSquare,
+  BookOpen,
+  CheckCircle2,
+  Trash2,
+  XCircle,
 } from 'lucide-react';
 import { useDeveloperContact } from '../hooks/useDeveloperContact';
+import { storySubmissionService, SubmittedStory } from '../services/storySubmissionService';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -39,10 +44,22 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'support' | 'notice' | 'profile'>('support');
+  const [activeTab, setActiveTab] = useState<'support' | 'notice' | 'profile' | 'stories'>('support');
   const [adminPinInput, setAdminPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Submitted stories management state
+  const [submittedStories, setSubmittedStories] = useState<SubmittedStory[]>([]);
+  const [storyFilter, setStoryFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [storyPreview, setStoryPreview] = useState<SubmittedStory | null>(null);
+
+  useEffect(() => {
+    const unsub = storySubmissionService.subscribe((list) => {
+      setSubmittedStories(list);
+    });
+    return () => unsub();
+  }, []);
 
   // Enforce password prompt on every single open and reset upon exit
   useEffect(() => {
@@ -388,7 +405,25 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   }`}
                 >
                   <User className="w-4 h-4 text-indigo-600" />
-                  <span>৩. প্রোফাইল ও ছবি</span>
+                  <span>৩. প্রোফাইল</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('stories')}
+                  className={`flex-1 py-2 px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
+                    activeTab === 'stories'
+                      ? 'bg-white text-amber-700 shadow-xs ring-1 ring-amber-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4 text-amber-600" />
+                  <span>৪. জমা পড়া গল্প</span>
+                  {submittedStories.filter((s) => s.status === 'pending').length > 0 && (
+                    <span className="w-4.5 h-4.5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-black animate-pulse">
+                      {submittedStories.filter((s) => s.status === 'pending').length}
+                    </span>
+                  )}
                 </button>
               </div>
 
@@ -1188,6 +1223,181 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* TAB 4: SUBMITTED STORIES REVIEW & APPROVAL */}
+              {activeTab === 'stories' && (
+                <div className="space-y-5 animate-in fade-in">
+                  <div className="p-4 rounded-3xl bg-amber-50/80 border border-amber-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <BookOpen className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                          <span>ইউজারদের জমা দেওয়া গল্প ও আমল যাচাই-বাছাই</span>
+                          <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full">
+                            এডমিন অনুমোদন
+                          </span>
+                        </h4>
+                        <p className="text-[11px] text-slate-600 mt-0.5">
+                          ইউজাররা যেসকল গল্প বা ইস্তেগফার আমল লিখেছেন, তা এখান থেকে যাচাই করে "অনুমোদন দিন" বাটনে চাপলে স্বয়ংক্রিয়ভাবে সাইটে লাইভ হবে।
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+                    {[
+                      { id: 'pending', label: `⏳ পেন্ডিং (${submittedStories.filter((s) => s.status === 'pending').length})` },
+                      { id: 'approved', label: `✅ লাইভ (${submittedStories.filter((s) => s.status === 'approved').length})` },
+                      { id: 'rejected', label: `❌ বাতিল (${submittedStories.filter((s) => s.status === 'rejected').length})` },
+                      { id: 'all', label: `সব (${submittedStories.length})` },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setStoryFilter(tab.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                          storyFilter === tab.id
+                            ? 'bg-slate-900 text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Stories list */}
+                  <div className="space-y-3.5 max-h-[460px] overflow-y-auto pr-1">
+                    {submittedStories
+                      .filter((s) => storyFilter === 'all' || s.status === storyFilter)
+                      .length === 0 ? (
+                      <div className="p-8 text-center text-slate-400 border border-dashed border-slate-200 rounded-2xl">
+                        কোনো গল্প পাওয়া যায়নি
+                      </div>
+                    ) : (
+                      submittedStories
+                        .filter((s) => storyFilter === 'all' || s.status === storyFilter)
+                        .map((story) => (
+                          <div
+                            key={story.id}
+                            className={`p-4 rounded-2xl border transition-all ${
+                              story.status === 'pending'
+                                ? 'bg-amber-50/50 border-amber-300 shadow-xs'
+                                : story.status === 'approved'
+                                ? 'bg-white border-emerald-200'
+                                : 'bg-slate-50 border-slate-200 opacity-70'
+                            }`}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                              <div className="space-y-1 max-w-lg">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                    story.storyType === 'islamic'
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : 'bg-indigo-100 text-indigo-800'
+                                  }`}>
+                                    {story.storyType === 'islamic' ? '📿 ইসলামিক আমল' : '📖 স্বরচিত গল্প'}
+                                  </span>
+                                  <span className="text-xs text-slate-500 font-semibold">
+                                    {story.categoryLabel}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">
+                                    • {new Date(story.submittedAt).toLocaleDateString('bn-BD')}
+                                  </span>
+                                </div>
+                                <h4 className="text-sm font-black text-slate-900">
+                                  {story.title}
+                                </h4>
+                                <p className="text-xs text-slate-600">
+                                  লেখক: <span className="font-bold">{story.author}</span> {story.authorContact && `(${story.authorContact})`}
+                                </p>
+                                <p className="text-xs text-slate-500 line-clamp-2">
+                                  {story.shortDescription}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0 pt-2 sm:pt-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setStoryPreview(story)}
+                                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                                  <span>পড়ুন</span>
+                                </button>
+
+                                {story.status !== 'approved' && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      await storySubmissionService.approveStory(story.id);
+                                      onShowToast?.(`"${story.title}" গল্পটি লাইভ অনুমোদন করা হয়েছে! 🎉`, '✅');
+                                    }}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1 cursor-pointer shadow-xs"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>অনুমোদন (Live)</span>
+                                  </button>
+                                )}
+
+                                {story.status === 'pending' && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      await storySubmissionService.rejectStory(story.id);
+                                      onShowToast?.(`গল্পটি বাতিল করা হয়েছে`, '❌');
+                                    }}
+                                    className="px-2.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold cursor-pointer"
+                                  >
+                                    বাতিল
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (window.confirm('মুছে ফেলতে চান?')) {
+                                      await storySubmissionService.deleteStory(story.id);
+                                      onShowToast?.('গল্পটি মুছে ফেলা হয়েছে', '🗑️');
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                  title="মুছুন"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </div>
+
+                  {/* Story Preview Modal */}
+                  {storyPreview && (
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 mt-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-sm text-slate-900">{storyPreview.title}</h4>
+                        <button
+                          type="button"
+                          onClick={() => setStoryPreview(null)}
+                          className="text-slate-400 hover:text-slate-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="space-y-2 text-xs text-slate-700 max-h-48 overflow-y-auto">
+                        {storyPreview.content.map((p, i) => (
+                          <p key={i}>{p}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

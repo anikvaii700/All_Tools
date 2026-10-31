@@ -361,13 +361,60 @@ export const MobileInstallModal: React.FC<MobileInstallModalProps> = ({
         {/* TAB 2: APK GENERATOR & DOWNLOAD */}
         {activeTab === 'apk' && (
           <div className="space-y-4 text-left animate-in fade-in duration-200">
-            <div className="bg-purple-50/80 p-5 rounded-3xl border border-purple-200/80">
+            {/* Direct Pre-Built APK Download Card */}
+            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-700 to-indigo-800 text-white shadow-xl shadow-emerald-950/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative z-10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-emerald-400/25 border border-emerald-300/40 text-[11px] font-black text-emerald-200 tracking-wide uppercase flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping" />
+                    রেডি APK ফাইল প্রস্তুত
+                  </span>
+                  <span className="text-[11px] font-mono text-emerald-200 bg-black/20 px-2.5 py-0.5 rounded-lg">
+                    The-MoSaFa-Tools.apk (১.১ MB)
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-base sm:text-lg font-extrabold text-white">
+                    The-MoSaFa-Tools.apk সরাসরি ডাউনলোড
+                  </h4>
+                  <p className="text-xs text-emerald-100/90 leading-relaxed mt-1">
+                    প্রজেক্ট রুট ডিরেক্টরি (Project Root Directory) এবং ওয়েব সার্ভারে সরাসরি ইনস্টলযোগ্য <strong>The-MoSaFa-Tools.apk</strong> প্রস্তুত রাখা হয়েছে।
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <a
+                    href="/The-MoSaFa-Tools.apk"
+                    download="The-MoSaFa-Tools.apk"
+                    onClick={() => onShowToast('The-MoSaFa-Tools.apk সরাসরি ডাউনলোড শুরু হয়েছে! 📲', '🚀')}
+                    className="px-5 py-3 rounded-2xl bg-white hover:bg-emerald-50 text-emerald-900 text-xs sm:text-sm font-black transition flex items-center gap-2 shadow-lg shadow-black/20 cursor-pointer active:scale-98"
+                  >
+                    <Download className="w-4 h-4 text-emerald-700 stroke-[3]" />
+                    <span>The-MoSaFa-Tools.apk ডাউনলোড করুন 📥</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const apkFullUrl = `${window.location.origin}/The-MoSaFa-Tools.apk`;
+                      navigator.clipboard.writeText(apkFullUrl);
+                      onShowToast('APK ডাউনলোডের সরাসরি লিংক কপি হয়েছে! 📋', '✅');
+                    }}
+                    className="px-3.5 py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer backdrop-blur-xs"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>APK লিংক কপি</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-purple-50/80 p-4 sm:p-5 rounded-3xl border border-purple-200/80">
               <h4 className="text-sm sm:text-base font-bold text-purple-950 flex items-center gap-2 mb-1">
                 <Download className="w-4 h-4 text-purple-600" />
-                <span>অ্যান্ড্রয়েড APK প্রস্তুত ও ডাউনলোডের উপায়</span>
+                <span>অন্যান্য বিকল্প APK তৈরি ও ডাউনলোডের মাধ্যম</span>
               </h4>
               <p className="text-xs text-purple-800 leading-relaxed">
-                আপনার সুবিধার জন্য সম্পূর্ণ সাইটের সোর্স কোডসহ অ্যান্ড্রয়েড প্রজেক্ট <strong>কোড সেকশনের <code>/android-apk/</code></strong> ফোল্ডারে রাখা হয়েছে। এছাড়া আপনি সরাসরি নিচে থেকে APK তৈরি বা ডাউনলোড করতে পারেন:
+                এছাড়াও সম্পূর্ণ সাইটের অ্যান্ড্রয়েড সোর্স কোড <strong><code>/android-apk/</code></strong> ফোল্ডারে এবং অটোমেটেড গিটহাব বিল্ড <strong><code>/.github/workflows/build-apk.yml</code></strong>-এ অন্তর্ভুক্ত রয়েছে:
               </p>
             </div>
 
@@ -378,11 +425,11 @@ export const MobileInstallModal: React.FC<MobileInstallModalProps> = ({
                   ১
                 </span>
                 <h5 className="text-xs sm:text-sm font-bold text-slate-900">
-                  PWABuilder দিয়ে সরাসরি Signed APK তৈরি (১-ক্লিক)
+                  PWABuilder দিয়ে লাইভ Signed APK জেনারেট (১-ক্লিক)
                 </h5>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                গুগল ও মাইক্রোসফটের অফিশিয়াল ক্লাউড বিল্ডার দিয়ে কোনো কোডিং ছাড়াই মাত্র ১০ সেকেন্ডে সাইটের রেডি <strong>.apk</strong> ফাইল ডাউনলোড করুন:
+                গুগল ও মাইক্রোসফটের অফিশিয়াল ক্লাউড বিল্ডার দিয়ে কোনো কোডিং ছাড়াই মাত্র ১০ সেকেন্ডে সাইটের সাইন করা <strong>.apk</strong> ফাইল ডাউনলোড করুন:
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <a
@@ -421,11 +468,11 @@ export const MobileInstallModal: React.FC<MobileInstallModalProps> = ({
               <div className="pt-1">
                 <button
                   type="button"
-                  onClick={() => handleDownloadStudioZip('The-MoSaFa-StudyMate-Android-Project.zip')}
+                  onClick={() => handleDownloadStudioZip('The-MoSaFa-Tools-Android-Studio-Project.zip')}
                   className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Download className="w-4 h-4" />
-                  <span>The-MoSaFa-StudyMate-Android-Project.zip (ডাউনলোড)</span>
+                  <span>The-MoSaFa-Tools-Android-Studio-Project.zip (ডাউনলোড)</span>
                 </button>
               </div>
             </div>

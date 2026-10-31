@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
 
     // Live deployment URL of The MoSaFa StudyMate BD & Tools
-    private val appUrl = "https://ais-pre-vzob6g5trhnzc2w7qmf6to-580416772203.asia-southeast1.run.app"
+    private val appUrl = "https://mosafa-tools.onrender.com"
 
     private val fileChooserLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
