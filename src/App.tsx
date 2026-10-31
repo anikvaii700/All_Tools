@@ -141,6 +141,25 @@ export default function App() {
   const [isDeveloperModalOpen, setIsDeveloperModalOpen] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
 
+  // Secret 5-click Easter Egg on "The MoSaFa Tools" brand text
+  const navSecretClicksRef = React.useRef(0);
+  const navSecretTimerRef = React.useRef<any>(null);
+
+  const handleNavSecretAdmin = () => {
+    navSecretClicksRef.current += 1;
+    if (navSecretTimerRef.current) {
+      clearTimeout(navSecretTimerRef.current);
+    }
+    if (navSecretClicksRef.current >= 5) {
+      navSecretClicksRef.current = 0;
+      setIsAdminModalOpen(true);
+      return;
+    }
+    navSecretTimerRef.current = setTimeout(() => {
+      navSecretClicksRef.current = 0;
+    }, 1600);
+  };
+
   const { user, isLoggedIn, canSpinToday } = useAuth();
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const updateSync = useAppUpdateSync();
@@ -823,7 +842,10 @@ export default function App() {
           <span>← সকল {toBanglaNum(tools.length)}টি টুলস (All Tools)</span>
         </button>
 
-        <div className="hidden md:flex items-center gap-2 text-slate-300 font-medium">
+        <div
+          onClick={handleNavSecretAdmin}
+          className="hidden md:flex items-center gap-2 text-slate-300 font-medium select-none cursor-default"
+        >
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>The MoSaFa Tools • সকল {toBanglaNum(tools.length)}টি অনলাইন টুলস এক ক্লিকে</span>
         </div>

@@ -241,7 +241,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       setPinError('');
       onShowToast?.('এডমিন প্যানেল সফলভাবে আনলক হয়েছে 🔓', '🔑');
     } else {
-      setPinError('ভুল পাসওয়ার্ড! সঠিক এডমিন পাসওয়ার্ড দিন (ইঙ্গিত: 2****0)।');
+      setPinError('ভুল পাসওয়ার্ড! সঠিক পাসওয়ার্ড দিন।');
     }
   };
 

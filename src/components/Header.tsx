@@ -148,12 +148,11 @@ export const Header: React.FC<HeaderProps> = ({
   // 5-Click Easter Egg trigger on "The MoSaFa" to open Admin Panel (mobile & desktop)
   const clickCountRef = React.useRef(0);
   const clickTimerRef = React.useRef<any>(null);
-  const [easterEggActive, setEasterEggActive] = React.useState(false);
 
   const handleBrandClick = () => {
     clickCountRef.current += 1;
 
-    // First click always navigates home
+    // First click navigates home
     if (clickCountRef.current === 1) {
       onNavigateHome();
     }
@@ -164,8 +163,6 @@ export const Header: React.FC<HeaderProps> = ({
 
     if (clickCountRef.current >= 5) {
       clickCountRef.current = 0;
-      setEasterEggActive(true);
-      setTimeout(() => setEasterEggActive(false), 2000);
       onOpenAdminPanel?.();
       return;
     }
@@ -179,14 +176,12 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="w-full pt-4 sm:pt-6 pb-2 z-40">
       <div className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 sm:gap-4">
-        {/* Brand / Logo - Clicking 5 times rapidly unlocks Admin Panel */}
+        {/* Brand / Logo - Only admin knows that clicking 5 times unlocks admin panel */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={handleBrandClick}
             type="button"
-            className={`flex items-center gap-2 sm:gap-3 group text-left cursor-pointer transition select-none active:scale-95 ${
-              easterEggActive ? 'ring-2 ring-indigo-500 rounded-2xl p-1 bg-indigo-50/50' : ''
-            }`}
+            className="flex items-center gap-2 sm:gap-3 group text-left cursor-pointer transition select-none active:scale-95"
             title="The MoSaFa Tools"
           >
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white p-0.5 shadow-md shadow-rose-200/60 border border-slate-200/80 group-hover:scale-105 transition shrink-0 flex items-center justify-center overflow-hidden">
