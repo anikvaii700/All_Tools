@@ -935,6 +935,188 @@ Return strict JSON:
     }
   });
 
+  // Entrepreneur Journey AI Proxy API
+  app.post('/api/entrepreneur/generate', async (req, res) => {
+    try {
+      const { action, ...params } = req.body;
+
+      if (!ai) {
+        return res.json({
+          success: false,
+          isAiAvailable: false,
+          message: 'GEMINI_API_KEY is not configured, please use offline templates.',
+        });
+      }
+
+      let systemInstruction = `You are a world-class startup mentor, business strategist, and Bangladesh small-business operations specialist.
+You help beginners in Bangladesh start zero-to-low capital businesses with realistic, highly practical, zero-fluff advice in clear, natural Bengali.
+Never promise unrealistic riches or guaranteed income.
+Distinguish assumptions from verified facts.
+Provide actionable, culturally resonant steps suitable for Bangladesh (districts, towns, Dhaka/Chittagong, local markets, bKash/Nagad, courier, Facebook groups).`;
+
+      let promptText = '';
+      let isJsonResponse = false;
+
+      if (action === 'validate_idea') {
+        isJsonResponse = true;
+        promptText = `Validate this business idea for Bangladesh market:
+Idea Description: ${params.ideaDescription}
+Target Location: ${params.targetLocation || 'Bangladesh'}
+Available Capital: ${params.budget || 'zero'}
+
+Return strict JSON:
+{
+  "customerProblem": "Exact customer pain point in clear Bengali",
+  "targetAudience": "Specific target customer profile in Bangladesh",
+  "valueProposition": "Why customers will pay for this instead of existing options",
+  "competitors": [
+    {
+      "name": "Competitor name / category",
+      "pricingEstimate": "Price range in BDT",
+      "strengths": "Their advantage",
+      "weaknesses": "Their gaps",
+      "ourAdvantage": "How our business wins"
+    }
+  ],
+  "interviewQuestions": [
+    {
+      "id": "iq-1",
+      "question": "Clear conversational question in Bengali",
+      "purpose": "What this reveals",
+      "sampleAnswer": "Realistic customer answer"
+    }
+  ],
+  "mvpPlan": {
+    "scope": "Minimal test scope",
+    "format": "e.g. WhatsApp Catalog or Sample Reel",
+    "timeToBuildDays": 2,
+    "budgetBDT": 0
+  },
+  "experiments": [
+    {
+      "name": "Test experiment name",
+      "method": "How to run it in 48 hours without spending money",
+      "successMetric": "Measurable success criteria",
+      "status": "planned"
+    }
+  ],
+  "identifiedRisks": [
+    "Risk 1 in Bangladesh context and how to overcome it",
+    "Risk 2 in Bangladesh context"
+  ],
+  "nextActions": [
+    "Next immediate step 1",
+    "Next immediate step 2",
+    "Next immediate step 3"
+  ]
+}`;
+      } else if (action === 'generate_plan') {
+        isJsonResponse = true;
+        promptText = `Generate a comprehensive 12-section business plan in professional Bengali:
+Business Name: ${params.businessName}
+Idea: ${params.ideaDescription}
+Location: ${params.targetLocation}
+Monthly Revenue Goal: ৳${params.monthlyIncomeGoal || 30000}
+
+Return strict JSON:
+{
+  "executiveSummary": "Concise summary in Bengali",
+  "businessDescription": "Business operations overview",
+  "problemAndSolution": "Problem solved and solution provided",
+  "targetCustomerProfile": "Demographics and behavioral traits",
+  "marketResearchAndOpportunity": "Market opportunity in Bangladesh",
+  "competitorAnalysis": "Market landscape",
+  "productsAndPricing": "3-tier pricing overview",
+  "marketingAndAcquisitionPlan": "Free and organic acquisition methods",
+  "salesAndConversionProcess": "Step by step sales conversion",
+  "operationsAndDailyWorkflow": "Daily morning/afternoon/evening routine",
+  "financialProjections": {
+    "startingCapitalNeeded": 0,
+    "monthlyOverhead": 1500,
+    "estimatedBreakEvenMonths": 1,
+    "month1RevenueTarget": 12000,
+    "month3RevenueTarget": 35000
+  },
+  "risksAndMitigation": "Real operational risks and practical mitigation",
+  "thirtyDayMilestones": [
+    "Day 1-7 milestone",
+    "Day 8-15 milestone",
+    "Day 16-22 milestone",
+    "Day 23-30 milestone"
+  ],
+  "ninetyDayVision": "Where this business can be in 3 months"
+}`;
+      } else if (action === 'generate_marketing_copy') {
+        isJsonResponse = true;
+        promptText = `You are an elite Bengali copywriter and sales strategist.
+Create high-converting copy for:
+Business Name: ${params.businessName}
+Product/Service: ${params.productService}
+Target Audience: ${params.targetAudience}
+Format: ${params.type} (facebook_post | sales_copy | whatsapp_message | video_script)
+Tone: ${params.tone || 'Friendly & Professional'}
+
+Return strict JSON:
+{
+  "content": "Full formatted copy in authentic, persuasive Bengali with emojis, bullet points, and high-converting call-to-action"
+}`;
+      } else {
+        return res.status(400).json({ success: false, error: 'Unknown action' });
+      }
+
+      const modelNames = ['gemini-3.8-flash', 'gemini-2.5-flash'];
+      for (const modelName of modelNames) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: [{ role: 'user', parts: [{ text: promptText }] }],
+            config: {
+              systemInstruction: { parts: [{ text: systemInstruction }] },
+              temperature: 0.7,
+              ...(isJsonResponse ? { responseMimeType: 'application/json' } : {}),
+            },
+          });
+
+          if (response && response.text) {
+            let parsedData: any = response.text;
+            if (isJsonResponse) {
+              try {
+                const cleaned = response.text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+                parsedData = JSON.parse(cleaned);
+              } catch {
+                const match = response.text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+                if (match) {
+                  parsedData = JSON.parse(match[0]);
+                }
+              }
+            }
+
+            return res.json({
+              success: true,
+              data: parsedData,
+              isAiAvailable: true,
+              modelUsed: modelName,
+            });
+          }
+        } catch (mErr: any) {
+          console.warn(`[Entrepreneur AI] ${modelName} failed:`, mErr?.message || mErr);
+        }
+      }
+
+      return res.json({
+        success: false,
+        isAiAvailable: false,
+        message: 'Could not generate via Gemini API, please use offline templates.',
+      });
+    } catch (apiErr: any) {
+      console.error('Entrepreneur AI Server Error:', apiErr);
+      return res.status(500).json({
+        success: false,
+        error: apiErr?.message || 'Server error generating entrepreneur content',
+      });
+    }
+  });
+
   // Vite integration: Dev middleware or static dist
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));

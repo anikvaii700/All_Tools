@@ -83,9 +83,11 @@ import { PDFToolkit } from './components/pdf-toolkit/PDFToolkit';
 import { PalmistryAI } from './components/PalmistryAI';
 import { BdOnlinePortal } from './components/BdOnlinePortal';
 import { ContentCreatorStudio } from './components/ContentCreatorStudio';
+import { EntrepreneurJourney } from './components/EntrepreneurJourney';
 
 export type ToolId =
   | 'studymate-bd'
+  | 'entrepreneur-journey'
   | 'love-test'
   | 'typing-test'
   | 'age-calc'
@@ -201,6 +203,7 @@ export default function App() {
         'palmistry-ai',
         'bd-online-portal',
         'content-creator-studio',
+        'entrepreneur-journey',
       ];
       if (toolParam && validToolIds.includes(toolParam)) {
         setActiveTool(toolParam as ToolId);
@@ -781,6 +784,35 @@ export default function App() {
         'facebook reels',
       ],
     },
+    // 32. MoSaFa Entrepreneur Journey
+    {
+      id: 'entrepreneur-journey',
+      title: 'MoSaFa Entrepreneur Journey (উদ্যোক্তা গাইড)',
+      badge: '🚀 জিরো টু বিজনেস',
+      badgeColor: 'bg-amber-50 text-amber-900 border-amber-300',
+      category: 'calculator',
+      iconBg: 'from-amber-500 via-rose-600 to-indigo-700',
+      icon: <Compass className="w-6 h-6 text-white" />,
+      description:
+        'Zero to Entrepreneur — শূন্য থেকে নিজের ব্যবসা গড়ার পূর্ণাঙ্গ গাইড। জিরো ক্যাপিটাল ফাইন্ডার, আইডিয়া ভ্যালিডেটর, অফার বিল্ডার, বিজনেস প্ল্যান A4 প্রিন্ট, ফাইন্যান্স ল্যাব, কাস্টমার খাতা ও সরকারি গাইডবুক।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'entrepreneur journey',
+        'mosafa entrepreneur',
+        'উদ্যোক্তা',
+        'ব্যবসা',
+        'business plan',
+        'zero capital',
+        'বিনা পুঁজিতে ব্যবসা',
+        'ট্রেড লাইসেন্স',
+        'ফাইন্যান্স',
+        'কাস্টমার',
+        'crm',
+        'হিসাব',
+        'ব্যবসা শুরু',
+      ],
+    },
   ];
 
   // Master Short Prompt Flag: 'Random ON' / 'Random OFF'
@@ -1105,6 +1137,9 @@ export default function App() {
   }
   if (activeTool === 'content-creator-studio') {
     return wrapWithNavbar(<ContentCreatorStudio onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'entrepreneur-journey') {
+    return wrapWithNavbar(<EntrepreneurJourney onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'studymate-bd') {
     return wrapWithNavbar(

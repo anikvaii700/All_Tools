@@ -233,5 +233,37 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
+  /* MoSaFa Entrepreneur Journey Dedicated Business Plan Sheet */
+  #printable-business-plan {
+    display: block !important;
+    visibility: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 auto !important;
+    padding: 15mm 15mm !important;
+    width: 100% !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #printable-business-plan * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #printable-business-plan textarea,
+  #printable-business-plan input {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    resize: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 
