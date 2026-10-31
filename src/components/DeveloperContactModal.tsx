@@ -67,7 +67,7 @@ export const DeveloperContactModal: React.FC<DeveloperContactModalProps> = ({
       aria-modal="true"
     >
       <div className="w-full max-w-4xl bg-white rounded-[28px] sm:rounded-[36px] overflow-hidden shadow-2xl border border-slate-200 relative my-auto max-h-[92vh] flex flex-col">
-        {/* Top Header Row with ONLY Close (X) button - Admin button removed as requested */}
+        {/* Top Header Row with Close (X) button */}
         <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
           <button
             type="button"
@@ -135,14 +135,29 @@ export const DeveloperContactModal: React.FC<DeveloperContactModalProps> = ({
                   </span>
                 </div>
 
-                {/* Heading: প্রফেশনাল সাপোর্ট নিন। */}
+                {/* Heading */}
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                  প্রফেশনাল <span className="text-emerald-500">সাপোর্ট</span> নিন।
+                  {config.supportHeading ? (
+                    config.supportHeading.includes('সাপোর্ট') ? (
+                      <>
+                        {config.supportHeading.split('সাপোর্ট')[0]}
+                        <span className="text-emerald-500">সাপোর্ট</span>
+                        {config.supportHeading.split('সাপোর্ট')[1]}
+                      </>
+                    ) : (
+                      config.supportHeading
+                    )
+                  ) : (
+                    <>
+                      প্রফেশনাল <span className="text-emerald-500">সাপোর্ট</span> নিন।
+                    </>
+                  )}
                 </h2>
 
-                {/* Subtitle */}
+                {/* Subtitle / Description (Highlight Target) */}
                 <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed font-medium mt-2 max-w-xl">
-                  {config.supportSubtitle}
+                  {config.supportSubtitle ||
+                    'আপনার যেকোনো তথ্য বিশদভাবে জানতে বা যেকোনো টেকনিক্যাল সহায়তার জন্য সরাসরি আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন। আমাদের টিম ২৪/৭ আপনাকে সাহায্য করতে প্রস্তুত।'}
                 </p>
 
                 {/* Contact Info Row */}

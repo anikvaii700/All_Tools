@@ -34,6 +34,9 @@ import {
   Radio,
   RefreshCw,
   Files,
+  Hand,
+  Building2,
+  Video,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useAppUpdateSync } from './hooks/useAppUpdateSync';
@@ -77,6 +80,9 @@ import { InvoiceMaker } from './components/InvoiceMaker';
 import { BanglaTextConverter } from './components/bangla-converter/BanglaTextConverter';
 import { ApplicationWriter } from './components/application-writer/ApplicationWriter';
 import { PDFToolkit } from './components/pdf-toolkit/PDFToolkit';
+import { PalmistryAI } from './components/PalmistryAI';
+import { BdOnlinePortal } from './components/BdOnlinePortal';
+import { ContentCreatorStudio } from './components/ContentCreatorStudio';
 
 export type ToolId =
   | 'studymate-bd'
@@ -102,6 +108,9 @@ export type ToolId =
   | 'bangla-text-converter'
   | 'application-writer'
   | 'pdf-toolkit'
+  | 'palmistry-ai'
+  | 'bd-online-portal'
+  | 'content-creator-studio'
   | null;
 
 export type DeviceSector = 'all' | 'desktop' | 'mobile';
@@ -188,6 +197,10 @@ export default function App() {
         'invoice-maker',
         'bangla-text-converter',
         'application-writer',
+        'pdf-toolkit',
+        'palmistry-ai',
+        'bd-online-portal',
+        'content-creator-studio',
       ];
       if (toolParam && validToolIds.includes(toolParam)) {
         setActiveTool(toolParam as ToolId);
@@ -680,6 +693,94 @@ export default function App() {
         'পিডিএফ',
       ],
     },
+    // 29. MoSaFa Palmistry AI (এআই হস্তরেখা ও ভাগ্যরেখা)
+    {
+      id: 'palmistry-ai',
+      title: 'MoSaFa Palmistry AI (হস্তরেখা বিশ্লেষণ)',
+      badge: '🖐️ এআই হস্তরেখা',
+      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+      category: 'entertainment',
+      iconBg: 'from-amber-500 via-orange-600 to-rose-600',
+      icon: <Hand className="w-6 h-6 text-white" />,
+      description:
+        'আপনার হাতের রেখায় লুকানো গল্প! লাইভ ক্যামেরা বা ছবি আপলোড করে জেনে নিন হৃদয় রেখা, মস্তিষ্ক রেখা, জীবন রেখা ও ভাগ্য রেখার এআই বিশ্লেষণ ও ব্যক্তিত্বের উপাখ্যান।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 ক্যামেরা ও ছবি আপলোড',
+      keywords: [
+        'palmistry',
+        'mosafa palmistry ai',
+        'palmistry ai',
+        'হস্তরেখা',
+        'হাতের রেখা',
+        'হস্তরেখা বিশ্লেষণ',
+        'palm reading',
+        'হাত দেখা',
+        'ভাগ্য',
+        'ভাগ্যরেখা',
+        'জীবন রেখা',
+        'হৃদয় রেখা',
+      ],
+    },
+    // 30. MoSaFa BD Online Portal (বাংলাদেশ সার্ভিস ডিরেক্টরি ও জব পোর্টাল)
+    {
+      id: 'bd-online-portal',
+      title: 'MoSaFa BD Online Portal (বাংলাদেশ ডিরেক্টরি)',
+      badge: '🏛️ সার্ভিস ও জব পোর্টাল',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      category: 'calculator',
+      iconBg: 'from-emerald-600 via-teal-600 to-indigo-700',
+      icon: <Building2 className="w-6 h-6 text-white" />,
+      description:
+        'বাংলাদেশ সরকার ও বেসরকারি গুরুত্বপূর্ণ অনলাইন সেবা এবং দেশের সকল জনপ্রিয় চাকরির ওয়েবসাইট এক ঠিকানায়! NID, পাসপোর্ট, ড্রাইভিং লাইসেন্স, খতিয়ান ও Bdjobs সহ ১৩টি ক্যাটাগরি।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'bd online portal',
+        'mosafa bd online portal',
+        'বাংলাদেশ সার্ভিস পোর্টাল',
+        'সরকারি সেবা',
+        'jobs portal',
+        'online jobs portal',
+        'চাকরি পোর্টাল',
+        'bdjobs',
+        'mygov',
+        'nid',
+        'পাসপোর্ট',
+        'bsp',
+        'ড্রাইভিং লাইসেন্স',
+        'খতিয়ান',
+        'নামজারি',
+        'রেলওয়ে টিকিট',
+      ],
+    },
+    // 31. MoSaFa Content Creator Studio
+    {
+      id: 'content-creator-studio',
+      title: 'MoSaFa Content Creator Studio',
+      badge: '🎥 অল-ইন-ওয়ান স্টুডিও',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      category: 'typing',
+      iconBg: 'from-indigo-600 via-purple-600 to-pink-600',
+      icon: <Video className="w-6 h-6 text-white" />,
+      description:
+        'আইডিয়া থেকে প্রকাশনা—ব্লগার, ইউটিউবার ও ফেসবুক ক্রিয়েটরদের জন্য নিশ ফাইন্ডার, টপিক ল্যাব, স্ক্রিপ্ট রাইটিং, ব্রাউজার ভিডিও এডিটর, থাম্বনেইল স্টুডিও ও শিডিউলার।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'content creator studio',
+        'mosafa creator studio',
+        'ইউটিউব স্ক্রিপ্ট',
+        'ভিডিও এডিটর',
+        'ব্লগ রাইটার',
+        'থাম্বনেইল স্টুডিও',
+        'নিশ ফাইন্ডার',
+        'এসইও',
+        'video editor',
+        'script writer',
+        'thumbnail maker',
+        'facebook reels',
+      ],
+    },
   ];
 
   // Master Short Prompt Flag: 'Random ON' / 'Random OFF'
@@ -995,6 +1096,15 @@ export default function App() {
   }
   if (activeTool === 'pdf-toolkit') {
     return wrapWithNavbar(<PDFToolkit onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'palmistry-ai') {
+    return wrapWithNavbar(<PalmistryAI onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'bd-online-portal') {
+    return wrapWithNavbar(<BdOnlinePortal onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'content-creator-studio') {
+    return wrapWithNavbar(<ContentCreatorStudio onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'studymate-bd') {
     return wrapWithNavbar(

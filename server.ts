@@ -472,10 +472,9 @@ async function startServer() {
       }
 
       const candidateModels = [
-        'gemini-2.5-flash',
-        'gemini-3.1-flash-lite',
         'gemini-3.8-flash',
         'gemini-flash-latest',
+        'gemini-3.1-flash-lite',
       ];
 
       let enhancedText = '';
@@ -523,6 +522,415 @@ async function startServer() {
       return res.status(500).json({
         success: false,
         error: err?.message || 'Internal server error',
+      });
+    }
+  });
+
+  // MoSaFa Palmistry AI Vision Analysis API
+  app.post('/api/palmistry/analyze', async (req, res) => {
+    try {
+      const {
+        imageBase64,
+        imageMimeType = 'image/jpeg',
+        handSide = 'right',
+        userName = '',
+        gender = '',
+      } = req.body;
+
+      if (!imageBase64) {
+        return res.status(400).json({ success: false, error: 'হাতের ছবি পাওয়া যায়নি।' });
+      }
+
+      const cleanBase64 = String(imageBase64).replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
+
+      const fallbackResult = {
+        success: true,
+        isAiAvailable: Boolean(ai),
+        overview: `আপনার হাতের তালু বিশ্লেষণ করে দেখা যাচ্ছে যে রেখাসমূহ স্পষ্ট ও আকর্ষণীয়ভাবে বিন্যস্ত। ত্বকের সতেজতা ও তালুর গঠন একজন উদ্যমী, আন্তরিক ও দূরদর্শী মানুষের পরিচয় দেয়।`,
+        heartLine: {
+          name: 'হৃদয় রেখা (Heart Line)',
+          englishName: 'Heart Line',
+          visibility: 'স্পষ্ট',
+          interpretation: 'আপনার হৃদয় রেখাটি ইঙ্গিত দেয় আপনি আবেগের ক্ষেত্রে যথেষ্ট আন্তরিক ও অনুভূতিপ্রবণ। সম্পর্কের ক্ষেত্রে বিশ্বস্ততা ও পারস্পরিক মূল্যবোধ আপনার কাছে অত্যন্ত গুরুত্বপূর্ণ।',
+          details: 'রেখাটির সুষম বক্রতা নির্দেশ করে আপনি ভালোবাসার প্রকাশে কোমল এবং আন্তরিক বন্ধন বজায় রাখতে ভালোবাসেন।',
+        },
+        headLine: {
+          name: 'মস্তিষ্ক রেখা (Head Line)',
+          englishName: 'Head Line',
+          visibility: 'স্পষ্ট',
+          interpretation: 'মস্তিষ্ক রেখার পরিচ্ছন্ন বিস্তার প্রমাণ করে আপনার চিন্তাভাবনা বাস্তববাদী কিন্তু কল্পনাশক্তি সমৃদ্ধ। যেকোনো সংকটময় পরিস্থিতিতে মাথা ঠান্ডা রেখে বিশ্লেষণ করার অসাধারণ ক্ষমতা রয়েছে।',
+          details: 'আপনার স্মৃতিশক্তি প্রখর এবং দ্রুত নতুন বিষয় আয়ত্ত করার স্বাভাবিক মানসিক প্রস্তুতি রয়েছে।',
+        },
+        lifeLine: {
+          name: 'জীবন রেখা (Life Line)',
+          englishName: 'Life Line',
+          visibility: 'স্পষ্ট',
+          interpretation: 'জীবন রেখাটি আপনার অটুট জীবনীশক্তি, কাজের প্রতি প্রবল আগ্রহ এবং সহনশীল মানসিকতার পরিচয় বহন করে। প্রতিকূলতা কাটিয়ে দ্রুত ঘুরে দাঁড়ানোর ক্ষমতা আপনার সহজাত।',
+          details: 'একটি ইতিবাচক, উদ্দীপনাময় ও প্রাণবন্ত জীবনযাত্রার প্রতিফলন এই রেখায় দৃশ্যমান।',
+        },
+        fateLine: {
+          name: 'ভাগ্য রেখা (Fate Line)',
+          englishName: 'Fate Line',
+          visibility: 'আংশিক স্পষ্ট',
+          interpretation: 'আপনার ভাগ্য রেখা নির্দেশ করে আপনি নিজের মেধা ও নিষ্ঠার ওপর ভরসা করে জীবন সাজাতে বিশ্বাসী। অধ্যবসায় ও সঠিক পদক্ষেপ আপনাকে অভীষ্ট লক্ষ্যে নিয়ে যাবে।',
+          details: 'পরিশ্রম ও সুযোগের সঠিক সমন্বয়ে জীবনের প্রতিটি ধাপে সম্মান ও উন্নতির জোরালো সম্ভাবনা রয়েছে।',
+        },
+        personalityReading: 'আপনি বাইরে থেকে শান্ত ও সংযমী হলেও অন্তরে দৃঢ় সংকল্পবদ্ধ। মানুষের অনুভূতি সহজে উপলব্ধি করতে পারেন এবং বন্ধুদের বিপদে নিঃস্বার্থভাবে পাশে দাঁড়ান। আত্মমর্যাদাবোধ আপনার ব্যক্তিত্বের মূল শক্তি।',
+        loveReading: 'ভালোবাসায় আপনি বিশ্বস্ত, সমঝদার ও শ্রদ্ধাশীল সম্পর্ক পছন্দ করেন। ক্ষুদ্র ভুলের চেয়ে দীর্ঘমেয়াদী সুখ ও পারস্পরিক বিশ্বাস আপনার কাছে প্রধান বিবেচ্য।',
+        careerReading: 'যেকোনো দায়িত্বশীল, সৃজনশীল বা সিদ্ধান্ত গ্রহণের কাজে আপনি অসাধারণ উৎকর্ষ দেখাতে পারেন। লক্ষ্য স্থির রাখলে কর্মক্ষেত্রে আপনার নেতৃত্ব ও সুনাম অক্ষুণ্ণ থাকবে।',
+        palmStorySummary: 'আপনার হাতের রেখাসমূহ এক অনুপ্রেরণাদায়ক ও অনন্য জীবনের গল্প বলে। অতীত অভিজ্ঞতা আপনাকে করেছে বিজ্ঞ ও সংযত, আর বর্তমানের উদ্যম আপনাকে নিয়ে যাচ্ছে সাফল্যের স্বর্ণতোরণে। সর্বদা আত্মবিশ্বাসী থাকুন!',
+        luckyNumber: Math.floor(Math.random() * 9) + 1,
+        luckyColor: 'রয়েল ব্লু ও শুভ্র শ্বেত',
+        vibeScore: Math.floor(Math.random() * 10) + 89,
+      };
+
+      if (!ai) {
+        return res.json(fallbackResult);
+      }
+
+      const promptText = `Act as an expert, culturally attuned, deeply respectful Bengali Master Palm Reader and Storyteller (হস্তরেখাবিদ).
+Analyze the provided human palm image for entertaining and insightful character reading.
+
+User Details:
+- Name: "${userName || 'প্রিয় বন্ধু'}"
+- Hand Side: "${handSide === 'left' ? 'বাম হাত' : 'ডান হাত'}"
+- Gender: "${gender || 'উল্লেখ নেই'}"
+
+CRITICAL INSTRUCTIONS:
+1. Examine the image carefully. Identify visible palm lines:
+   - Heart Line (হৃদয় রেখা - প্রেম ও আবেগ)
+   - Head Line (মস্তিষ্ক রেখা - বুদ্ধি ও মনন)
+   - Life Line (জীবন রেখা - জীবনীশক্তি ও সহনশীলতা)
+   - Fate Line (ভাগ্য রেখা - ক্যারিয়ার ও কর্মপ্রচেষ্টা)
+2. Gauge visibility honestly based solely on image clarity: choose strictly from "স্পষ্ট", "আংশিক স্পষ্ট", or "অস্পষ্ট".
+   If lines are blurry or faint, do not fabricate precise details—note them as "আংশিক স্পষ্ট" or "অস্পষ্ট" and offer general positive wisdom.
+3. STRICT SAFETY & TRANSPARENCY RULES:
+   - NEVER predict exact death dates, lifespans, or tragic events.
+   - NEVER diagnose illnesses, diseases, or medical conditions.
+   - NEVER guarantee wealth, exact marriage ages, or pregnancy.
+   - Keep the tone encouraging, warm, poetic, and engagingly entertaining in pristine Bengali (প্রমিত বাংলা).
+4. Output MUST be ONLY valid JSON matching this exact structure with NO markdown or preamble:
+{
+  "overview": "হাতের গঠন ও সার্বিক রেখার প্রথম দর্শনের বিবরণী (২-৩ বাক্য)",
+  "heartLine": {
+    "name": "হৃদয় রেখা (Heart Line)",
+    "englishName": "Heart Line",
+    "visibility": "স্পষ্ট | আংশিক স্পষ্ট | অস্পষ্ট",
+    "interpretation": "প্রেম ও আবেগ সম্পর্কিত মনোমুগ্ধকর ব্যাখ্যা (২-৩ বাক্য)",
+    "details": "রেখার গঠন ও বৈশিষ্ট্য সম্পর্কিত সংক্ষিপ্ত বিবরণ"
+  },
+  "headLine": {
+    "name": "মস্তিষ্ক রেখা (Head Line)",
+    "englishName": "Head Line",
+    "visibility": "স্পষ্ট | আংশিক স্পষ্ট | অস্পষ্ট",
+    "interpretation": "বুদ্ধি, চিন্তা ও মনোযোগের ব্যাখ্যা (২-৩ বাক্য)",
+    "details": "রেখার গঠন ও বৈশিষ্ট্য সম্পর্কিত সংক্ষিপ্ত বিবরণ"
+  },
+  "lifeLine": {
+    "name": "জীবন রেখা (Life Line)",
+    "englishName": "Life Line",
+    "visibility": "স্পষ্ট | আংশিক স্পষ্ট | অস্পষ্ট",
+    "interpretation": "জীবনীশক্তি, প্রেরণা ও উদ্দীপনার ইতিবাচক ব্যাখ্যা (২-৩ বাক্য)",
+    "details": "রেখার গঠন ও বৈশিষ্ট্য সম্পর্কিত সংক্ষিপ্ত বিবরণ"
+  },
+  "fateLine": {
+    "name": "ভাগ্য রেখা (Fate Line)",
+    "englishName": "Fate Line",
+    "visibility": "স্পষ্ট | আংশিক স্পষ্ট | অস্পষ্ট",
+    "interpretation": "ক্যারিয়ার, লক্ষ্য ও কর্মোদ্যোগের ব্যাখ্যা (২-৩ বাক্য)",
+    "details": "রেখার গঠন ও বৈশিষ্ট্য সম্পর্কিত সংক্ষিপ্ত বিবরণ"
+  },
+  "personalityReading": "ব্যক্তিত্বের উন্মোচন ও আত্মিক গুণের সুন্দর বিবরণী (৩-৪ বাক্য)",
+  "loveReading": "প্রেম, ভালোবাসা ও সম্পর্কের প্রতি দৃষ্টিভঙ্গি (২-৩ বাক্য)",
+  "careerReading": "কর্মজীবন, উদ্যম ও সাফল্যের সম্ভাবনা (২-৩ বাক্য)",
+  "palmStorySummary": "আপনার হাতের বিশেষ গল্প (Your Palm's Story) - এক নজরে প্রেরণাদায়ক ইতিবাচক উপাখ্যান (৩-৪ বাক্য)",
+  "luckyNumber": 7,
+  "luckyColor": "রঙের নাম (যেমন: রয়েল ব্লু বা এমারেল্ড গ্রিন)",
+  "vibeScore": 92
+}`;
+
+      const candidateModels = [
+        'gemini-3.8-flash',
+        'gemini-flash-latest',
+        'gemini-3.1-flash-lite',
+      ];
+
+      for (const modelName of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: imageMimeType,
+                      data: cleanBase64,
+                    },
+                  },
+                  {
+                    text: promptText,
+                  },
+                ],
+              },
+            ],
+            config: {
+              temperature: 0.6,
+              responseMimeType: 'application/json',
+            },
+          });
+
+          if (response && response.text) {
+            let parsed: any;
+            try {
+              const cleaned = response.text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+              parsed = JSON.parse(cleaned);
+            } catch {
+              const match = response.text.match(/\{[\s\S]*\}/);
+              if (match) {
+                parsed = JSON.parse(match[0]);
+              }
+            }
+
+            if (parsed && (parsed.heartLine || parsed.palmStorySummary)) {
+              return res.json({
+                success: true,
+                isAiAvailable: true,
+                overview: parsed.overview || fallbackResult.overview,
+                heartLine: parsed.heartLine || fallbackResult.heartLine,
+                headLine: parsed.headLine || fallbackResult.headLine,
+                lifeLine: parsed.lifeLine || fallbackResult.lifeLine,
+                fateLine: parsed.fateLine || fallbackResult.fateLine,
+                personalityReading: parsed.personalityReading || fallbackResult.personalityReading,
+                loveReading: parsed.loveReading || fallbackResult.loveReading,
+                careerReading: parsed.careerReading || fallbackResult.careerReading,
+                palmStorySummary: parsed.palmStorySummary || fallbackResult.palmStorySummary,
+                luckyNumber: parsed.luckyNumber || fallbackResult.luckyNumber,
+                luckyColor: parsed.luckyColor || fallbackResult.luckyColor,
+                vibeScore: parsed.vibeScore || fallbackResult.vibeScore,
+              });
+            }
+          }
+        } catch (modelErr: any) {
+          console.warn(`[Palmistry AI] Model ${modelName} error:`, modelErr?.message || modelErr);
+        }
+      }
+
+      return res.json(fallbackResult);
+    } catch (err: any) {
+      console.error('Palmistry AI API Error:', err);
+      return res.status(500).json({
+        success: false,
+        error: err?.message || 'হাতের ছবি বিশ্লেষণ করতে সমস্যা হয়েছে।',
+      });
+    }
+  });
+
+  // ==========================================
+  // MoSaFa Content Creator Studio AI API
+  // ==========================================
+  app.post('/api/creator/generate', async (req, res) => {
+    try {
+      const { action, ...params } = req.body;
+
+      if (!ai) {
+        return res.json({
+          success: false,
+          isAiAvailable: false,
+          message: 'Gemini API Key is not configured on server. Falling back to local templates.',
+        });
+      }
+
+      const candidateModels = [
+        'gemini-3.8-flash',
+        'gemini-flash-latest',
+        'gemini-3.1-flash-lite',
+      ];
+
+      let promptText = '';
+      let isJsonResponse = false;
+
+      if (action === 'generate_niche') {
+        isJsonResponse = true;
+        promptText = `You are an expert digital content strategist and niche advisor for Bangladeshi and global content creators.
+Based on the following user profile, generate 3 highly targeted, realistic, and profitable content niches:
+Country: ${params.country || 'Bangladesh'}
+Language: ${params.language || 'Bengali'}
+Platform: ${params.platform || 'YouTube & Facebook'}
+Interests: ${params.interests || 'Technology, Education, Freelancing'}
+Skills: ${params.skills || 'Basic video editing, writing'}
+Available Time: ${params.timeHours || 10} hours/week
+Budget: ${params.budget || 'Minimal / zero'}
+Monetization: ${params.monetization || 'AdSense, Affiliates, Sponsorships'}
+
+Output strict JSON array with 3 objects matching this schema:
+[
+  {
+    "id": "niche-1",
+    "title": "Bengali niche title",
+    "englishTitle": "English title",
+    "description": "Clear explanation of this niche in Bengali",
+    "targetAudience": "Audience description",
+    "monetizationMethods": ["method1", "method2", "method3"],
+    "recommendedFormats": ["format1", "format2"],
+    "competitionLevel": "Low" | "Medium" | "High",
+    "profitPotential": "Moderate" | "High" | "Very High",
+    "roadmap30Days": [
+      { "day": "দিন ১-৭", "task": "Task description in Bengali" },
+      { "day": "দিন ৮-১৫", "task": "Task description in Bengali" },
+      { "day": "দিন ১৬-২৩", "task": "Task description in Bengali" },
+      { "day": "দিন ২৪-৩০", "task": "Task description in Bengali" }
+    ]
+  }
+]
+Do not fabricate fake search volumes. Keep it realistic, encouraging, and actionable.`;
+      } else if (action === 'generate_topics') {
+        isJsonResponse = true;
+        promptText = `You are a professional SEO & content marketing specialist.
+Generate 5 viral, engaging, and high-CTR topic ideas and keyword clusters for the following niche:
+Niche: ${params.niche}
+Platform: ${params.platform || 'multi'}
+Language: ${params.language || 'bn'}
+Target Audience: ${params.audience || 'General public'}
+
+Output strict JSON array of objects:
+[
+  {
+    "id": "kw-1",
+    "title": "Engaging title in Bengali",
+    "platform": "youtube" | "blog" | "facebook" | "multi",
+    "searchIntent": "Informational" | "Commercial" | "Transactional" | "Navigational",
+    "category": "Topic category",
+    "difficultyEstimate": "সহজ (নতুনদের জন্য আদর্শ) | মাঝারি | উচ্চ",
+    "relatedKeywords": ["keyword 1", "keyword 2", "keyword 3"],
+    "suggestedAngles": ["angle 1", "angle 2"],
+    "faqs": [
+      { "q": "Frequent question in Bengali", "a": "Helpful answer" }
+    ]
+  }
+]`;
+      } else if (action === 'generate_script') {
+        isJsonResponse = true;
+        promptText = `You are a master scriptwriter and copywriter.
+Generate a high-retention content script/article:
+Topic: ${params.topic}
+Type: ${params.type || 'youtube_long'}
+Tone: ${params.tone || 'Engaging & Helpful'}
+Language: ${params.language || 'Bengali'}
+Length: ${params.length || 'Standard'}
+
+Return strict JSON:
+{
+  "title": "Viral Click-Worthy Title",
+  "outline": ["Section 1", "Section 2", "Section 3", "Section 4"],
+  "content": "Full formatted script or article text with timecodes/visual cues in Bengali/English"
+}`;
+      } else if (action === 'generate_video_plan') {
+        isJsonResponse = true;
+        promptText = `You are an expert video director and storyboard artist.
+Create a complete scene-by-scene video production plan and storyboard:
+Topic: ${params.topic}
+Platform: ${params.platform || 'youtube'}
+Duration: ${params.duration || '3-5 minutes'}
+Tone: ${params.tone || 'Friendly & Energetic'}
+Language: ${params.language || 'Bengali'}
+
+Return strict JSON:
+{
+  "id": "plan-1",
+  "title": "Video Title",
+  "topic": "${params.topic}",
+  "platform": "${params.platform || 'youtube'}",
+  "durationEstimate": "${params.duration || '3-5 min'}",
+  "hook": "Strong 3-second hook in Bengali",
+  "scenes": [
+    {
+      "sceneNumber": 1,
+      "durationSeconds": 5,
+      "visualPrompt": "Visual cue description",
+      "voiceover": "Voiceover line in Bengali",
+      "onScreenText": "Short punchy text overlay",
+      "bRollSuggestion": "B-roll suggestion",
+      "musicMood": "Music style"
+    }
+  ],
+  "titleIdeas": ["Title 1", "Title 2", "Title 3"],
+  "description": "Video description with SEO keywords",
+  "hashtags": ["#tag1", "#tag2", "#tag3"],
+  "callToAction": "Call to action text in Bengali"
+}`;
+      } else if (action === 'repurpose_content') {
+        isJsonResponse = true;
+        promptText = `You are a multi-platform content repurposing expert.
+Take this source text and repurpose it into 9 different formats:
+Source Text:
+${params.sourceText}
+
+Return strict JSON:
+{
+  "sourceText": "...",
+  "blogArticle": "Complete markdown blog post...",
+  "facebookPost": "Engaging Facebook post with emojis & discussion prompt...",
+  "youtubeScript": "YouTube video script with intro, main points, and outro...",
+  "shortsScript": "30-60 second fast-paced vertical video script...",
+  "carouselSlides": ["Slide 1...", "Slide 2...", "Slide 3...", "Slide 4...", "Slide 5..."],
+  "linkedinPost": "Professional LinkedIn post with key takeaways...",
+  "newsletterDraft": "Engaging email newsletter draft...",
+  "quoteCard": "Punchy memorable quote...",
+  "pinterestDescription": "SEO-optimized Pinterest pin description..."
+}`;
+      } else {
+        return res.status(400).json({ success: false, error: 'Unknown action' });
+      }
+
+      for (const modelName of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: promptText,
+            config: {
+              temperature: 0.7,
+              responseMimeType: isJsonResponse ? 'application/json' : undefined,
+            },
+          });
+
+          if (response && response.text) {
+            let parsedData: any = response.text;
+            if (isJsonResponse) {
+              try {
+                const cleaned = response.text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+                parsedData = JSON.parse(cleaned);
+              } catch {
+                const match = response.text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+                if (match) {
+                  parsedData = JSON.parse(match[0]);
+                }
+              }
+            }
+
+            return res.json({
+              success: true,
+              data: parsedData,
+              isAiAvailable: true,
+              modelUsed: modelName,
+            });
+          }
+        } catch (mErr: any) {
+          console.warn(`[Creator AI] ${modelName} failed:`, mErr?.message || mErr);
+        }
+      }
+
+      return res.json({
+        success: false,
+        isAiAvailable: false,
+        message: 'Could not generate via Gemini API, please use offline templates.',
+      });
+    } catch (apiErr: any) {
+      console.error('Creator AI Server Error:', apiErr);
+      return res.status(500).json({
+        success: false,
+        error: apiErr?.message || 'Server error generating creator content',
       });
     }
   });

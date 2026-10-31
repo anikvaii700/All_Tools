@@ -1,8 +1,8 @@
 // The MoSaFa Tools - Advanced PWA & Offline Service Worker
-// Version: 3.1.0 (Master Command: Update ON)
+// Version: 3.2.0 (Master Command: Update ON)
 // Supports full offline usage for mobile APK/PWA + instant cache purging on update release
 
-const CACHE_NAME = 'mosafa-tools-v3.1.0';
+const CACHE_NAME = 'mosafa-tools-v3.2.0';
 
 const PRECACHE_ASSETS = [
   '/',

@@ -20,6 +20,7 @@ import {
   Sparkles,
   Palette,
   Check,
+  MessageSquare,
 } from 'lucide-react';
 import { useDeveloperContact } from '../hooks/useDeveloperContact';
 
@@ -38,7 +39,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'notice'>('notice');
+  const [activeTab, setActiveTab] = useState<'support' | 'notice' | 'profile'>('support');
   const [adminPinInput, setAdminPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -59,6 +60,18 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setShowPassword(false);
     onClose();
   };
+
+  // Support Popup Content edit fields (The exact text in user screenshot)
+  const [editSupportSubtitle, setEditSupportSubtitle] = useState(
+    config.supportSubtitle ||
+      'আপনার যেকোনো তথ্য বিশদভাবে জানতে বা যেকোনো টেকনিক্যাল সহায়তার জন্য সরাসরি আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন। আমাদের টিম ২৪/৭ আপনাকে সাহায্য করতে প্রস্তুত।'
+  );
+  const [editSupportHeading, setEditSupportHeading] = useState(
+    config.supportHeading || 'প্রফেশনাল সাপোর্ট নিন।'
+  );
+  const [editSupportBadge, setEditSupportBadge] = useState(
+    config.supportBadge || 'সাপোর্ট ও ইনকোয়ারি'
+  );
 
   // Profile edit fields
   const [editPhotoUrl, setEditPhotoUrl] = useState(config.photoUrl);
@@ -92,6 +105,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   // Sync state whenever config changes
   useEffect(() => {
+    setEditSupportSubtitle(
+      config.supportSubtitle ||
+        'আপনার যেকোনো তথ্য বিশদভাবে জানতে বা যেকোনো টেকনিক্যাল সহায়তার জন্য সরাসরি আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন। আমাদের টিম ২৪/৭ আপনাকে সাহায্য করতে প্রস্তুত।'
+    );
+    setEditSupportHeading(config.supportHeading || 'প্রফেশনাল সাপোর্ট নিন।');
+    setEditSupportBadge(config.supportBadge || 'সাপোর্ট ও ইনকোয়ারি');
+
     setEditPhotoUrl(config.photoUrl);
     setEditName(config.name);
     setEditDesignation(config.designation);
@@ -170,6 +190,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       phoneDisplay: editPhone,
       whatsappNumber: editWhatsapp,
       email: editEmail,
+      supportBadge: editSupportBadge,
+      supportHeading: editSupportHeading,
+      supportSubtitle: editSupportSubtitle,
       noticeEnabled: editNoticeEnabled,
       noticeTitle: editNoticeTitle,
       noticeContent: editNoticeContent,
@@ -328,35 +351,191 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               )}
 
               {/* Navigation Tabs */}
-              <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+              <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('support')}
+                  className={`flex-1 py-2 px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    activeTab === 'support'
+                      ? 'bg-white text-emerald-700 shadow-xs ring-1 ring-emerald-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4 text-emerald-500" />
+                  <span>১. সাপোর্ট পপআপের লেখা</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setActiveTab('notice')}
-                  className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`flex-1 py-2 px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     activeTab === 'notice'
-                      ? 'bg-white text-indigo-700 shadow-xs'
+                      ? 'bg-white text-indigo-700 shadow-xs ring-1 ring-indigo-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <Megaphone className="w-4 h-4 text-rose-500" />
-                  <span>১. টুলসের নোটিশ ও শিরোনাম</span>
+                  <span>২. টুলস নোটিশ ব্যানার</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('profile')}
-                  className={`flex-1 py-2 px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`flex-1 py-2 px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     activeTab === 'profile'
-                      ? 'bg-white text-indigo-700 shadow-xs'
+                      ? 'bg-white text-indigo-700 shadow-xs ring-1 ring-indigo-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <User className="w-4 h-4 text-indigo-600" />
-                  <span>২. ডেভেলপার প্রোফাইল ও ছবি</span>
+                  <span>৩. প্রোফাইল ও ছবি</span>
                 </button>
               </div>
 
-              {/* TAB 1: NOTICE & INFORMATION BANNER ABOVE TOOLS */}
+              {/* TAB 1: SUPPORT POPUP CONTENT (THE EXACT USER REQUESTED TEXT) */}
+              {activeTab === 'support' && (
+                <div className="space-y-5 animate-in fade-in">
+                  <div className="p-4 rounded-3xl bg-emerald-50/80 border border-emerald-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <MessageSquare className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                          <span>সাপোর্ট পপআপের মূল লেখা ও বিবরণী পরিবর্তন</span>
+                          <span className="text-[10px] bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded-full">
+                            লাইভ এডিটর
+                          </span>
+                        </h4>
+                        <p className="text-[11px] text-slate-600 mt-0.5">
+                          সরাসরি ডেভেলপারকে মেসেজ দিন পপআপের মূল বিবরণী টেক্সট, শিরোনাম ও ব্যাজ এখান থেকে নিজের ইচ্ছামতো পরিবর্তন করতে পারবেন।
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-2xs">
+                    {/* The Exact Target Field Highlighted in the User's Screenshot */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/80 to-rose-50/40 border-2 border-amber-300 shadow-2xs">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-rose-500 animate-pulse" />
+                          <span>সাপোর্ট বিবরণী / বার্তা (স্ক্রিনশটের লাল বক্সে চিহ্নিত লেখাটি):</span>
+                        </label>
+                        <span className="text-[10px] bg-rose-100 text-rose-700 font-extrabold px-2 py-0.5 rounded-md border border-rose-200">
+                          মূল টেক্সট ফিল্ড ✍️
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mb-2.5 leading-relaxed font-medium">
+                        পপআপে সাপোর্ট নিন শিরোনামের নিচে যে লেখাটি দেখা যায়, তা নিচের বক্সে পরিবর্তন করে নিচে <strong>"সংরক্ষণ করুন (Save)"</strong> বাটনে ক্লিক করুন:
+                      </p>
+                      <textarea
+                        rows={4}
+                        value={editSupportSubtitle}
+                        onChange={(e) => setEditSupportSubtitle(e.target.value)}
+                        placeholder="আপনার যেকোনো তথ্য বিশদভাবে জানতে বা যেকোনো টেকনিক্যাল সহায়তার জন্য সরাসরি আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন..."
+                        className="w-full px-3.5 py-3 rounded-xl border-2 border-slate-300 focus:border-emerald-500 text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-200 bg-white resize-y shadow-inner leading-relaxed"
+                      />
+                      <div className="flex items-center justify-between mt-2.5 text-[11px] text-slate-500">
+                        <span>মোট অক্ষর: <strong className="font-mono text-slate-700">{editSupportSubtitle.length}</strong>টি</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditSupportSubtitle(
+                              'আপনার যেকোনো তথ্য বিশদভাবে জানতে বা যেকোনো টেকনিক্যাল সহায়তার জন্য সরাসরি আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন। আমাদের টিম ২৪/৭ আপনাকে সাহায্য করতে প্রস্তুত।'
+                            )
+                          }
+                          className="text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer"
+                        >
+                          ডিফল্ট টেক্সট ফেরত আনুন
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Support Heading & Badge Inputs */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-slate-100">
+                      <div>
+                        <label className="text-xs font-bold text-slate-800 block mb-1">
+                          সাপোর্ট প্রধান শিরোনাম (Heading):
+                        </label>
+                        <input
+                          type="text"
+                          value={editSupportHeading}
+                          onChange={(e) => setEditSupportHeading(e.target.value)}
+                          placeholder="যেমন: প্রফেশনাল সাপোর্ট নিন।"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-800 block mb-1">
+                          সাপোর্ট টপ ব্যাজ (Badge):
+                        </label>
+                        <input
+                          type="text"
+                          value={editSupportBadge}
+                          onChange={(e) => setEditSupportBadge(e.target.value)}
+                          placeholder="যেমন: সাপোর্ট ও ইনকোয়ারি"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Preview Card */}
+                  <div className="border border-slate-200 rounded-3xl p-4 sm:p-5 bg-gradient-to-br from-slate-50 via-white to-emerald-50/40 shadow-xs">
+                    <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-3">
+                      লাইভ প্রিভিউ (পপআপে ঠিক যেমন দেখাবে):
+                    </span>
+
+                    <div className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-md max-w-xl mx-auto space-y-3">
+                      <div>
+                        <span className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 text-xs font-bold">
+                          {editSupportBadge || 'সাপোর্ট ও ইনকোয়ারি'}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
+                        {editSupportHeading ? (
+                          editSupportHeading.includes('সাপোর্ট') ? (
+                            <>
+                              {editSupportHeading.split('সাপোর্ট')[0]}
+                              <span className="text-emerald-500">সাপোর্ট</span>
+                              {editSupportHeading.split('সাপোর্ট')[1]}
+                            </>
+                          ) : (
+                            editSupportHeading
+                          )
+                        ) : (
+                          <>
+                            প্রফেশনাল <span className="text-emerald-500">সাপোর্ট</span> নিন।
+                          </>
+                        )}
+                      </h3>
+
+                      <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/90">
+                        <p className="text-xs sm:text-[13px] text-slate-700 leading-relaxed font-medium">
+                          {editSupportSubtitle ||
+                            'আপনার যেকোনো তথ্য বিশদভাবে জানতে বা যেকোনো টেকনিক্যাল সহায়তার জন্য সরাসরি আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন। আমাদের টিম ২৪/৭ আপনাকে সাহায্য করতে প্রস্তুত।'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-6 pt-2 border-t border-slate-100 text-xs text-slate-600 font-mono">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans">ফোন নাম্বার:</span>
+                          <span className="font-bold text-slate-800">{editPhone}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans">ইমেইল এড্রেস:</span>
+                          <span className="font-bold text-slate-800">{editEmail}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: NOTICE & INFORMATION BANNER ABOVE TOOLS */}
               {activeTab === 'notice' && (
                 <div className="space-y-5 animate-in fade-in">
                   <div className="p-4 rounded-3xl bg-indigo-50/60 border border-indigo-100">

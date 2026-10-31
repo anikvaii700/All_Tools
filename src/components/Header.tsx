@@ -31,6 +31,9 @@ import {
   RotateCw,
   Gift,
   User,
+  Hand,
+  Building2,
+  Video,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { BanglaLiveDateTimeWidget } from './BanglaLiveDateTimeWidget';
@@ -68,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectDeviceSector,
   onOpenLiveUpdate,
   isUpdateOn = true,
-  currentVersion = '3.0.0',
+  currentVersion = '3.2.0',
   updateAvailable = false,
   onOpenSpinModal,
   onOpenAuthModal,
@@ -107,6 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'voter-transfer-form', name: 'ভোটার স্থানান্তর ফরম (ফরম-১৩ অটো ফিল)', icon: <FileText className="w-3.5 h-3.5 text-emerald-600" />, category: 'শিক্ষা ও ক্যারিয়ার', badge: 'অফিসিয়াল' },
 
     // 2. কন্টেন্ট, পোস্টার ও বই
+    { id: 'content-creator-studio', name: 'MoSaFa Content Creator Studio (কনটেন্ট স্টুডিও)', icon: <Video className="w-3.5 h-3.5 text-indigo-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ক্রিয়েটর' },
     { id: 'pdf-toolkit', name: 'MoSaFa PDF Toolkit (PDF টুলবক্স)', icon: <FileText className="w-3.5 h-3.5 text-rose-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'PDF টুলস' },
     { id: 'poster-studio', name: 'MoSaFa Poster Studio (পোস্টার ও স্লোগান)', icon: <Palette className="w-3.5 h-3.5 text-rose-500" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ডিজাইন' },
     { id: 'golpo-ghor', name: 'গল্পের ঘর (জনপ্রিয় সকল বই ও গল্প)', icon: <BookOpen className="w-3.5 h-3.5 text-amber-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'বই ও গল্প' },
@@ -115,11 +119,13 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'bangla-text-converter', name: 'MoSaFa বাংলা টেক্সট কনভার্টার', icon: <Languages className="w-3.5 h-3.5 text-emerald-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'কনভার্টার' },
 
     // 3. মানচিত্র, যাতায়াত ও ইউটিলিটি
+    { id: 'bd-online-portal', name: 'MoSaFa BD Online Portal (বাংলাদেশ ডিরেক্টরি)', icon: <Building2 className="w-3.5 h-3.5 text-emerald-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'সার্ভিস ও জব' },
     { id: 'bangladesh-map', name: 'MoSaFa My Bangladesh Map (ভ্রমণ মানচিত্র)', icon: <Compass className="w-3.5 h-3.5 text-emerald-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'ম্যাপ' },
     { id: 'bus-fare', name: 'ঢাকা ও আন্তঃজেলা বাস ভাড়া তালিকা', icon: <Bus className="w-3.5 h-3.5 text-sky-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'বাস ভাড়া' },
     { id: 'prepaid-meter', name: 'বিদ্যুৎ প্রিপেইড মিটার হিসাব সহকারী', icon: <Zap className="w-3.5 h-3.5 text-emerald-600" />, category: 'যাতায়াত ও ইউটিলিটি', badge: 'বিদ্যুৎ' },
 
     // 4. বিনোদন, প্রেম ও কুইজ
+    { id: 'palmistry-ai', name: 'MoSaFa Palmistry AI (হস্তরেখা ও ভাগ্যরেখা)', icon: <Hand className="w-3.5 h-3.5 text-amber-600" />, category: 'বিনোদন ও কুইজ', badge: 'এআই হাত' },
     { id: 'love-test', name: 'প্রেম টেস্ট (বাস্তব পরীক্ষা ও সনদপত্র)', icon: <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-600" />, category: 'বিনোদন ও কুইজ', badge: 'ভাইরাল' },
     { id: 'bangla-quiz', name: 'বাংলা সাধারণ জ্ঞান ও মেধা কুইজ', icon: <Brain className="w-3.5 h-3.5 text-indigo-600" />, category: 'বিনোদন ও কুইজ', badge: 'কুইজ' },
     { id: 'random-picker', name: 'র‍্যান্ডম পিকার হুইল (ভাগ্যের চাকা)', icon: <Compass className="w-3.5 h-3.5 text-purple-600" />, category: 'বিনোদন ও কুইজ', badge: 'চাকা' },
@@ -235,7 +241,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <span>সকল টুলস ডিরেক্টরি</span>
                     <span className="bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded-full text-[10px]">
-                      ২৫টি
+                      ২৭টি
                     </span>
                   </span>
                   <button
