@@ -83,8 +83,10 @@ import { BdOnlinePortal } from './components/BdOnlinePortal';
 import { ContentCreatorStudio } from './components/ContentCreatorStudio';
 import { EntrepreneurJourney } from './components/EntrepreneurJourney';
 import { AllFormFillup } from './components/all-form-fillup/AllFormFillup';
+import { GovOfficesHub } from './components/gov-offices/GovOfficesHub';
 
 export type ToolId =
+  | 'all-gov-offices'
   | 'studymate-bd'
   | 'all-form-fillup'
   | 'entrepreneur-journey'
@@ -192,6 +194,7 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const toolParam = params.get('tool');
       const validToolIds = [
+        'all-gov-offices',
         'studymate-bd',
         'all-form-fillup',
         'love-test',
@@ -251,7 +254,37 @@ export default function App() {
 
   // Complete Tools Registry with Sector Categorization
   const tools: ToolCardInfo[] = [
-    // 0. MoSaFa All Form Fillup
+    // 0. MoSaFa All Government Offices (সকল সরকারি অফিস)
+    {
+      id: 'all-gov-offices',
+      title: 'সকল সরকারি অফিস (MoSaFa Gov Offices)',
+      badge: '🏛️ নির্বাচন কমিশন ও সরকারি সেবা',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      category: 'calculator',
+      iconBg: 'from-rose-600 via-pink-600 to-indigo-700',
+      icon: <Building2 className="w-6 h-6 text-white" />,
+      description:
+        'বাংলাদেশের সকল সরকারি অফিসের তথ্য, সেবা, আবেদন প্রক্রিয়া, প্রয়োজনীয় কাগজপত্র ও ফি জানার স্মার্ট প্ল্যাটফর্ম। প্রথম ধাপে নির্বাচন কমিশন NID সংশোধন সহায়িকা, ফি ক্যালকুলেটর ও চেকলিস্ট সহ।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'সকল সরকারি অফিস',
+        'সরকারি অফিস',
+        'all gov offices',
+        'gov offices',
+        'নির্বাচন কমিশন',
+        'nid সংশোধন',
+        'জাতীয় পরিচয়পত্র সংশোধন',
+        'nid correction',
+        'nid fee',
+        'nid documents',
+        'services nidw',
+        'পাসপোর্ট',
+        'ভূমি অফিস',
+        'bdris',
+      ],
+    },
+    // 1. MoSaFa All Form Fillup
     {
       id: 'all-form-fillup',
       title: 'MoSaFa All Form Fillup (সকল ফরম ফিলআপ ও রসিদ)',
@@ -803,8 +836,8 @@ export default function App() {
   ];
 
   // Master Short Prompt Flag: 'Random ON' / 'Random OFF'
-  // Currently set to: 'Random ON' (Tools positions randomized on each load)
-  const IS_RANDOM_MODE = true;
+  // Currently set to: 'Random OFF' (Tools positions fixed in canonical catalog order)
+  const IS_RANDOM_MODE = false;
 
   // Fisher-Yates shuffle algorithm: randomizes tools positions on every page reload
   const shuffleTools = (list: ToolCardInfo[]): ToolCardInfo[] => {
@@ -1128,6 +1161,14 @@ export default function App() {
   }
   if (activeTool === 'entrepreneur-journey') {
     return wrapWithNavbar(<EntrepreneurJourney onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'all-gov-offices') {
+    return wrapWithNavbar(
+      <GovOfficesHub
+        onBackToHub={() => navigateToTool(null)}
+        onShowToast={showToast}
+      />
+    );
   }
   if (activeTool === 'all-form-fillup') {
     return wrapWithNavbar(

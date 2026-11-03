@@ -32,6 +32,7 @@ import { CustomFormBuilderModal } from './CustomFormBuilderModal';
 import { SavedDraftsModal } from './SavedDraftsModal';
 import { VoterTransferForm } from '../VoterTransferForm';
 import { NidCorrectionForm2 } from './NidCorrectionForm2';
+import { NidBiometricForm1 } from './NidBiometricForm1';
 
 interface AllFormFillupProps {
   onBackToHub: () => void;
@@ -595,6 +596,50 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
 
             {/* Embedded Full Voter Transfer Form */}
             <VoterTransferForm
+              onBackToHub={() => {
+                const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
+                handleSelectTemplate(defaultTmpl);
+              }}
+              onShowToast={onShowToast}
+            />
+          </div>
+        ) : selectedTemplate?.id === 'voter-form-1' ? (
+          <div className="space-y-4">
+            {/* Top Return Banner */}
+            <div className="bg-gradient-to-r from-amber-700 via-yellow-700 to-amber-900 text-white p-3.5 sm:p-4 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">
+                  🇧🇩
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-black">
+                      বায়োমেট্রিক আপডেট আবেদন (ফরম-১)
+                    </h3>
+                    <span className="text-[10px] bg-amber-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full">
+                      সরকারি অফিশিয়াল ফরম
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-100 font-medium">
+                    MoSaFa All Form Fillup-এর অন্তর্ভুক্ত নির্বাচন কমিশন নির্ধারিত সম্পূর্ণ লিগ্যাল ফরম-১ (আঙ্গুলের ছাপ ও আইরিশ আপডেট)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
+                  handleSelectTemplate(defaultTmpl);
+                }}
+                className="px-3.5 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-white/20"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>অন্যান্য ফরম দেখুন (বাসা ভাড়ার রসিদ, চুক্তিপত্র ইত্যাদি)</span>
+              </button>
+            </div>
+
+            {/* Dedicated Official Form-1 Biometric Component */}
+            <NidBiometricForm1
               onBackToHub={() => {
                 const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
                 handleSelectTemplate(defaultTmpl);

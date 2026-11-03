@@ -42,6 +42,7 @@ export type DocumentLayoutType =
   | 'memo'
   | 'voter-form-13'
   | 'voter-form-2'
+  | 'voter-form-1'
   | 'custom';
 
 export interface FormTemplate {

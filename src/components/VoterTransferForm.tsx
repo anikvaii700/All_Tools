@@ -20,6 +20,8 @@ import { jsPDF } from 'jspdf';
 interface VoterTransferFormProps {
   onBackToHub: () => void;
   onShowToast: (message: string, icon?: string) => void;
+  backButtonLabel?: string;
+  initialData?: Partial<Form13Data>;
 }
 
 export interface Form13Data {
@@ -167,8 +169,13 @@ const SAMPLE_DATA: Form13Data = {
 export const VoterTransferForm: React.FC<VoterTransferFormProps> = ({
   onBackToHub,
   onShowToast,
+  backButtonLabel,
+  initialData,
 }) => {
-  const [formData, setFormData] = useState<Form13Data>(SAMPLE_DATA);
+  const [formData, setFormData] = useState<Form13Data>(() => ({
+    ...SAMPLE_DATA,
+    ...(initialData || {}),
+  }));
   const [activePage, setActivePage] = useState<'both' | 'page1' | 'page2'>('both');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
@@ -303,10 +310,10 @@ export const VoterTransferForm: React.FC<VoterTransferFormProps> = ({
             <button
               onClick={onBackToHub}
               className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
-              title="সকল টুলস তালিকায় ফিরুন"
+              title={backButtonLabel || "সকল টুলস তালিকায় ফিরুন"}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">সকল টুলস</span>
+              <span className="hidden sm:inline">{backButtonLabel || "সকল টুলস"}</span>
             </button>
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-xs">

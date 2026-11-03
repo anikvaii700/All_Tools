@@ -22,6 +22,8 @@ import { toBanglaDigits } from './numberUtils';
 interface NidCorrectionForm2Props {
   onBackToHub?: () => void;
   onShowToast: (message: string, icon?: string) => void;
+  initialData?: Partial<Form2Data>;
+  backButtonLabel?: string;
 }
 
 export interface CorrectionRow {
@@ -207,8 +209,17 @@ const EMPTY_DATA: Form2Data = {
 export const NidCorrectionForm2: React.FC<NidCorrectionForm2Props> = ({
   onBackToHub,
   onShowToast,
+  initialData,
+  backButtonLabel,
 }) => {
   const [formData, setFormData] = useState<Form2Data>(() => {
+    if (initialData) {
+      return {
+        ...SAMPLE_DATA,
+        ...initialData,
+        corrections: initialData.corrections || SAMPLE_DATA.corrections,
+      };
+    }
     try {
       const saved = localStorage.getItem('mosafa_voter_form_2_draft');
       if (saved) return JSON.parse(saved);
@@ -323,6 +334,17 @@ export const NidCorrectionForm2: React.FC<NidCorrectionForm2Props> = ({
       {/* Top Banner & Quick Controls */}
       <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white p-3.5 sm:p-4 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-3">
+          {onBackToHub && (
+            <button
+              type="button"
+              onClick={onBackToHub}
+              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-xs"
+              title="ফিরে যান"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>{backButtonLabel || '← ফিরে যান'}</span>
+            </button>
+          )}
           <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">
             🇧🇩
           </div>
