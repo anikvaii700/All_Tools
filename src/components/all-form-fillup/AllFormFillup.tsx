@@ -33,6 +33,9 @@ import { SavedDraftsModal } from './SavedDraftsModal';
 import { VoterTransferForm } from '../VoterTransferForm';
 import { NidCorrectionForm2 } from './NidCorrectionForm2';
 import { NidBiometricForm1 } from './NidBiometricForm1';
+import { LandlordVoterCertificate } from './LandlordVoterCertificate';
+import { PhotoSignCertificate } from './PhotoSignCertificate';
+import { NidServerCopyApplication } from './NidServerCopyApplication';
 
 interface AllFormFillupProps {
   onBackToHub: () => void;
@@ -640,6 +643,138 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
 
             {/* Dedicated Official Form-1 Biometric Component */}
             <NidBiometricForm1
+              onBackToHub={() => {
+                const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
+                handleSelectTemplate(defaultTmpl);
+              }}
+              onShowToast={onShowToast}
+            />
+          </div>
+        ) : selectedTemplate?.id === 'landlord-voter-certificate' ? (
+          <div className="space-y-4">
+            {/* Top Return Banner */}
+            <div className="bg-gradient-to-r from-cyan-800 via-teal-800 to-slate-900 text-white p-3.5 sm:p-4 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">
+                  🏠
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-black">
+                      বাড়ির মালিকের প্রত্যয়নপত্র (নতুন ভোটার নিবন্ধনের বর্তমান ঠিকানা)
+                    </h3>
+                    <span className="text-[10px] bg-cyan-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full">
+                      সম্পূর্ণ এডিটেবল
+                    </span>
+                  </div>
+                  <p className="text-xs text-teal-100 font-medium">
+                    MoSaFa All Form Fillup-এর অন্তর্ভুক্ত নতুন ভোটার নিবন্ধনে বাড়িওয়ালার প্রমিত প্রত্যয়নপত্র
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
+                  handleSelectTemplate(defaultTmpl);
+                }}
+                className="px-3.5 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-white/20"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>অন্যান্য ফরম দেখুন (বাসা ভাড়ার রসিদ, চুক্তিপত্র ইত্যাদি)</span>
+              </button>
+            </div>
+
+            {/* Dedicated Landlord Voter Certificate Component */}
+            <LandlordVoterCertificate
+              onBackToHub={() => {
+                const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
+                handleSelectTemplate(defaultTmpl);
+              }}
+              onShowToast={onShowToast}
+            />
+          </div>
+        ) : selectedTemplate?.id === 'photo-sign-certificate' ? (
+          <div className="space-y-4">
+            {/* Top Return Banner */}
+            <div className="bg-gradient-to-r from-rose-800 via-pink-800 to-indigo-950 text-white p-3.5 sm:p-4 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">
+                  ✍️
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-black">
+                      ছবি ও স্বাক্ষর পরিবর্তনের প্রত্যয়নপত্র (ইউপি / পৌরসভা)
+                    </h3>
+                    <span className="text-[10px] bg-rose-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full">
+                      সম্পূর্ণ এডিটেবল
+                    </span>
+                  </div>
+                  <p className="text-xs text-rose-100 font-medium">
+                    ০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ সহ সকল তথ্য এডিটেবল, গণপ্রজাতন্ত্রী লোগো, নমুনা ছক, লাইভ A4 প্রিভিউ ও PDF ডাউনলোড
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
+                  handleSelectTemplate(defaultTmpl);
+                }}
+                className="px-3.5 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-white/20"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>অন্যান্য ফরম দেখুন</span>
+              </button>
+            </div>
+
+            {/* Dedicated Photo & Signature Certificate Component */}
+            <PhotoSignCertificate
+              onBackToHub={() => {
+                const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
+                handleSelectTemplate(defaultTmpl);
+              }}
+              onShowToast={onShowToast}
+            />
+          </div>
+        ) : selectedTemplate?.id === 'nid-server-copy-application' ? (
+          <div className="space-y-4">
+            {/* Top Return Banner */}
+            <div className="bg-gradient-to-r from-purple-800 via-indigo-850 to-slate-900 text-white p-3.5 sm:p-4 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">
+                  💻
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-black">
+                      জাতীয় পরিচয়পত্রের সার্ভার কপি সরবরাহের জন্য আবেদন
+                    </h3>
+                    <span className="text-[10px] bg-purple-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full">
+                      সম্পূর্ণ এডিটেবল
+                    </span>
+                  </div>
+                  <p className="text-xs text-purple-100 font-medium">
+                    উপজেলা নির্বাচন অফিসারের নিকট দরখাস্ত • লাইভ A4 প্রিভিউ • তাৎক্ষণিক প্রিন্ট ও PDF ডাউনলোড
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
+                  handleSelectTemplate(defaultTmpl);
+                }}
+                className="px-3.5 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-white/20"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>অন্যান্য ফরম দেখুন</span>
+              </button>
+            </div>
+
+            {/* Dedicated Server Copy Application Component */}
+            <NidServerCopyApplication
               onBackToHub={() => {
                 const defaultTmpl = templates.find((t) => t.id === 'house-rent-receipt') || templates[0];
                 handleSelectTemplate(defaultTmpl);

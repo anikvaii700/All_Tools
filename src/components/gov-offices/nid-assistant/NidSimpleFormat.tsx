@@ -27,10 +27,14 @@ import {
   ChevronLeft,
   FileText,
   Fingerprint,
+  Edit3,
 } from 'lucide-react';
 import { NidCorrectionForm2, Form2Data, CorrectionRow } from '../../all-form-fillup/NidCorrectionForm2';
 import { NidBiometricForm1, Form1Data } from '../../all-form-fillup/NidBiometricForm1';
 import { VoterTransferForm, Form13Data } from '../../VoterTransferForm';
+import { LandlordVoterCertificate, LandlordCertificateData } from '../../all-form-fillup/LandlordVoterCertificate';
+import { PhotoSignCertificate, PhotoSignCertificateData } from '../../all-form-fillup/PhotoSignCertificate';
+import { NidServerCopyApplication, ServerCopyApplicationData } from '../../all-form-fillup/NidServerCopyApplication';
 
 interface NidSimpleFormatProps {
   onShowToast: (msg: string, icon?: string) => void;
@@ -152,6 +156,12 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
   const [isForm13EditorActive, setIsForm13EditorActive] = useState<boolean>(false);
   // Controls whether the complete Form-1 Biometric editor (from image_551c9cea.png) is active
   const [isForm1EditorActive, setIsForm1EditorActive] = useState<boolean>(false);
+  // Controls whether the complete Landlord Certificate editor (from image_4c431222.png) is active
+  const [isLandlordEditorActive, setIsLandlordEditorActive] = useState<boolean>(false);
+  // Controls whether the complete Photo & Sign Certificate editor (from image_d5c7e51c.png) is active
+  const [isPhotoSignEditorActive, setIsPhotoSignEditorActive] = useState<boolean>(false);
+  // Controls whether the complete NID Server Copy Application editor (from image_44a1549a.png) is active
+  const [isServerCopyEditorActive, setIsServerCopyEditorActive] = useState<boolean>(false);
 
   // Search filter query
   const [searchQuery, setSearchQuery] = useState('');
@@ -693,6 +703,185 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
     );
   }
 
+  // Map current table data into LandlordCertificateData structure
+  const mappedLandlordData: Partial<LandlordCertificateData> = {
+    tenantName: formData.self_name_bn.desired || formData.self_name_bn.existing || 'নাঈম মিয়া',
+    guardianName: formData.father_name.desired || formData.father_name.existing || 'মো: রফিকুল ইসলাম',
+    motherName: formData.mother_name.desired || formData.mother_name.existing || '',
+    tenantNid: formNidNumber || '',
+    presentDistrict: 'ঢাকা',
+    presentVillage: 'ধানমন্ডি',
+    presentUpazila: 'ধানমন্ডি',
+  };
+
+  // If user clicked "ভাড়াটিয়ার জন্য বাড়িওয়ালার প্রত্যয়ন", render the complete editable Landlord Voter Certificate (image_4c431222.png)
+  if (isLandlordEditorActive) {
+    return (
+      <div className="space-y-4">
+        {/* Top return banner */}
+        <div className="bg-gradient-to-r from-cyan-800 via-teal-800 to-slate-900 text-white p-3.5 sm:p-4 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-3 print:hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">
+              🏠
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-black">
+                  বাড়ির মালিকের প্রত্যয়নপত্র (নতুন ভোটার নিবন্ধনের জন্য বর্তমান ঠিকানার প্রত্যয়ন)
+                </h3>
+                <span className="text-[10px] bg-cyan-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full">
+                  সম্পূর্ণ এডিটেবল
+                </span>
+              </div>
+              <p className="text-xs text-teal-100 font-medium">
+                নতুন ভোটার নিবন্ধনের ক্ষেত্রে বর্তমান ঠিকানার প্রমাণপত্র, লাইভ A4 প্রিভিউ, প্রিন্ট ও PDF ডাউনলোড
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsLandlordEditorActive(false)}
+            className="px-3.5 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-white/20"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>← ফিরে যান (ডকুমেন্টস ও ফি নির্দেশিকা ছক)</span>
+          </button>
+        </div>
+
+        {/* Embedded Complete Landlord Certificate Component */}
+        <LandlordVoterCertificate
+          onBackToHub={() => setIsLandlordEditorActive(false)}
+          backButtonLabel="← ছকে ফিরে যান"
+          onShowToast={onShowToast}
+          initialData={mappedLandlordData}
+        />
+      </div>
+    );
+  }
+
+  // Map current table data into PhotoSignCertificateData structure (image_d5c7e51c.png)
+  const mappedPhotoSignData: Partial<PhotoSignCertificateData> = {
+    unionParishad: '০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ',
+    upazila: 'মাধবপুর',
+    district: 'হবিগঞ্জ',
+    applicantName: formData.self_name_bn.desired || formData.self_name_bn.existing || 'ছামিরা',
+    guardianName: formData.father_name.desired || formData.father_name.existing || 'মোঃ মিলন মিয়া',
+    motherName: formData.mother_name.desired || formData.mother_name.existing || 'আলিমা বেগম',
+    village: 'আন্দিউড়া',
+    postOffice: 'আন্দিউড়া-৩৩০১',
+    nidNumber: formNidNumber || '৪৬৭২৯২৮৭৪৬',
+    voterYear: '২০২২',
+    dateOfBirth: '০৫-০৫-১৯৯৮',
+    reasonDetails:
+      'তাহার জাতীয় পরিচয়পত্রে থাকা ছবি ও স্বাক্ষর অন্য একজন হিন্দু মহিলার। এমতাবস্থায় এই জাতীয় পরিচয়পত্র দিয়ে কোন রকম কাজ করা যাচ্ছেনা। তাই উক্ত জাতীয় পরিচয়পত্রে তাহার বর্তমান ছবি ও স্বাক্ষর দিয়ে ঠিক করার জন্য প্রত্যয়ন করা হলো।',
+  };
+
+  // If user clicked "ছবি ও স্বাক্ষর পরিবর্তনের প্রত্যয়ন", render the complete editable Photo & Sign Certificate (image_d5c7e51c.png)
+  if (isPhotoSignEditorActive) {
+    return (
+      <div className="space-y-4">
+        {/* Top return banner */}
+        <div className="bg-gradient-to-r from-rose-800 via-pink-850 to-indigo-950 text-white p-3.5 sm:p-4 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-3 print:hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">
+              ✍️
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-black">
+                  ছবি ও স্বাক্ষর পরিবর্তনের প্রত্যয়নপত্র (ইউপি / পৌরসভা ফরম্যাট)
+                </h3>
+                <span className="text-[10px] bg-rose-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full">
+                  সম্পূর্ণ এডিটেবল
+                </span>
+              </div>
+              <p className="text-xs text-rose-100 font-medium">
+                ০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ সহ সকল তথ্য এডিটেবল • গণপ্রজাতন্ত্রী লোগো • ৩-ঘর নমুনা ছক • লাইভ A4 প্রিভিউ ও PDF ডাউনলোড
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPhotoSignEditorActive(false)}
+            className="px-3.5 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-white/20"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>← ফিরে যান (ডকুমেন্টস ও ফি নির্দেশিকা ছক)</span>
+          </button>
+        </div>
+
+        {/* Embedded Complete Photo & Sign Certificate Component */}
+        <PhotoSignCertificate
+          onBackToHub={() => setIsPhotoSignEditorActive(false)}
+          backButtonLabel="← ছকে ফিরে যান"
+          onShowToast={onShowToast}
+          initialData={mappedPhotoSignData}
+        />
+      </div>
+    );
+  }
+
+  // Map current table data into ServerCopyApplicationData structure (image_44a1549a.png)
+  const mappedServerCopyData: Partial<ServerCopyApplicationData> = {
+    recipientDesignation: 'উপজেলা নির্বাচন কর্মকর্তা',
+    upazila: 'মাধবপুর',
+    district: 'হবিগঞ্জ',
+    applicantName: formData.self_name_bn.desired || formData.self_name_bn.existing || 'নাঈম মিয়া',
+    applicantNid: formNidNumber || '১৯৯৫২৬৯১৬৪৫০৪৫৭১২',
+    applicantMobile: formMobileNumber || '০১৭১২-৩৪৫৬৭৮',
+    applicationDate: '২৮/১০/২০২৬',
+    purposeText: 'পাসপোর্ট তৈরি, ভূমি সংক্রান্ত কাজ, সরকারি দাপ্তরিক যাচাই ইত্যাদি',
+    attachments: [
+      'জাতীয় পরিচয়পত্রের ফটোকপি।',
+      'প্রয়োজন অনুযায়ী সংশ্লিষ্ট দাপ্তরিক কাগজপত্রের ফটোকপি।',
+    ],
+  };
+
+  // If user clicked "সার্ভার কপি সংগ্রহের আবেদন", render the complete editable NID Server Copy Application (image_44a1549a.png)
+  if (isServerCopyEditorActive) {
+    return (
+      <div className="space-y-4">
+        {/* Top return banner */}
+        <div className="bg-gradient-to-r from-purple-800 via-indigo-850 to-slate-900 text-white p-3.5 sm:p-4 rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-3 print:hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-xl shrink-0">
+              💻
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-black">
+                  জাতীয় পরিচয়পত্রের সার্ভার কপি সংগ্রহের আবেদন
+                </h3>
+                <span className="text-[10px] bg-purple-400 text-slate-900 font-extrabold px-2 py-0.5 rounded-full">
+                  সম্পূর্ণ এডিটেবল
+                </span>
+              </div>
+              <p className="text-xs text-purple-100 font-medium">
+                উপজেলা নির্বাচন কর্মকর্তার নিকট দরখাস্ত • লাইভ A4 প্রিভিউ • তাৎক্ষণিক প্রিন্ট ও PDF ডাউনলোড
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsServerCopyEditorActive(false)}
+            className="px-3.5 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-white/20"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>← ফিরে যান (ডকুমেন্টস ও ফি নির্দেশিকা ছক)</span>
+          </button>
+        </div>
+
+        {/* Embedded Complete Server Copy Application Component */}
+        <NidServerCopyApplication
+          onBackToHub={() => setIsServerCopyEditorActive(false)}
+          backButtonLabel="← ছকে ফিরে যান"
+          onShowToast={onShowToast}
+          initialData={mappedServerCopyData}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 sm:space-y-8 font-sans text-slate-800">
       {/* ========================================================== */}
@@ -714,6 +903,15 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
                 } else if (box.id === 'form1') {
                   setIsForm1EditorActive(true);
                   onShowToast('ফরম ১ (বায়োমেট্রিক আপডেট ফরম ফিলাপ) ও লাইভ A4 প্রিভিউ খোলা হয়েছে!', '👆');
+                } else if (box.id === 'server_copy') {
+                  setIsServerCopyEditorActive(true);
+                  onShowToast('জাতীয় পরিচয়পত্রের সার্ভার কপি সংগ্রহের আবেদন খোলা হয়েছে!', '💻');
+                } else if (box.id === 'photo_sign') {
+                  setIsPhotoSignEditorActive(true);
+                  onShowToast('ছবি ও স্বাক্ষর পরিবর্তনের প্রত্যয়নপত্র (ইউপি / পৌরসভা) খোলা হয়েছে!', '✍️');
+                } else if (box.id === 'landlord') {
+                  setIsLandlordEditorActive(true);
+                  onShowToast('বাড়ির মালিকের প্রত্যয়নপত্র (ভাড়াটিয়ার নতুন ভোটার নিবন্ধন প্রত্যয়ন) খোলা হয়েছে!', '🏠');
                 } else {
                   setSelectedFormModal(box.id);
                 }
@@ -725,6 +923,12 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
                   ? 'border-teal-600 bg-teal-50/50 hover:bg-teal-100/60 ring-2 ring-teal-200 text-teal-950'
                   : box.id === 'form1'
                   ? 'border-amber-600 bg-amber-50/50 hover:bg-amber-100/60 ring-2 ring-amber-200 text-amber-950'
+                  : box.id === 'server_copy'
+                  ? 'border-purple-600 bg-purple-50/50 hover:bg-purple-100/60 ring-2 ring-purple-200 text-purple-950'
+                  : box.id === 'photo_sign'
+                  ? 'border-rose-600 bg-rose-50/50 hover:bg-rose-100/60 ring-2 ring-rose-200 text-rose-950'
+                  : box.id === 'landlord'
+                  ? 'border-cyan-600 bg-cyan-50/50 hover:bg-cyan-100/60 ring-2 ring-cyan-200 text-cyan-950'
                   : 'border-slate-300 bg-white hover:bg-slate-50 text-slate-900 hover:border-slate-400'
               }`}
             >
@@ -747,6 +951,21 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
               {box.id === 'form1' && (
                 <span className="text-[10px] font-bold text-amber-800 mt-1 bg-white px-2 py-0.5 rounded-full border border-amber-300">
                   A4 বায়োমেট্রিক ফরম
+                </span>
+              )}
+              {box.id === 'server_copy' && (
+                <span className="text-[10px] font-bold text-purple-800 mt-1 bg-white px-2 py-0.5 rounded-full border border-purple-300">
+                  A4 এডিটেবল আবেদন
+                </span>
+              )}
+              {box.id === 'photo_sign' && (
+                <span className="text-[10px] font-bold text-rose-800 mt-1 bg-white px-2 py-0.5 rounded-full border border-rose-300">
+                  A4 এডিটেবল প্রত্যয়ন
+                </span>
+              )}
+              {box.id === 'landlord' && (
+                <span className="text-[10px] font-bold text-cyan-800 mt-1 bg-white px-2 py-0.5 rounded-full border border-cyan-300">
+                  A4 এডিটেবল প্রত্যয়ন
                 </span>
               )}
             </button>
@@ -1453,13 +1672,25 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
                 <li>ডাউনলোড বোতামে ক্লিক করে সার্ভার কপি সংরক্ষণ করুন</li>
               </ul>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedFormModal(null)}
                 className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
               >
                 বন্ধ করুন
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedFormModal(null);
+                  setIsServerCopyEditorActive(true);
+                  onShowToast('জাতীয় পরিচয়পত্রের সার্ভার কপি সংগ্রহের দরখাস্ত খোলা হয়েছে!', '💻');
+                }}
+                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>সম্পূর্ণ এডিটেবল দরখাস্ত ও A4 প্রিভিউ</span>
               </button>
             </div>
           </div>
@@ -1497,13 +1728,25 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
                 <li>উপজেলা নির্বাচন অফিসারের সামনে লাইভ ছবি ও ডিজিটাল প্যাডে স্বাক্ষর প্রদান</li>
               </ul>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedFormModal(null)}
                 className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
               >
                 বন্ধ করুন
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedFormModal(null);
+                  setIsPhotoSignEditorActive(true);
+                  onShowToast('ছবি ও স্বাক্ষর পরিবর্তনের প্রত্যয়নপত্র (ইউপি / পৌরসভা) খোলা হয়েছে!', '✍️');
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>সম্পূর্ণ এডিটেবল ফরম ফিলাপ ও A4 প্রিভিউ</span>
               </button>
             </div>
           </div>
@@ -1524,31 +1767,53 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
             <div className="text-center mb-6">
               <span className="text-2xl mb-1 block">🏠</span>
               <h3 className="text-lg font-bold text-slate-900">
-                ভাড়াটিয়ার জন্য বাড়িওয়ালার প্রত্যয়নপত্র
+                বাড়ির মালিকের প্রত্যয়নপত্র
               </h3>
               <p className="text-xs text-slate-500">
-                এনআইডি স্থানান্তর ও নতুন ভোটার নিবন্ধনে বাড়িওয়ালার সম্মতিপত্র
+                (নতুন ভোটার নিবন্ধনের জন্য বর্তমান ঠিকানার প্রত্যয়ন)
               </p>
             </div>
             <div className="border border-slate-300 p-5 rounded-2xl bg-white space-y-3 text-xs text-slate-800 leading-relaxed font-serif">
               <div className="text-center font-bold text-sm underline pb-2">
-                প্রত্যয়নপত্র
+                বাড়ির মালিকের প্রত্যয়নপত্র
+              </div>
+              <p className="font-semibold">
+                এই মর্মে প্রত্যয়ন করা যাচ্ছে যে,
+              </p>
+              <div className="space-y-1 pl-3 text-[11.5px]">
+                <div><b>নামঃ</b> {formData.self_name_bn.desired || formData.self_name_bn.existing || '..................................................................................'}</div>
+                <div><b>পিতা/স্বামীর নামঃ</b> {formData.father_name.desired || formData.father_name.existing || '...................................................................'}</div>
+                <div><b>মাতার নামঃ</b> {formData.mother_name.desired || formData.mother_name.existing || '...........................................................................'}</div>
+                <div><b>জাতীয় পরিচয়পত্র নম্বর (যদি থাকে)ঃ</b> {formNidNumber || '...................................................'}</div>
+                <div><b>স্থায়ী ঠিকানাঃ</b> গ্রাম: .......................... ডাকঘর: ......................... উপজেলা: .......................... জেলা: ..........................</div>
+              </div>
+              <p className="pt-1">
+                উপরোক্ত ব্যক্তি আমার বাড়ির একজন ভাড়াটিয়া। তিনি বর্তমানে আমার মালিকানাধীন বাড়িতে বসবাস করছেন।
+              </p>
+              <div className="space-y-1 pl-3 text-[11.5px]">
+                <div><b>বর্তমান ঠিকানাঃ</b> বাড়ি/হোল্ডিং নং: ........................ গ্রাম/মহল্লা: ........................ ওয়ার্ড নং: .......... ডাকঘর: ........................ উপজেলা/থানা: ........................ জেলা: ........................</div>
               </div>
               <p>
-                এই মর্মে প্রত্যয়ন করা যাইতেছে যে, জনাব/বেগম ....................................................., পিতা: ....................................................., মাতা: ..................................................... আমার মালিকানাধীন বাসা নং: ....................., রোড নং: ....................., এলাকা: ..................................................... ঠিকানায় বিগত ..................... তারিখ হইতে নিয়মিত ভাড়াটিয়া হিসাবে সপরিবারে বসবাস করিতেছেন।
+                তিনি অত্র ঠিকানায় .................................... তারিখ হতে বসবাস করে আসছেন।
               </p>
               <p>
-                উক্ত ঠিকানায় তাঁহার জাতীয় পরিচয়পত্র বা ভোটার তালিকাভুক্তির বিষয়ে আমার কোনো প্রকার আপত্তি নাই।
+                আমি তাকে ব্যক্তিগতভাবে চিনি এবং তিনি উক্ত ঠিকানায় বসবাস করছেন মর্মে নিশ্চিত করছি। তার নতুন ভোটার নিবন্ধনের ক্ষেত্রে বর্তমান ঠিকানার প্রমাণ হিসেবে এই প্রত্যয়নপত্র প্রদান করা হলো।
               </p>
-              <div className="pt-8 flex justify-between">
-                <div>তারিখ: .....................</div>
-                <div className="text-center">
-                  .....................................................<br />
-                  (বাড়িওয়ালার স্বাক্ষর, নাম ও মোবাইল নং)
+              <p>
+                আমি তার সর্বাঙ্গীণ মঙ্গল কামনা করি।
+              </p>
+              <div className="pt-6 flex justify-between items-end">
+                <div>তারিখ: ............................</div>
+                <div className="text-right text-[11px] space-y-0.5">
+                  <div className="border-t border-dashed border-slate-800 pt-1 text-center font-bold mb-1">বাড়ির মালিকের স্বাক্ষর</div>
+                  <div><b>বাড়ির মালিকের নামঃ</b> ....................................................</div>
+                  <div><b>জাতীয় পরিচয়পত্র নম্বরঃ</b> ............................................</div>
+                  <div><b>মোবাইল নম্বরঃ</b> ............................................................</div>
+                  <div><b>বাড়ির ঠিকানাঃ</b> ............................................................</div>
                 </div>
               </div>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedFormModal(null)}
@@ -1558,11 +1823,14 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
               </button>
               <button
                 type="button"
-                onClick={() => window.print()}
-                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5"
+                onClick={() => {
+                  setSelectedFormModal(null);
+                  setIsLandlordEditorActive(true);
+                }}
+                className="px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
               >
-                <Printer className="w-3.5 h-3.5" />
-                <span>প্রিন্ট করুন</span>
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>সম্পূর্ণ এডিটেবল ফরম ফিলাপ ও A4 প্রিভিউ</span>
               </button>
             </div>
           </div>

@@ -56,6 +56,57 @@ export const INITIAL_TEMPLATES: FormTemplate[] = [
     fields: [],
   },
 
+  {
+    id: 'landlord-voter-certificate',
+    name: 'বাড়ির মালিকের প্রত্যয়নপত্র (নতুন ভোটার নিবন্ধন)',
+    tagline: 'নতুন ভোটার নিবন্ধনের জন্য বর্তমান ঠিকানার বাড়িওয়ালার প্রত্যয়নপত্র',
+    category: 'election',
+    categoryName: 'নির্বাচন কমিশন ও এনআইডি',
+    badge: '🏠 এডিটেবল প্রত্যয়নপত্র',
+    badgeColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+    shortDescription: 'নতুন ভোটার নিবন্ধনে বর্তমান ঠিকানার প্রমাণ হিসেবে বাড়ির মালিক কর্তৃক নির্ধারিত প্রত্যয়নপত্র। সম্পূর্ণ এডিটেবল, লাইভ A4 প্রিভিউ ও PDF ডাউনলোড।',
+    icon: 'Home',
+    layoutType: 'landlord-voter-certificate',
+    orientation: 'portrait',
+    disclaimer: 'এটি নতুন ভোটার নিবন্ধনের বর্তমান ঠিকানা প্রমাণের জন্য বাড়িওয়ালার প্রমিত প্রত্যয়নপত্র।',
+    sampleData: {},
+    fields: [],
+  },
+
+  {
+    id: 'photo-sign-certificate',
+    name: 'ছবি ও স্বাক্ষর পরিবর্তনের প্রত্যয়নপত্র',
+    tagline: 'এনআইডির ছবি ও স্বাক্ষর সংশোধনের জন্য ইউনিয়ন পরিষদ / পৌরসভা প্রত্যয়নপত্র',
+    category: 'election',
+    categoryName: 'নির্বাচন কমিশন ও এনআইডি',
+    badge: '✍️ ছবি ও স্বাক্ষর প্রত্যয়ন',
+    badgeColor: 'bg-rose-50 text-rose-800 border-rose-200',
+    shortDescription: 'জাতীয় পরিচয়পত্রে ছবি ও স্বাক্ষর পরিবর্তনের জন্য সংশ্লিষ্ট ইউনিয়ন পরিষদ বা কাউন্সিলর কর্তৃক নির্ধারিত অফিসিয়াল প্রত্যয়নপত্র। A4 সাইজ, গণপ্রজাতন্ত্রী লোগো, নমুনা ছক, প্রিন্ট ও PDF।',
+    icon: 'PenTool',
+    layoutType: 'photo-sign-certificate',
+    orientation: 'portrait',
+    disclaimer: 'এটি এনআইডি ছবি ও স্বাক্ষর পরিবর্তনের ক্ষেত্রে চেয়ারম্যান / কাউন্সিলর স্বাক্ষরিত স্ট্যান্ডার্ড প্রত্যয়নপত্র।',
+    sampleData: {},
+    fields: [],
+  },
+
+  {
+    id: 'nid-server-copy-application',
+    name: 'জাতীয় পরিচয়পত্রের সার্ভার কপি সরবরাহের জন্য আবেদন',
+    tagline: 'উপজেলা নির্বাচন অফিসারের নিকট এনআইডি সার্ভার কপি প্রাপ্তির অফিসিয়াল আবেদনপত্র',
+    category: 'election',
+    categoryName: 'নির্বাচন কমিশন ও এনআইডি',
+    badge: '💻 সার্ভার কপি আবেদন',
+    badgeColor: 'bg-purple-50 text-purple-800 border-purple-200',
+    shortDescription: 'পাসপোর্ট তৈরি, ভূমি সংক্রান্ত বা সরকারি দাপ্তরিক কাজে জাতীয় পরিচয়পত্রের সার্ভার কপি প্রাপ্তির জন্য উপজেলা নির্বাচন অফিসারের নিকট নির্ধারিত আবেদনপত্র। A4 সাইজ, প্রিন্ট ও PDF ডাউনলোড।',
+    icon: 'FileText',
+    layoutType: 'nid-server-copy-application',
+    orientation: 'portrait',
+    disclaimer: 'এটি উপজেলা নির্বাচন অফিসে এনআইডি সার্ভার কপি প্রাপ্তির জন্য স্ট্যান্ডার্ড লিখিত আবেদনপত্র।',
+    sampleData: {},
+    fields: [],
+  },
+
   // =========================================================================
   // CATEGORY 2: বাসা ও সম্পত্তি (HOUSING & PROPERTY)
   // =========================================================================

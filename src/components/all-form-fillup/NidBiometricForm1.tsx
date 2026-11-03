@@ -73,7 +73,7 @@ export interface Form1Data {
 }
 
 const SAMPLE_DATA: Form1Data = {
-  serialNo: 'EC-BIO-২০২৬/১০৪',
+  serialNo: '',
   applicationDate: '২৮/১০/২০২৬',
   applicationType: 'general',
   applicantName: 'মো: মোফাসসিরুল ইসলাম',
@@ -81,10 +81,10 @@ const SAMPLE_DATA: Form1Data = {
   hasGuardian: false,
   guardianName: '',
   guardianNid: '',
-  otherAttachedDoc: 'মূল জাতীয় পরিচয়পত্রের ফটোকপি ও বায়োমেট্রিক ফি রশিদ',
-  feeAmount: '৩৪৫/- (তিনশত পঁয়তাল্লিশ টাকা)',
-  feeReceiptNo: 'TR-BIO-৯৮৪৫১২ তারিখ: ২৮/১০/২০২৬',
-  attachedDocuments: '১. মূল জাতীয় পরিচয়পত্র, ২. অনলাইন জন্ম নিবন্ধন কপি, ৩. চালানের কপি।',
+  otherAttachedDoc: 'মূল জাতীয় পরিচয়পত্রের ফটোকপি',
+  feeAmount: '০/- (সম্পূর্ণ বিনামূল্যে)',
+  feeReceiptNo: 'প্রযোজ্য নয় (ফি ফ্রি)',
+  attachedDocuments: '১. মূল জাতীয় পরিচয়পত্রের ফটোকপি',
   guardianSignName: '',
   guardianAddress: '',
   guardianMobile: '',
@@ -93,7 +93,7 @@ const SAMPLE_DATA: Form1Data = {
   applicantAddress: 'বাড়ি-১২, লেন-৪, পাইকপাড়া, মিরপুর, ঢাকা-১২১৬',
   applicantMobile: '০১৭১২-৩৪৫৬৭৮',
   applicantEmail: 'mofassir@example.com',
-  receiptSerialNo: 'EC-BIO-২০২৬/১০৪',
+  receiptSerialNo: '',
   receiptApplicationType: 'general',
   receiptApplicationDate: '২৮/১০/২০২৬',
   receiptNextContactDate: '১৫/১১/২০২৬',
@@ -109,9 +109,9 @@ const EMPTY_DATA: Form1Data = {
   guardianName: '',
   guardianNid: '',
   otherAttachedDoc: 'মূল জাতীয় পরিচয়পত্রের ফটোকপি',
-  feeAmount: '',
-  feeReceiptNo: '',
-  attachedDocuments: '১. মূল জাতীয় পরিচয়পত্র',
+  feeAmount: '০/- (সম্পূর্ণ বিনামূল্যে)',
+  feeReceiptNo: 'ফি প্রযোজ্য নয়',
+  attachedDocuments: '১. মূল জাতীয় পরিচয়পত্রের ফটোকপি',
   guardianSignName: '',
   guardianAddress: '',
   guardianMobile: '',
@@ -449,75 +449,26 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
           }`}
         >
           <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs space-y-5">
-            {/* ১। ক্রমিক নম্বর ও আবেদনের ধরন */}
+            {/* ১। আবেদনের তারিখ */}
             <div className="space-y-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 pb-1 border-b border-slate-100 flex items-center justify-between">
-                <span>অফিসিয়াল তথ্য ও আবেদনের ধরন</span>
-                <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                  নির্বাচন কমিশন
+                <span>আবেদনের তারিখ</span>
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  সম্পূর্ণ ফি-মুক্ত (ফ্রি)
                 </span>
               </h4>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    ক্রমিক নম্বর (অফিস কর্তৃক পূরণীয়)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.serialNo}
-                    onChange={(e) => updateField('serialNo', e.target.value)}
-                    placeholder="যেমন: EC-BIO-২০২৬/১০৪"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    আবেদনের তারিখ (DD/MM/YYYY)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.applicationDate}
-                    onChange={(e) => updateField('applicationDate', e.target.value)}
-                    placeholder="২৮/১০/২০২৬"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-                  />
-                </div>
-              </div>
-
-              {/* আবেদনের ধরন: জরুরী বনাম সাধারণ */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
-                  আবেদনের ধরন নির্বাচন করুন:
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  আবেদনের তারিখ (DD/MM/YYYY) *
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => updateField('applicationType', 'general')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                      formData.applicationType === 'general'
-                        ? 'border-amber-600 bg-amber-50 text-amber-950 ring-2 ring-amber-200'
-                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                    }`}
-                  >
-                    {formData.applicationType === 'general' && <Check className="w-3.5 h-3.5 text-amber-600" />}
-                    <span>সাধারণ আবেদন</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => updateField('applicationType', 'emergency')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                      formData.applicationType === 'emergency'
-                        ? 'border-rose-600 bg-rose-50 text-rose-950 ring-2 ring-rose-200'
-                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                    }`}
-                  >
-                    {formData.applicationType === 'emergency' && <Check className="w-3.5 h-3.5 text-rose-600" />}
-                    <span>জরুরী আবেদন</span>
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  value={formData.applicationDate}
+                  onChange={(e) => updateField('applicationDate', e.target.value)}
+                  placeholder="২৮/১০/২০২৬"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-bold"
+                />
               </div>
             </div>
 
@@ -648,56 +599,41 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
                     type="text"
                     value={formData.otherAttachedDoc}
                     onChange={(e) => updateField('otherAttachedDoc', e.target.value)}
-                    placeholder="যেমন: মূল জাতীয় পরিচয়পত্রের ফটোকপি ও বায়োমেট্রিক ফি চালান"
+                    placeholder="যেমন: মূল জাতীয় পরিচয়পত্রের ফটোকপি"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                   />
                 </div>
               </div>
             </div>
 
-            {/* ৫। জমাকৃত ফি ও অন্যান্য */}
+            {/* ৫। সরকারি ফি ও সংযুক্ত দলিলের বিবরণ */}
             <div className="space-y-3 pt-2 border-t border-slate-100">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 pb-1 border-b border-slate-100">
-                ৪, ৫ ও ৬। ফি ও সংযুক্ত দলিলের বিবরণ
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 pb-1 border-b border-slate-100 flex items-center justify-between">
+                <span>সরকারি ফি ও সংযুক্ত দলিলের বিবরণ</span>
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  টোটাল ফ্রি (০ টাকা)
+                </span>
               </h4>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    ৪। জমাকৃত ফি এর পরিমাণ
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.feeAmount}
-                    onChange={(e) => updateField('feeAmount', e.target.value)}
-                    placeholder="যেমন: ৩৪৫/- টাকা"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    ৫। ফি জমা দানের রসিদ নম্বর
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.feeReceiptNo}
-                    onChange={(e) => updateField('feeReceiptNo', e.target.value)}
-                    placeholder="রসিদ নম্বর ও তারিখ"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none"
-                  />
+              <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex items-start gap-2.5 text-xs text-emerald-950 font-bold">
+                <span className="text-base leading-none">✅</span>
+                <div className="space-y-0.5">
+                  <div className="text-emerald-900 font-black">বায়োমেট্রিকের কোনো ফি লাগে না — সম্পূর্ণ ফ্রি!</div>
+                  <p className="text-[11px] font-normal text-emerald-800 leading-relaxed">
+                    জাতীয় পরিচয়পত্রের ১০ আঙুলের ছাপ ও আইরিশ আপডেটের জন্য কোনো প্রকার সরকারি ফি বা চালান লাগে না। এটি নির্বাচন কমিশনের একটি সম্পূর্ণ ফি-মুক্ত সেবা।
+                  </p>
                 </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  ৬। আবেদনপত্রের সহিত সংযুক্ত দলিলাদির তালিকা
+                  আবেদনপত্রের সহিত সংযুক্ত দলিলাদির তালিকা (যদি থাকে)
                 </label>
                 <textarea
                   rows={2}
                   value={formData.attachedDocuments}
                   onChange={(e) => updateField('attachedDocuments', e.target.value)}
-                  placeholder="যেমন: ১. মূল জাতীয় পরিচয়পত্র, ২. চালান কপি"
+                  placeholder="যেমন: ১. মূল জাতীয় পরিচয়পত্রের ফটোকপি"
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none"
                 />
               </div>
@@ -830,90 +766,42 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
           <div className="overflow-x-auto flex justify-center pb-6">
             <div
               ref={previewRef}
+              id="nid-biometric-form1"
               style={{
                 transform: `scale(${zoomLevel / 100})`,
                 transformOrigin: 'top center',
               }}
-              className="w-[210mm] min-h-[297mm] bg-white text-slate-900 shadow-xl border border-slate-300 p-[10mm] sm:p-[12mm] font-serif leading-tight text-[12px] print:m-0 print:p-[8mm] print:shadow-none print:border-none print:w-full print:scale-100"
+              className="w-[210mm] min-h-[297mm] max-h-[297mm] bg-white text-slate-900 shadow-xl border border-slate-300 p-[8mm] sm:p-[10mm] font-serif leading-tight text-[11.5px] print:m-0 print:p-[8mm] print:shadow-none print:border-none print:w-[210mm] print:scale-100 box-border overflow-hidden"
             >
-              {/* TOP HEADER SECTION WITH STAPLE BOX */}
-              <div className="relative mb-3 pt-1">
-                {/* Top-Right Staple Box matching image_551c9cea.png */}
-                <div className="absolute top-0 right-0 w-[110px] h-[80px] border-2 border-slate-900 p-1 flex flex-col items-center justify-center text-center text-[10px] leading-tight font-sans font-bold bg-white">
-                  <span>মূল জাতীয় পরিচয়পত্র</span>
-                  <span>এখানে সংযুক্ত করুন</span>
-                  <span className="text-[9px] text-slate-700 font-normal mt-0.5">(স্ট্যাপল)</span>
-                </div>
-
-                {/* Center Title */}
-                <div className="text-center space-y-0.5 pr-28 pl-4">
-                  <div className="text-[16px] font-black underline tracking-tight">ফরম-১</div>
-                  <div className="text-[11px] font-bold">[প্রবিধান ৩ দ্রষ্টব্য]</div>
-                  <h3 className="text-[14px] font-black tracking-tight pt-1 leading-snug">
-                    জাতীয় পরিচয়পত্র বা সংরক্ষিত তথ্য-উপাত্তে মুদ্রণজনিত ভুল সংশোধনের আবেদন
-                  </h3>
-                </div>
+              {/* TOP HEADER SECTION */}
+              <div className="text-center space-y-0.5 mb-2.5 pt-1">
+                <div className="text-[16px] font-black underline tracking-tight">ফরম-১</div>
+                <div className="text-[11px] font-bold">[প্রবিধান ৩ দ্রষ্টব্য]</div>
+                <h3 className="text-[14px] font-black tracking-tight pt-0.5 leading-snug">
+                  জাতীয় পরিচয়পত্র বা সংরক্ষিত তথ্য-উপাত্তে মুদ্রণজনিত ভুল সংশোধনের আবেদন
+                </h3>
               </div>
 
-              {/* SERIAL NO, DATE & APPLICATION TYPE ROW */}
-              <div className="grid grid-cols-12 gap-1 items-center text-[11px] mb-2.5 pt-1">
-                {/* Left: ক্রমিক নম্বর */}
-                <div className="col-span-5 flex items-center">
-                  <span className="font-bold shrink-0">ক্রমিক নম্বর : </span>
-                  <div className="inline-block border border-slate-900 min-w-[100px] h-[22px] px-2 py-0.5 ml-1 text-center font-mono font-bold text-xs bg-white">
-                    {formData.serialNo}
-                  </div>
-                  <span className="text-[9.5px] ml-1 text-slate-600 shrink-0 font-sans">(অফিস কর্তৃক পূরণীয়)</span>
-                </div>
-
-                {/* Center: আবেদনের তারিখ */}
-                <div className="col-span-4 flex items-center justify-center">
-                  <span className="font-bold mr-1 shrink-0 text-[10.5px]">আবেদনের তারিখ :</span>
-                  {renderDateBoxes(formData.applicationDate)}
-                </div>
-
-                {/* Right: আবেদনের ধরন টেবিল */}
-                <div className="col-span-3 flex justify-end">
-                  <div className="text-center font-sans">
-                    <span className="block text-[9.5px] font-bold pb-0.5">আবেদনের ধরন</span>
-                    <table className="border-collapse border border-slate-900 text-[10px]">
-                      <tbody>
-                        <tr>
-                          <td
-                            className={`border border-slate-900 px-2 py-0.5 font-bold ${
-                              formData.applicationType === 'emergency' ? 'bg-slate-200' : ''
-                            }`}
-                          >
-                            {formData.applicationType === 'emergency' ? '✓ জরুরী' : 'জরুরী'}
-                          </td>
-                          <td
-                            className={`border border-slate-900 px-2 py-0.5 font-bold ${
-                              formData.applicationType === 'general' ? 'bg-slate-200' : ''
-                            }`}
-                          >
-                            {formData.applicationType === 'general' ? '✓ সাধারণ' : 'সাধারণ'}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+              {/* DATE ROW */}
+              <div className="flex justify-end items-center text-[11px] mb-2.5 pt-0.5">
+                <span className="font-bold mr-1.5 shrink-0 text-[11px]">আবেদনের তারিখঃ</span>
+                {renderDateBoxes(formData.applicationDate)}
               </div>
 
               {/* ১। জাতীয় পরিচয়পত্রধারীর তথ্য */}
               <div className="space-y-1.5 mb-2 text-[11.5px]">
                 <div className="font-bold">১। জাতীয় পরিচয়পত্রধারীর-</div>
                 <div className="pl-4 flex items-baseline">
-                  <span className="w-20 shrink-0 font-medium">(ক) নাম</span>
-                  <span className="mr-1">:</span>
-                  <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5 min-h-[17px]">
+                  <span className="w-20 shrink-0 font-medium">(ক) নামঃ</span>
+                  <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5 min-h-[17px] pl-1">
                     {formData.applicantName || '........................................................................................................'}
                   </span>
                 </div>
                 <div className="pl-4 flex items-center">
-                  <span className="w-48 shrink-0 font-medium">(খ) জাতীয় পরিচিতি নম্বর (NID)</span>
-                  <span className="mr-1">:</span>
-                  <div className="flex-1">
+                  <span className="w-48 shrink-0 font-medium">
+                    (খ) জাতীয় পরিচিতি নম্বর (NID)<span className="-ml-1 inline-block">ঃ</span>
+                  </span>
+                  <div className="flex-1 pl-1">
                     {renderNidBoxes(formData.applicantNid, 17)}
                   </div>
                 </div>
@@ -927,22 +815,22 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
                   </span>
                 </div>
                 <div className="pl-4 flex items-baseline">
-                  <span className="w-20 shrink-0 font-medium">(ক) নাম</span>
-                  <span className="mr-1">:</span>
-                  <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5 min-h-[17px]">
+                  <span className="w-20 shrink-0 font-medium">(ক) নামঃ</span>
+                  <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5 min-h-[17px] pl-1">
                     {formData.hasGuardian && formData.guardianName ? formData.guardianName : '........................................................................................................'}
                   </span>
                 </div>
                 <div className="pl-4 flex items-center">
-                  <span className="w-48 shrink-0 font-medium">(খ) জাতীয় পরিচিতি নম্বর (NID)</span>
-                  <span className="mr-1">:</span>
-                  <div className="flex-1">
+                  <span className="w-48 shrink-0 font-medium">
+                    (খ) জাতীয় পরিচিতি নম্বর (NID)<span className="-ml-1 inline-block">ঃ</span>
+                  </span>
+                  <div className="flex-1 pl-1">
                     {renderNidBoxes(formData.hasGuardian ? formData.guardianNid : '', 17)}
                   </div>
                 </div>
               </div>
 
-              {/* ৩। সংশোধন ছক (৪ কলাম) - EXACT AS PER USER DRAWING image_551c9cea.png */}
+              {/* ৩। সংশোধন ছক (৪ কলাম) */}
               <div className="space-y-1 mb-2.5">
                 <div className="font-bold text-[11px]">
                   ৩। জাতীয় পরিচয়পত্র বা সংরক্ষিত তথ্য-উপাত্তে যে তথ্য সংশোধন করিতে হইবে (অপ্রয়োজনীয় অংশ কাটিয়া দিন)-
@@ -951,7 +839,7 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
                 <div className="relative">
                   <table className="w-full border-collapse border border-slate-900 text-[11px] leading-tight text-center">
                     <thead>
-                      <tr className="bg-slate-100 font-bold">
+                      <tr className="bg-slate-100 font-bold h-[36px]">
                         <th className="border border-slate-900 p-1 w-[20%] text-center">বিষয়</th>
                         <th className="border border-slate-900 p-1 w-[32%] text-center">
                           বর্তমানে জাতীয় পরিচয়পত্রের তথ্য বা<br />সংরক্ষিত তথ্য-উপাত্তে বিদ্যমান তথ্য
@@ -964,19 +852,17 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="relative">
-                      {/* Rows (ক) to (জ) - All disabled and crossed out with user's red strike-through */}
-                      {FIXED_ROWS.map((row, idx) => (
-                        <tr key={row.key} className="h-[21px] relative">
+                    <tbody>
+                      {/* Rows (ক) to (জ) - All disabled and crossed out */}
+                      {FIXED_ROWS.map((row) => (
+                        <tr key={row.key} className="h-[21px]">
                           <td className="border border-slate-900 px-1 py-0.5 font-bold text-left pl-2">
                             {row.label}
                           </td>
-                          {/* Col 2 & 3: Diagonal strike through area */}
-                          <td className="border border-slate-900 p-0 text-slate-300 select-none relative bg-slate-50/20">
-                            {/* Visual strike line */}
+                          <td className="border border-slate-900 p-0 text-slate-300 select-none bg-slate-50/20">
                             <span className="text-slate-200">-</span>
                           </td>
-                          <td className="border border-slate-900 p-0 text-slate-300 select-none relative bg-slate-50/20">
+                          <td className="border border-slate-900 p-0 text-slate-300 select-none bg-slate-50/20">
                             <span className="text-slate-200">-</span>
                           </td>
                           <td className="border border-slate-900 px-1 py-0.5 text-[9.5px] text-slate-300 select-none">
@@ -985,7 +871,7 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
                         </tr>
                       ))}
 
-                      {/* Row (ঝ) অন্যান্য - FIXED IN RED TEXT AS REQUESTED */}
+                      {/* Row (ঝ) অন্যান্য - FIXED IN RED TEXT (NO FEE) */}
                       <tr className="h-[26px] bg-amber-50/30">
                         <td className="border border-slate-900 px-1 py-1 font-bold text-left pl-2 text-slate-900">
                           (ঝ) অন্যান্য
@@ -997,71 +883,79 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
                           আপডেট করণ
                         </td>
                         <td className="border border-slate-900 px-1 py-1 text-[10px] text-slate-800 leading-tight">
-                          {formData.otherAttachedDoc || 'বায়োমেট্রিক তথ্য'}
+                          {formData.otherAttachedDoc || 'মূল জাতীয় পরিচয়পত্রের ফটোকপি'}
                         </td>
                       </tr>
                     </tbody>
                   </table>
 
-                  {/* OVERLAY: EXACT RED DIAGONAL SLASH LINE AS DRAWN BY USER (image_551c9cea.png) */}
-                  <svg
-                    className="absolute inset-0 pointer-events-none"
+                  {/* OVERLAY: কলমের মতো চিকন লাল দাগ (ক) নাম (বাংলা) ঘরের মাঝখান হতে (জ) পর্যন্ত */}
+                  <div
+                    className="absolute pointer-events-none left-0 right-0 overflow-hidden"
                     style={{
-                      width: '100%',
-                      height: '100%',
+                      top: '48px',
+                      height: '154px',
                     }}
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
                   >
-                    {/* Diagonal Slash across Column 2 (বর্তমানে...) for rows ক through জ (approx top 12% to 78%) */}
-                    <line
-                      x1="46"
-                      y1="16"
-                      x2="24"
-                      y2="78"
-                      stroke="#dc2626"
-                      strokeWidth="2.8"
-                      strokeLinecap="round"
-                    />
-                    {/* Diagonal Slash across Column 3 (চাহিত...) for rows ক through জ (approx top 12% to 78%) */}
-                    <line
-                      x1="77"
-                      y1="16"
-                      x2="55"
-                      y2="78"
-                      stroke="#dc2626"
-                      strokeWidth="2.8"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+                    <svg
+                      className="w-full h-full"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                    >
+                      {/* Column 2 (বর্তমানে...): (ক) এর মাঝখান হতে (জ) পর্যন্ত কলমের মতো চিকন লাল দাগ */}
+                      <line
+                        x1="45"
+                        y1="2"
+                        x2="25"
+                        y2="98"
+                        stroke="#dc2626"
+                        strokeWidth="1.2"
+                        vectorEffect="non-scaling-stroke"
+                        strokeLinecap="round"
+                      />
+                      {/* Column 3 (চাহিত...): (ক) এর মাঝখান হতে (জ) পর্যন্ত কলমের মতো চিকন লাল দাগ */}
+                      <line
+                        x1="75"
+                        y1="2"
+                        x2="55"
+                        y2="98"
+                        stroke="#dc2626"
+                        strokeWidth="1.2"
+                        vectorEffect="non-scaling-stroke"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
                 </div>
               </div>
 
-              {/* SIGNATURES DUAL COLUMNS */}
-              <div className="grid grid-cols-2 gap-4 pt-1 mb-2 text-[11px] leading-snug">
+              {/* SIGNATURES DUAL COLUMNS - Generous room above for physical signature / thumbprint */}
+              <div className="grid grid-cols-2 gap-8 mt-14 sm:mt-16 mb-4 text-[11px] leading-relaxed">
                 {/* Left: Guardian Signature */}
-                <div className="space-y-0.5 border-t border-dashed border-slate-400 pt-1">
+                <div className="space-y-1 border-t border-dashed border-slate-800 pt-1.5">
                   <div className="font-bold">আইনানুগ অভিভাবকের স্বাক্ষর/টিপসহি (প্রযোজ্য ক্ষেত্রে)</div>
                   <div>
-                    <span className="font-medium">নাম ঃ </span>
+                    <span className="font-medium">নামঃ </span>
                     <span className="font-bold border-b border-dotted border-slate-800 pb-0.5">
                       {formData.hasGuardian && formData.guardianSignName ? formData.guardianSignName : '.....................................................'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium">ঠিকানা ঃ </span>
+                    <span className="font-medium">ঠিকানাঃ </span>
                     <span className="border-b border-dotted border-slate-800 pb-0.5">
                       {formData.hasGuardian && formData.guardianAddress ? formData.guardianAddress : '...................................................'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium">মোবাইল নম্বর ঃ </span>
+                    <span className="font-medium">মোবাইল নম্বরঃ </span>
                     <span className="border-b border-dotted border-slate-800 pb-0.5">
                       {formData.hasGuardian && formData.guardianMobile ? formData.guardianMobile : '................................................'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium">ই-মেইল (যদি থাকে) ঃ </span>
+                    <span className="font-medium">
+                      ই-মেইল (যদি থাকে)<span className="-ml-1 inline-block">ঃ</span>{' '}
+                    </span>
                     <span className="border-b border-dotted border-slate-800 pb-0.5">
                       {formData.hasGuardian && formData.guardianEmail ? formData.guardianEmail : '.............................................'}
                     </span>
@@ -1069,28 +963,30 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
                 </div>
 
                 {/* Right: Applicant Signature */}
-                <div className="space-y-0.5 border-t border-dashed border-slate-400 pt-1">
+                <div className="space-y-1 border-t border-dashed border-slate-800 pt-1.5">
                   <div className="font-bold">আবেদনকারীর স্বাক্ষর/টিপসহি</div>
                   <div>
-                    <span className="font-medium">নাম ঃ </span>
+                    <span className="font-medium">নামঃ </span>
                     <span className="font-bold border-b border-dotted border-slate-800 pb-0.5">
                       {formData.applicantSignName || formData.applicantName || '.....................................................'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium">ঠিকানা ঃ </span>
+                    <span className="font-medium">ঠিকানাঃ </span>
                     <span className="border-b border-dotted border-slate-800 pb-0.5">
                       {formData.applicantAddress || '...................................................'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium">মোবাইল নম্বর ঃ </span>
+                    <span className="font-medium">মোবাইল নম্বরঃ </span>
                     <span className="font-bold border-b border-dotted border-slate-800 pb-0.5">
                       {formData.applicantMobile || '................................................'}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium">ই-মেইল (যদি থাকে) ঃ </span>
+                    <span className="font-medium">
+                      ই-মেইল (যদি থাকে)<span className="-ml-1 inline-block">ঃ</span>{' '}
+                    </span>
                     <span className="border-b border-dotted border-slate-800 pb-0.5">
                       {formData.applicantEmail || '.............................................'}
                     </span>
@@ -1099,15 +995,15 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
               </div>
 
               {/* PERFORATED DOTTED TEAR LINE */}
-              <div className="relative my-2 border-t-2 border-dashed border-slate-400 flex items-center justify-center">
-                <span className="absolute bg-white px-2 text-[9.5px] text-slate-500 font-sans flex items-center gap-1">
+              <div className="relative my-4 border-t-2 border-dashed border-slate-400 flex items-center justify-center">
+                <span className="absolute bg-white px-2.5 text-[9.5px] text-slate-500 font-sans flex items-center gap-1">
                   ✂️ অংশ কাটার লাইন (রসিদ অংশ পৃথক করুন)
                 </span>
               </div>
 
               {/* অংশ - ক (ফরম-১) প্রাপ্তিস্বীকার এবং জাতীয় পরিচয়পত্র প্রদানের রশিদ */}
-              <div className="pt-1 text-[11px] leading-snug">
-                <div className="text-center mb-1.5 space-y-0.5">
+              <div className="pt-2 text-[11px] leading-snug">
+                <div className="text-center mb-3 space-y-0.5">
                   <div className="font-bold text-[12px]">অংশ-ক (ফরম-১)</div>
                   <div className="text-[10px] font-bold">[প্রবিধান ৩ (২) ও ৩ (৩)]</div>
                   <div className="font-black text-[12.5px] underline">
@@ -1115,107 +1011,61 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
                   </div>
                 </div>
 
-                {/* Receipt Header Table with Serial Box & Type */}
-                <div className="flex justify-between items-center text-[10.5px] mb-2">
-                  <div className="flex items-center">
-                    <table className="border-collapse border border-slate-900 bg-white">
-                      <tbody>
-                        <tr>
-                          <td className="border border-slate-900 px-2 py-0.5 font-bold text-center">
-                            ক্রমিক নম্বরঃ
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="border border-slate-900 px-2 py-1 font-mono font-bold text-center min-w-[110px]">
-                            {formData.receiptSerialNo || formData.serialNo}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="text-center font-sans">
-                    <span className="block text-[9.5px] font-bold pb-0.5">আবেদনের ধরন</span>
-                    <table className="border-collapse border border-slate-900 text-[10px]">
-                      <tbody>
-                        <tr>
-                          <td
-                            className={`border border-slate-900 px-2 py-0.5 font-bold ${
-                              formData.receiptApplicationType === 'emergency' ? 'bg-slate-200' : ''
-                            }`}
-                          >
-                            {formData.receiptApplicationType === 'emergency' ? '✓ জরুরী' : 'জরুরী'}
-                          </td>
-                          <td
-                            className={`border border-slate-900 px-2 py-0.5 font-bold ${
-                              formData.receiptApplicationType === 'general' ? 'bg-slate-200' : ''
-                            }`}
-                          >
-                            {formData.receiptApplicationType === 'general' ? '✓ সাধারণ' : 'সাধারণ'}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
                 {/* Receipt Details */}
-                <div className="space-y-1 pl-1">
+                <div className="space-y-1.5 pl-1 text-[11.5px]">
                   <div className="flex items-baseline">
-                    <span className="w-48 shrink-0 font-medium">১। আবেদনকারীর নাম-</span>
-                    <span className="mr-1">:</span>
-                    <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5">
+                    <span className="w-48 shrink-0 font-medium">১। আবেদনকারীর নামঃ</span>
+                    <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5 pl-1">
                       {formData.applicantName || '.......................................................................'}
                     </span>
                   </div>
 
                   <div className="flex items-center">
-                    <span className="w-48 shrink-0 font-medium pl-4">জাতীয় পরিচিতি নম্বর (NID)</span>
-                    <span className="mr-1">:</span>
-                    <div className="flex-1">
+                    <span className="w-48 shrink-0 font-medium pl-4">
+                      জাতীয় পরিচিতি নম্বর (NID)<span className="-ml-1 inline-block">ঃ</span>
+                    </span>
+                    <div className="flex-1 pl-1">
                       {renderNidBoxes(formData.applicantNid, 17)}
                     </div>
                   </div>
 
                   <div className="flex items-baseline">
                     <span className="w-48 shrink-0 font-medium">
-                      ২। প্রযোজ্য ক্ষেত্রে, আইনানুগ অভিভাবকের নাম
+                      ২। প্রযোজ্য ক্ষেত্রে, আইনানুগ অভিভাবকের নামঃ
                     </span>
-                    <span className="mr-1">:</span>
-                    <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5">
+                    <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5 pl-1">
                       {formData.hasGuardian && formData.guardianName ? formData.guardianName : '.......................................................................'}
                     </span>
                   </div>
 
                   <div className="flex items-center">
-                    <span className="w-48 shrink-0 font-medium pl-4">জাতীয় পরিচিতি নম্বর (NID)</span>
-                    <span className="mr-1">:</span>
-                    <div className="flex-1">
+                    <span className="w-48 shrink-0 font-medium pl-4">
+                      জাতীয় পরিচিতি নম্বর (NID)<span className="-ml-1 inline-block">ঃ</span>
+                    </span>
+                    <div className="flex-1 pl-1">
                       {renderNidBoxes(formData.hasGuardian ? formData.guardianNid : '', 17)}
                     </div>
                   </div>
 
                   <div className="flex items-baseline">
-                    <span className="w-48 shrink-0 font-medium">৩। আবেদনের তারিখ-</span>
-                    <span className="mr-1">:</span>
-                    <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5">
+                    <span className="w-48 shrink-0 font-medium">৩। আবেদনের তারিখঃ</span>
+                    <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5 pl-1">
                       {formData.receiptApplicationDate || formData.applicationDate || '...............................................................................'}
                     </span>
                   </div>
 
                   <div className="flex items-baseline">
                     <span className="w-72 shrink-0 font-medium">
-                      ৪। পরবর্তী যোগাযোগের তারিখ/জাতীয় পরিচয়পত্র প্রদানের তারিখ-
+                      ৪। পরবর্তী যোগাযোগের তারিখ/জাতীয় পরিচয়পত্র প্রদানের তারিখঃ
                     </span>
-                    <span className="mr-1">:</span>
-                    <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5">
+                    <span className="flex-1 font-bold border-b border-dotted border-slate-900 pb-0.5 pl-1">
                       {formData.receiptNextContactDate || '.......................................................................'}
                     </span>
                   </div>
                 </div>
 
                 {/* Bottom Signature & Seal */}
-                <div className="flex justify-end pt-5 px-4 text-[11px]">
+                <div className="flex justify-end pt-8 px-4 text-[11px]">
                   <div className="text-center border-t border-dashed border-slate-800 pt-1 font-bold min-w-[200px]">
                     দায়িত্বপ্রাপ্ত কর্মকর্তার স্বাক্ষর ও সিলমোহর
                   </div>

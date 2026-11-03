@@ -43,6 +43,9 @@ export type DocumentLayoutType =
   | 'voter-form-13'
   | 'voter-form-2'
   | 'voter-form-1'
+  | 'landlord-voter-certificate'
+  | 'photo-sign-certificate'
+  | 'nid-server-copy-application'
   | 'custom';
 
 export interface FormTemplate {
