@@ -132,6 +132,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'name-reveal', name: 'নামের গোপন রহস্য ও বিশ্লেষণ', icon: <Sparkles className="w-3.5 h-3.5 text-rose-500" />, category: 'বিনোদন ও কুইজ', badge: 'রহস্য' },
 
     // 5. হিসাব, ব্যবসা ও পরিবার
+    { id: 'all-form-fillup', name: 'MoSaFa All Form Fillup (সকল ফরম ফিলআপ ও রসিদ)', icon: <FileText className="w-3.5 h-3.5 text-rose-600" />, category: 'হিসাব ও পরিবার', badge: 'ফরম মেকার' },
     { id: 'entrepreneur-journey', name: 'MoSaFa Entrepreneur Journey (উদ্যোক্তা প্ল্যাটফর্ম)', icon: <Briefcase className="w-3.5 h-3.5 text-rose-600" />, category: 'হিসাব ও পরিবার', badge: 'উদ্যোক্তা' },
     { id: 'invoice-maker', name: 'MoSaFa Invoice Maker (ইনভয়েস ও মানি রিসিট)', icon: <Receipt className="w-3.5 h-3.5 text-emerald-600" />, category: 'হিসাব ও পরিবার', badge: 'ইনভয়েস' },
     { id: 'daily-hishab', name: 'দৈনিক হিসাব খাতা (আয়-ব্যয় ট্র্যাকার)', icon: <Wallet className="w-3.5 h-3.5 text-emerald-600" />, category: 'হিসাব ও পরিবার', badge: 'হিসাব' },

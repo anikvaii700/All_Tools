@@ -82,9 +82,11 @@ import { PalmistryAI } from './components/PalmistryAI';
 import { BdOnlinePortal } from './components/BdOnlinePortal';
 import { ContentCreatorStudio } from './components/ContentCreatorStudio';
 import { EntrepreneurJourney } from './components/EntrepreneurJourney';
+import { AllFormFillup } from './components/all-form-fillup/AllFormFillup';
 
 export type ToolId =
   | 'studymate-bd'
+  | 'all-form-fillup'
   | 'entrepreneur-journey'
   | 'love-test'
   | 'typing-test'
@@ -191,6 +193,7 @@ export default function App() {
       const toolParam = params.get('tool');
       const validToolIds = [
         'studymate-bd',
+        'all-form-fillup',
         'love-test',
         'typing-test',
         'age-calc',
@@ -246,8 +249,52 @@ export default function App() {
     }, 2800);
   };
 
-  // 25 Complete Tools Registry with Sector Categorization
+  // Complete Tools Registry with Sector Categorization
   const tools: ToolCardInfo[] = [
+    // 0. MoSaFa All Form Fillup
+    {
+      id: 'all-form-fillup',
+      title: 'MoSaFa All Form Fillup (সকল ফরম ফিলআপ ও রসিদ)',
+      badge: '🔥 ফরম-২, ফরম-১৩, ভাড়ার রসিদ ও সকল ফরম',
+      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+      category: 'calculator',
+      iconBg: 'from-rose-500 via-pink-600 to-indigo-600',
+      icon: <FileText className="w-6 h-6 text-white" />,
+      description:
+        'এনআইডি সংশোধন ফরম-২, ভোটার স্থানান্তর ফরম-১৩, বাসা ভাড়ার রসিদ, বাড়ি ভাড়ার চুক্তিপত্র, ক্যাশ মেমো, ভর্তি ফরম ও কাস্টম ফরম তৈরি—তথ্য দিন, অটো ফরম তৈরি করুন। A4 PDF ও প্রিন্ট ডাউনলোড সুবিধা সহ!',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'all form fillup',
+        'mosafa all form fillup',
+        'ফরম ২',
+        'ফরম-২',
+        'এনআইডি সংশোধন',
+        'জাতীয় পরিচয়পত্র সংশোধন',
+        'ভোটার স্থানান্তর ফরম',
+        'ফরম ১৩',
+        'ফরম-১৩',
+        'voter transfer form',
+        'form 13',
+        'form 2',
+        'ভোটার এলাকা স্থানান্তর',
+        'নির্বাচন কমিশন',
+        'বাসা ভাড়ার রসিদ',
+        'ভাড়ার রসিদ',
+        'বাড়ি ভাড়ার চুক্তিপত্র',
+        'চুক্তিপত্র',
+        'বাসা ছাড়ার নোটিশ',
+        'ভাড়াটিয়ার তথ্য ফরম',
+        'ক্যাশ মেমো',
+        'মানি রিসিট',
+        'ভর্তি ফরম',
+        'ছুটির আবেদন',
+        'ফরম ফিলআপ',
+        'form maker',
+        'house rent receipt',
+        'receipt',
+      ],
+    },
     // 1. প্রেম টেস্ট
     {
       id: 'love-test',
@@ -461,31 +508,6 @@ export default function App() {
         'জেলা ম্যাপ',
         'travel map',
         'পোস্টার',
-      ],
-    },
-    // 21. ভোটার স্থানান্তর ফরম ফিলাপ (Form-13)
-    {
-      id: 'voter-transfer-form',
-      title: 'ভোটার স্থানান্তর ফরম ফিলাপ (Form-13)',
-      badge: '📄 সরকারি ফরম-১৩',
-      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-      category: 'calculator',
-      iconBg: 'from-emerald-600 via-teal-600 to-indigo-700',
-      icon: <FileText className="w-6 h-6 text-white" />,
-      description:
-        'বাংলাদেশ নির্বাচন কমিশন নির্ধারিত ফরম-১৩ (ভোটার এলাকা স্থানান্তর আবেদন)। সহজ ফিল্ড এডিট, ২-পৃষ্ঠার লাইভ প্রিভিউ, নির্ভুল A4 প্রিন্ট ও অফিশিয়াল PDF ডাউনলোড!',
-      deviceTarget: 'desktop',
-      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (২-পৃষ্ঠা লিগ্যাল ফরম-১৩)',
-      keywords: [
-        'ভোটার স্থানান্তর ফরম',
-        'voter transfer form',
-        'form 13',
-        'ফরম ১৩',
-        'ফরম-১৩',
-        'ভোটার এলাকা স্থানান্তর',
-        'নির্বাচন কমিশন',
-        'ভোটার ফরম',
-        'nid স্থানান্তর',
       ],
     },
     // 22. The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার)
@@ -1071,7 +1093,14 @@ export default function App() {
     return wrapWithNavbar(<BangladeshMap onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'voter-transfer-form') {
-    return wrapWithNavbar(<VoterTransferForm onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+    return wrapWithNavbar(
+      <AllFormFillup
+        onBackToHub={() => navigateToTool(null)}
+        onShowToast={showToast}
+        initialTemplateId="voter-form-13"
+        onNavigateToTool={(t) => navigateToTool(t)}
+      />
+    );
   }
   if (activeTool === 'cv-maker') {
     return wrapWithNavbar(<CVMaker onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
@@ -1099,6 +1128,15 @@ export default function App() {
   }
   if (activeTool === 'entrepreneur-journey') {
     return wrapWithNavbar(<EntrepreneurJourney onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'all-form-fillup') {
+    return wrapWithNavbar(
+      <AllFormFillup
+        onBackToHub={() => navigateToTool(null)}
+        onShowToast={showToast}
+        onNavigateToTool={(t) => navigateToTool(t)}
+      />
+    );
   }
   if (activeTool === 'studymate-bd') {
     return wrapWithNavbar(
