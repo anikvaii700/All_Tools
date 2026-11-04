@@ -1118,6 +1118,128 @@ Return strict JSON:
     }
   });
 
+  // ==========================================
+  // MoSaFa AI Photo Status & Frame Studio API
+  // ==========================================
+  app.post('/api/photo-status/generate', async (req, res) => {
+    try {
+      const {
+        category = 'motivational',
+        tone = 'motivational',
+        length = 'medium',
+        imageBase64 = null,
+        imageMimeType = 'image/jpeg',
+      } = req.body;
+
+      if (!ai) {
+        return res.json({
+          success: false,
+          isAiAvailable: false,
+          message: 'Gemini API is not configured on server. Falling back to local curated quotes.',
+        });
+      }
+
+      const lengthGuidance =
+        length === 'short'
+          ? 'সংক্ষিপ্ত (১-২ লাইন, ১০-১৫ শব্দ)'
+          : length === 'long'
+          ? 'পূর্ণাঙ্গ ও গভীর (৩-৪ লাইন, ৩০-৪০ শব্দ)'
+          : 'মাঝারি (২-৩ লাইন, ২০-২৫ শব্দ)';
+
+      const systemInstruction = `You are an elite Bengali author, quote writer, and social media caption specialist.
+Create 5 unique, deeply resonant, emotionally evocative, and natural Bengali status captions for a personal photo quote poster.
+Requirements:
+1. Category: ${category}
+2. Writing Tone: ${tone}
+3. Desired Length: ${lengthGuidance}
+4. Language: Pure, authentic, high-impact Bengali (বাংলা). Zero spelling or grammatical mistakes.
+5. Variety: Each of the 5 captions must have a distinct angle, metaphor, and emotional texture.
+6. Safety Mandate: If an image is provided, appreciate its aesthetic atmosphere, lighting, and general mood. NEVER assume or invent a person's identity, occupation, personal secrets, or religious beliefs from their appearance.
+Return ONLY a valid JSON array of 5 Bengali strings, like:
+["ক্যাপশন ১", "ক্যাপশন ২", "ক্যাপশন ৩", "ক্যাপশন ৪", "ক্যাপশন ৫"]`;
+
+      const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+
+      if (imageBase64) {
+        const cleanBase64 = String(imageBase64).replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
+        parts.push({
+          inlineData: {
+            mimeType: imageMimeType,
+            data: cleanBase64,
+          },
+        });
+      }
+
+      parts.push({
+        text: `এই ছবির দৃশ্য ও নির্বাচিত ক্যাটাগরি (${category}), টোন (${tone}) এবং দৈর্ঘ্য (${lengthGuidance}) অনুযায়ী ৫টি অনন্য সুন্দর ও আকর্ষণীয় বাংলা স্ট্যাটাস ক্যাপশন তৈরি করো।`,
+      });
+
+      const candidateModels = [
+        'gemini-3.8-flash',
+        'gemini-flash-latest',
+        'gemini-3.1-flash-lite',
+      ];
+
+      for (const modelName of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: [{ role: 'user', parts }],
+            config: {
+              systemInstruction: { parts: [{ text: systemInstruction }] },
+              temperature: 0.8,
+              responseMimeType: 'application/json',
+            },
+          });
+
+          if (response && response.text) {
+            let statuses: string[] = [];
+            try {
+              const cleaned = response.text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+              const parsed = JSON.parse(cleaned);
+              if (Array.isArray(parsed)) {
+                statuses = parsed.map((s) => String(s).trim()).filter(Boolean);
+              } else if (parsed && Array.isArray(parsed.statuses)) {
+                statuses = parsed.statuses.map((s: any) => String(s).trim()).filter(Boolean);
+              }
+            } catch {
+              const match = response.text.match(/\[[\s\S]*\]/);
+              if (match) {
+                const arr = JSON.parse(match[0]);
+                if (Array.isArray(arr)) {
+                  statuses = arr.map((s) => String(s).trim()).filter(Boolean);
+                }
+              }
+            }
+
+            if (statuses.length > 0) {
+              return res.json({
+                success: true,
+                isAiAvailable: true,
+                statuses,
+                modelUsed: modelName,
+              });
+            }
+          }
+        } catch (mErr: any) {
+          console.warn(`[PhotoStatus AI] ${modelName} error:`, mErr?.message || mErr);
+        }
+      }
+
+      return res.json({
+        success: false,
+        isAiAvailable: false,
+        message: 'Could not generate via Gemini API, using offline quotes.',
+      });
+    } catch (err: any) {
+      console.error('PhotoStatus AI Server Error:', err);
+      return res.status(500).json({
+        success: false,
+        error: err?.message || 'Server error generating photo status',
+      });
+    }
+  });
+
   // Direct APK download route for mobile visitors & root directory access
   app.get(['/The-MoSaFa-Tools.apk', '/app-release.apk'], (_req, res) => {
     const rootApk = path.resolve(__dirname, 'The-MoSaFa-Tools.apk');

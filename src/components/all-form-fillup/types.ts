@@ -5,6 +5,10 @@ export type FormCategory =
   | 'personal'
   | 'business'
   | 'education'
+  | 'certificate'
+  | 'job'
+  | 'vehicle'
+  | 'lending'
   | 'custom';
 
 export type FormFieldType =

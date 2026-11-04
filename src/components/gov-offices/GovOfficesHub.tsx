@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft,
+  Home,
   Building2,
   Vote,
   BookMarked,
@@ -71,79 +72,37 @@ export const GovOfficesHub: React.FC<GovOfficesHubProps> = ({ onBackToHub, onSho
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
-      {/* Universal Top Bar */}
+      {/* Universal Top Bar: শুধুমাত্র ২টি বাটন: ১। "পিছনে যান" এবং ২। "হোম পেইজ" */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              {viewMode === 'office-detail' ? (
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-xs"
-                  title="সকল সরকারি অফিসের ৩x৩ গ্রিড তালিকায় ফিরে যান"
-                >
-                  <LayoutGrid className="w-4 h-4 text-rose-400" />
-                  <span>← সকল সরকারি অফিস (৩×৩ তালিকা)</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onBackToHub}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer active:scale-95"
-                  title="মূল টুলস তালিকায় ফিরে যান"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-              )}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+          <div className="flex items-center justify-between gap-3">
+            {/* ১। পিছনে যান */}
+            <button
+              type="button"
+              onClick={() => {
+                if (viewMode === 'office-detail') {
+                  setViewMode('grid');
+                } else {
+                  onBackToHub();
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-bold transition active:scale-95 cursor-pointer border border-slate-200 shadow-2xs"
+              title="পূর্ববর্তী পৃষ্ঠায় ফিরে যান"
+            >
+              <ArrowLeft className="w-4 h-4 stroke-[2.5] text-slate-700" />
+              <span>পিছনে যান</span>
+            </button>
 
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-rose-600 to-indigo-700 text-white flex items-center justify-center shadow-md">
-                  <Building2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
-                      সকল সরকারি অফিস
-                    </h1>
-                    <span className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-md font-semibold">
-                      ৩×৩ গ্রিড হাব
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 hidden sm:block">
-                    বাংলাদেশের সকল গুরুত্বপূর্ণ সরকারি দপ্তরের তথ্য, সেবা, আবেদন প্রক্রিয়া ও সরকারি ফি
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Emergency Helplines Badge */}
-            <div className="flex items-center gap-2 flex-wrap self-end sm:self-center">
-              {viewMode === 'office-detail' && (
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>দপ্তর পরিবর্তন</span>
-                </button>
-              )}
-
-              <a
-                href={currentOffice.officialPortalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow-xs"
-              >
-                <span>অফিসিয়াল পোর্টাল</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-
-              <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold font-mono">
-                <span>জরুরি ১০৫ / ৯৯৯</span>
-              </div>
-            </div>
+            {/* ২। হোম পেইজ */}
+            <button
+              type="button"
+              onClick={onBackToHub}
+              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-bold transition active:scale-95 cursor-pointer shadow-xs"
+              title="হোম পেইজে ফিরে যান"
+            >
+              <Home className="w-4 h-4 stroke-[2.5] text-white" />
+              <span>হোম পেইজ</span>
+            </button>
           </div>
         </div>
       </header>
@@ -298,16 +257,12 @@ export const GovOfficesHub: React.FC<GovOfficesHubProps> = ({ onBackToHub, onSho
       {/* ========================================================= */}
       {viewMode === 'office-detail' && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full space-y-6 sm:space-y-8">
-          {/* Back to 3x3 Grid Bar */}
-          <div className="flex items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs">
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 hover:text-rose-600 transition cursor-pointer"
-            >
-              <LayoutGrid className="w-4 h-4 text-rose-500" />
-              <span>← সকল সরকারি অফিস (৩টি লাইনে ৯টি অফিস তালিকা)</span>
-            </button>
+          {/* Active Office Status Indicator */}
+          <div className="flex items-center justify-between gap-3 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700">
+              <Building2 className="w-4 h-4 text-emerald-600" />
+              <span>সরকারি সেবা ডেস্ক</span>
+            </div>
 
             <span className="text-xs text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

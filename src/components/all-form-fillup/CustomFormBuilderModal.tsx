@@ -15,8 +15,8 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
   onSaveCustomTemplate,
   onShowToast,
 }) => {
-  const [formName, setFormName] = useState('');
-  const [formTagline, setFormTagline] = useState('');
+  const [formName, setFormName] = useState('আমার কাস্টম ফরম');
+  const [formTagline, setFormTagline] = useState('ব্যবহারকারীর তৈরি নিজস্ব ফরম');
   const [category, setCategory] = useState<'housing' | 'personal' | 'business' | 'education' | 'custom'>('custom');
   const [fields, setFields] = useState<FormField[]>([
     { name: 'fullName', label: 'পূর্ণ নাম', type: 'text', required: true, gridSpan: 1 },
@@ -30,23 +30,39 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
   const [newType, setNewType] = useState<FormFieldType>('text');
   const [newRequired, setNewRequired] = useState(false);
   const [newOptionsText, setNewOptionsText] = useState('');
+  const [inlineFeedback, setInlineFeedback] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleAddField = () => {
-    if (!newLabel.trim()) {
-      onShowToast('অনুগ্রহ করে ফিল্ডের শিরোনাম লিখুন!', '⚠️');
-      return;
-    }
+  const showFeedback = (msg: string) => {
+    setInlineFeedback(msg);
+    setTimeout(() => {
+      setInlineFeedback(null);
+    }, 3000);
+  };
 
+  const handleAddField = () => {
+    const defaultLabelMap: Record<string, string> = {
+      text: 'নতুন তথ্য',
+      number: 'সংখ্যা / পরিমাণ',
+      money: 'টাকার পরিমাণ (৳)',
+      date: 'তারিখ',
+      tel: 'মোবাইল নম্বর',
+      textarea: 'বিস্তারিত বিবরণ',
+      select: 'নির্বাচন অপশন',
+      checkbox: 'শর্তাবলী মেনে চলছি',
+      image: 'ছবি আপলোড',
+    };
+
+    const finalLabel = newLabel.trim() || `${defaultLabelMap[newType] || 'ফিল্ড'} ${fields.length + 1}`;
     const fieldName = `customField_${Date.now()}`;
     const options = newType === 'select'
-      ? newOptionsText.split(',').map((o) => o.trim()).filter(Boolean)
+      ? (newOptionsText.trim() ? newOptionsText.split(',').map((o) => o.trim()).filter(Boolean) : ['বিকল্প ১', 'বিকল্প ২'])
       : undefined;
 
     const newField: FormField = {
       name: fieldName,
-      label: newLabel.trim(),
+      label: finalLabel,
       type: newType,
       required: newRequired,
       gridSpan: newType === 'textarea' ? 2 : 1,
@@ -57,15 +73,33 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
     setNewLabel('');
     setNewOptionsText('');
     setNewRequired(false);
-    onShowToast('নতুন ফিল্ড যুক্ত করা হয়েছে! ➕', '✅');
+    showFeedback(`✓ "${finalLabel}" ফিল্ডটি তালিকায় যোগ হয়েছে!`);
+    onShowToast(`"${finalLabel}" ফিল্ড যোগ করা হয়েছে! ➕`, '✅');
+  };
+
+  const handleAddQuickField = (label: string, type: FormFieldType = 'text') => {
+    const fieldName = `quick_${Date.now()}`;
+    const newField: FormField = {
+      name: fieldName,
+      label,
+      type,
+      required: false,
+      gridSpan: type === 'textarea' ? 2 : 1,
+    };
+    setFields([...fields, newField]);
+    showFeedback(`✓ "${label}" ফিল্ডটি যোগ হয়েছে!`);
+    onShowToast(`"${label}" ফিল্ড যোগ করা হয়েছে! ➕`, '✅');
   };
 
   const handleDeleteField = (index: number) => {
     if (fields.length <= 1) {
+      showFeedback('⚠️ কমপক্ষে ১টি ফিল্ড রাখা আবশ্যক!');
       onShowToast('কমপক্ষে ১টি ফিল্ড রাখা আবশ্যক!', '⚠️');
       return;
     }
+    const removed = fields[index]?.label || 'ফিল্ড';
     setFields(fields.filter((_, i) => i !== index));
+    showFeedback(`🗑️ "${removed}" মুছে ফেলা হয়েছে।`);
   };
 
   const handleMoveField = (index: number, direction: 'up' | 'down') => {
@@ -84,11 +118,7 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
   };
 
   const handleSave = () => {
-    if (!formName.trim()) {
-      onShowToast('অনুগ্রহ করে ফরমের একটি নাম দিন!', '⚠️');
-      return;
-    }
-
+    const finalFormName = formName.trim() || 'আমার কাস্টম ফরম';
     const templateId = `custom-form-${Date.now()}`;
     const sampleData: Record<string, any> = {};
     fields.forEach((f) => {
@@ -105,9 +135,9 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
 
     const newTemplate: FormTemplate = {
       id: templateId,
-      name: formName.trim(),
+      name: finalFormName,
       tagline: formTagline.trim() || 'ব্যবহারকারীর তৈরি নিজস্ব কাস্টম ফরম',
-      category,
+      category: 'custom',
       categoryName: categoryNames[category] || 'কাস্টম ফরম',
       badge: '✨ নিজস্ব ফরম',
       badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
@@ -122,13 +152,19 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
     };
 
     onSaveCustomTemplate(newTemplate);
-    onShowToast(`"${newTemplate.name}" ফরমটি সফলভাবে তৈরি ও সংরক্ষিত হয়েছে! 🎉`, '✅');
+    onShowToast(`"${newTemplate.name}" ফরমটি তৈরি ও ওপেন করা হয়েছে! 🎉`, '✅');
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+      >
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-2.5">
@@ -207,6 +243,37 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
             </div>
           </div>
 
+          {/* Quick 1-Click Field Presets */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700">
+                ⚡ দ্রুত ১-ক্লিকে প্রয়োজনীয় ফিল্ড যোগ করুন:
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: 'পূর্ণ নাম', type: 'text' as FormFieldType },
+                { label: 'পিতা/স্বামীর নাম', type: 'text' as FormFieldType },
+                { label: 'মোবাইল নম্বর', type: 'tel' as FormFieldType },
+                { label: 'এনআইডি / ভোটার আইডি', type: 'text' as FormFieldType },
+                { label: 'বর্তমান ঠিকানা', type: 'text' as FormFieldType },
+                { label: 'টাকার পরিমাণ (৳)', type: 'money' as FormFieldType },
+                { label: 'তারিখ', type: 'date' as FormFieldType },
+                { label: 'বিস্তারিত মন্তব্য', type: 'textarea' as FormFieldType },
+              ].map((preset, pIdx) => (
+                <button
+                  key={pIdx}
+                  type="button"
+                  onClick={() => handleAddQuickField(preset.label, preset.type)}
+                  className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-lg text-xs font-semibold flex items-center gap-1 transition cursor-pointer active:scale-95"
+                >
+                  <Plus className="w-3 h-3 text-indigo-600" />
+                  <span>{preset.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* 2. Added Fields List */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -228,7 +295,7 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
                     </span>
                     <div className="truncate">
                       <p className="text-xs font-bold text-slate-800 truncate">
-                        {f.label} {f.required && <span className="text-rose-500">*</span>}
+                        {f.label || `ফিল্ড #${idx + 1}`} {f.required && <span className="text-rose-500">*</span>}
                       </p>
                       <p className="text-[10px] text-slate-500">
                         টাইপ: {f.type} {f.type === 'select' && `(${f.options?.join(', ')})`}
@@ -282,7 +349,7 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
                   type="text"
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
-                  placeholder="ফিল্ডের শিরোনাম (যেমন: ভোটার আইডি)"
+                  placeholder="ফিল্ডের নাম লিখুন (খালি রাখলে স্বয়ংক্রিয় নাম বসবে)"
                   className="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
@@ -316,7 +383,7 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
                 </div>
               )}
 
-              <div className="sm:col-span-3 flex items-center justify-between pt-1">
+              <div className="sm:col-span-3 flex flex-wrap items-center justify-between gap-2 pt-1">
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
                   <input
                     type="checkbox"
@@ -333,11 +400,28 @@ export const CustomFormBuilderModal: React.FC<CustomFormBuilderModalProps> = ({
                   className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>ফিল্ড যোগ করুন</span>
+                  <span>+ ফিল্ড যোগ করুন</span>
                 </button>
               </div>
             </div>
           </div>
+
+          {/* Inline Feedback Banner */}
+          {inlineFeedback && (
+            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center justify-between animate-in fade-in duration-200">
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{inlineFeedback}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInlineFeedback(null)}
+                className="text-emerald-700 hover:text-emerald-900 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer actions */}

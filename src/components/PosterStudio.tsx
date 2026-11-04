@@ -29,6 +29,7 @@ import {
   ChevronsRight,
 } from 'lucide-react';
 import { removeImageBackground } from '../utils/imageCutout';
+import { AIPhotoStatusFrameStudio } from './photo-status-frame/AIPhotoStatusFrameStudio';
 
 interface PosterStudioProps {
   onBackToHub: () => void;
@@ -39,6 +40,7 @@ export type PosterTemplate = 'news' | 'quote' | 'meme' | 'slogan' | 'branding';
 export type AspectRatio = '1:1' | '4:5' | '16:9';
 
 export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowToast }) => {
+  const [studioMode, setStudioMode] = useState<'ai_status_frame' | 'classic'>('ai_status_frame');
   const [template, setTemplate] = useState<PosterTemplate>('news');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
 
@@ -1139,6 +1141,16 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
     }
   };
 
+  if (studioMode === 'ai_status_frame') {
+    return (
+      <AIPhotoStatusFrameStudio
+        onBackToHub={onBackToHub}
+        onBackToClassic={() => setStudioMode('classic')}
+        onShowToast={onShowToast}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-900 text-slate-100">
       {/* Header */}
@@ -1163,6 +1175,16 @@ export const PosterStudio: React.FC<PosterStudioProps> = ({ onBackToHub, onShowT
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setStudioMode('ai_status_frame')}
+            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 hover:from-rose-500 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-900/40 active:scale-95"
+            title="নতুন AI ফটো স্ট্যাটাস ও ফ্রেম স্টুডিওতে যান"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+            <span>AI স্ট্যাটাস ও ফ্রেম স্টুডিও ✨</span>
+          </button>
+
           <button
             onClick={handleCopyText}
             className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"

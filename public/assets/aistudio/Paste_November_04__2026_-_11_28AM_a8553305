@@ -1,0 +1,1264 @@
+# GOOGLE AI STUDIO BUILD MODE — MASTER PROMPT
+
+# MoSaFa Bangladesh Service Finder
+## বাংলাদেশের প্রতিটি এলাকার ডিজিটাল তথ্যভান্ডার
+
+You are a senior full-stack developer, GIS engineer, data architect, data visualization specialist, and UI/UX designer.
+
+I have an existing website called **The MoSaFa / MoSaFa Tools**.
+
+I want to add a powerful new tool named:
+
+**MoSaFa Bangladesh Service Finder**
+
+বাংলা নাম: বাংলাদেশের ডিজিটাল এলাকা ও সেবা অনুসন্ধান
+
+Tagline:
+**বাংলাদেশের প্রতিটি এলাকার পরিচয়, জনসংখ্যা, প্রতিষ্ঠান, ইতিহাস ও ঐতিহ্য—এক জায়গায়।**
+
+This must become a comprehensive, data-driven digital information platform for Bangladesh.
+
+It should allow users to explore the country from the national level down to the smallest available geographic locality.
+
+The platform should be useful for:
+- Ordinary citizens
+- Students and researchers
+- Job seekers
+- Travelers
+- Business owners
+- Journalists
+- Government-service seekers
+- Local community members
+- Anyone interested in Bangladesh
+
+IMPORTANT: This is not just a district directory. It is a complete geographic, demographic, institutional, cultural, and local-information explorer.
+
+==================================================
+1. CRITICAL PROJECT INSTRUCTIONS
+==================================================
+
+Before coding:
+
+1. Inspect my existing project structure.
+2. Identify the framework, routing, navigation, styling system, and reusable components.
+3. Understand how existing MoSaFa tools are registered.
+4. Preserve all existing tools and functionality.
+5. Do not rebuild the entire website.
+6. Do not replace the existing application.
+7. Add this as a new independent tool.
+8. Follow the existing technology stack.
+9. Do not unnecessarily modify dependencies.
+10. Implement real working functionality rather than mockup screens.
+
+If the existing project uses React, Vite, TypeScript, and Tailwind CSS, continue using them.
+
+Suggested unique tool ID:
+
+`bangladesh-service-finder`
+
+Suggested route:
+
+`/tools/bangladesh-service-finder`
+
+Follow the actual existing routing convention.
+
+==================================================
+2. COMPLETE BANGLADESH GEOGRAPHICAL HIERARCHY
+==================================================
+
+Create a hierarchical geographic database for Bangladesh.
+
+The hierarchy must support:
+
+Bangladesh
+  └── Division
+       └── District
+            └── Upazila / Thana
+                 └── Union / Ward
+                      └── Village / Locality / Mouza
+
+Also support:
+- City Corporation
+- Municipality / Pourashava
+- Metropolitan Police Area
+- Ward
+- Mouza
+- Village
+- Other officially recognized local geographic units
+
+IMPORTANT:
+
+Use actual administrative relationships.
+
+Do not place a union under the wrong upazila or a village under the wrong union.
+
+Differentiate between:
+- Administrative unit
+- Census locality
+- Mouza
+- Village
+- Urban ward
+- Postal locality
+
+These are not always interchangeable.
+
+Every geographic record should have:
+- Unique ID
+- Bengali name
+- English name
+- Parent geographic ID
+- Geographic type
+- Official code, if available
+- Latitude and longitude, if available
+- Source
+- Data year
+- Verification status
+
+==================================================
+3. NATIONAL DASHBOARD
+==================================================
+
+Create an attractive national dashboard.
+
+At the top show:
+
+- বাংলাদেশের মানচিত্র
+- মোট বিভাগ
+- মোট জেলা
+- মোট উপজেলা
+- মোট ইউনিয়ন
+- মোট পৌরসভা
+- মোট সিটি কর্পোরেশন
+- মোট ওয়ার্ড, where verified data is available
+- মোট গ্রাম, where a reliable dataset is available
+
+Every number must come from the actual database.
+
+Do not hardcode invented statistics.
+
+If a count is not available, show:
+"তথ্য এখনো সম্পূর্ণ যুক্ত হয়নি"
+
+Add:
+- District search
+- Division filter
+- Geographic explorer
+- Interactive map
+- Popular districts
+- Recently explored areas
+- Area comparison
+
+The user should be able to search by Bengali or English name.
+
+==================================================
+4. INTERACTIVE BANGLADESH MAP
+==================================================
+
+Create an interactive map of Bangladesh.
+
+Map functionality:
+
+1. Display the Bangladesh national boundary.
+2. Show divisions.
+3. Show districts.
+4. Allow clicking a district.
+5. Zoom into the selected district.
+6. Display upazila boundaries when available.
+7. Display union boundaries when available.
+8. Display village/locality markers only when reliable coordinates exist.
+9. Show geographic names.
+10. Highlight the selected area.
+
+When a user clicks a map location, show:
+- Area name
+- Geographic type
+- Parent area
+- Available population
+- Available institutions
+- Explore Details button
+
+Use a suitable mapping library compatible with the existing project.
+
+Do not invent coordinates or draw misleading boundaries.
+
+If map boundary data is unavailable for a particular level, use the geographic selector and clearly explain the limitation.
+
+==================================================
+5. SMART LOCATION SELECTOR
+==================================================
+
+Create a dynamic cascading selector.
+
+Selection sequence:
+
+1. বিভাগ নির্বাচন
+2. জেলা নির্বাচন
+3. উপজেলা নির্বাচন
+4. ইউনিয়ন নির্বাচন
+5. গ্রাম / মৌজা নির্বাচন, if data is available
+
+When a user selects a division, only its districts should appear.
+
+When a user selects a district, only its actual upazilas should appear.
+
+When a user selects an upazila, only its actual unions should appear.
+
+When a user selects a union, show the available villages, mouzas, and localities belonging to it.
+
+Add:
+- Searchable dropdowns
+- Autocomplete
+- Bengali and English search
+- Breadcrumb navigation
+- Back to parent area
+
+Allow the user to select a location directly from the search bar.
+
+==================================================
+6. DISTRICT PROFILE
+==================================================
+
+When a user selects a district, create a comprehensive district profile.
+
+Example:
+টাঙ্গাইল জেলা
+
+Display:
+
+A. Basic Information
+- District name
+- Division
+- Establishment information, where verified
+- District headquarters
+- Total upazilas
+- Total municipalities
+- Total unions
+- Total wards, where available
+- Total villages, where available
+- Area in square kilometres
+- Geographic coordinates
+- Neighbouring districts
+
+B. Population Statistics
+- Total population
+- Male population
+- Female population
+- Other population categories, where officially reported
+- Rural population
+- Urban population
+- Population density
+- Household count
+- Literacy rate
+- Age distribution, where available
+
+For each statistic show:
+- Value
+- Unit
+- Reference year
+- Source
+- Verification status
+
+C. Administrative Statistics
+- Upazila count
+- Union count
+- Municipality count
+- City corporation count, if applicable
+- Ward count, where available
+- Village or locality count, where available
+
+D. Institutional Statistics
+Show actual available counts of:
+- Primary schools
+- Secondary schools
+- Colleges
+- Madrasas
+- Technical institutions
+- Universities
+- Hospitals
+- Clinics
+- Community clinics
+- Government offices
+- Police stations
+- Fire service stations
+- Post offices
+- Banks
+- Financial institutions
+- Markets
+- Other registered institutions
+
+Counts must be calculated from actual records.
+
+Allow clicking a category to see its institution list.
+
+==================================================
+7. UPAZILA PROFILE
+==================================================
+
+When a user selects an upazila, display a detailed profile.
+
+Example:
+টাঙ্গাইল → সখীপুর উপজেলা
+
+Show:
+
+- Upazila introduction
+- District
+- Total unions
+- Municipalities, if any
+- Total wards, if available
+- Total villages
+- Total mouzas
+- Total population
+- Male and female population
+- Rural and urban population
+- Household count
+- Population density
+- Literacy rate
+- Number of educational institutions
+- Number of health facilities
+- Number of government offices
+- Markets and important establishments
+- Roads and transport information
+- Important local places
+
+Show a list of all unions belonging to the upazila.
+
+Every union should be clickable.
+
+==================================================
+8. UNION PROFILE
+==================================================
+
+When a user selects a union, show:
+
+- Union name
+- Parent upazila
+- District
+- Union parishad information
+- Chairman and members, only if verified and appropriate
+- Total wards, where available
+- Total villages
+- Total mouzas
+- Population statistics
+- Household statistics
+- Male and female population, where available
+- Literacy statistics
+- Schools
+- Colleges
+- Madrasas
+- Health facilities
+- Markets
+- Religious institutions
+- Roads and bridges
+- Local government facilities
+- Important places
+
+Show all available villages and mouzas belonging to that union.
+
+==================================================
+9. VILLAGE / LOCALITY PROFILE
+==================================================
+
+This is one of the most important features.
+
+I want users to explore the smallest available locality.
+
+When a user selects a village, show:
+
+- Village name
+- Union
+- Upazila
+- District
+- Division
+- Mouza name, if available
+- Geographic coordinates, if verified
+- Map location, if available
+- Total population
+- Male population
+- Female population
+- Household count
+- Literacy rate
+- Population density, where calculable from valid data
+- Number of educational institutions
+- Number of mosques and other religious institutions, where verified
+- Number of markets
+- Number of health facilities
+- Important local establishments
+- Local history
+- Famous people
+- Local culture
+- Traditional food
+- Local sports
+- Festivals
+- Special traditions
+- Local economy
+- Agriculture
+- Important natural features
+- Tourist attractions
+
+IMPORTANT:
+
+Do not assume that all village-level information exists.
+
+If village-level population data is available from an official census or verified dataset, display it with its year and source.
+
+If only union-level population is available, do not present the union population as village population.
+
+If village voter data is unavailable, clearly show:
+"এই গ্রামের পৃথক ভোটারসংখ্যার নির্ভরযোগ্য প্রকাশ্য তথ্য পাওয়া যায়নি।"
+
+Never estimate or fabricate village population or voter numbers.
+
+==================================================
+10. VOTER STATISTICS MODULE
+==================================================
+
+Create a dedicated section:
+
+**ভোটার ও নির্বাচনী পরিসংখ্যান**
+
+Where verified aggregate data is available, display:
+
+- District-wise voter count
+- Upazila-wise voter count
+- Union-wise voter count
+- Ward-wise voter count
+- Male voters
+- Female voters
+- Other voter categories, where officially published
+- Total registered voters
+- Election year
+- Data publication date
+
+IMPORTANT PRIVACY RULES:
+
+- Use only publicly available aggregate statistics from authorized official sources.
+- Never expose individual voter records.
+- Never display NID numbers, personal voter information, or private addresses.
+- Do not invent village-level voter counts.
+- Distinguish voter count from total population.
+- Show the election year and source.
+- If village-level data is not publicly available, display "তথ্য পাওয়া যায়নি".
+
+==================================================
+11. EDUCATION DIRECTORY
+==================================================
+
+Create a comprehensive education module.
+
+Categories:
+
+- Government primary school
+- Non-government primary school
+- High school
+- School and college
+- Government college
+- Private college
+- Madrasa
+- Technical institution
+- Vocational institution
+- University
+- Other registered educational institutions
+
+Each institution record should support:
+
+- Institution name in Bengali
+- English name
+- Institution category
+- EIIN or official code, if available
+- Division
+- District
+- Upazila
+- Union
+- Village / locality
+- Address
+- Contact number, if public
+- Website, if available
+- Establishment year, if verified
+- Student count, if available
+- Teacher count, if available
+- MPO status, where applicable
+- Location coordinates
+- Official data source
+- Last updated date
+
+Add filters:
+
+- Division
+- District
+- Upazila
+- Union
+- Institution type
+- Government / private
+- MPO status
+- Search by institution name
+- Search by EIIN
+
+Display statistics:
+- Total institutions
+- Institutions by category
+- Student count, if available
+- Teacher count, if available
+
+Do not fabricate missing information.
+
+==================================================
+12. HEALTHCARE DIRECTORY
+==================================================
+
+Create a healthcare finder.
+
+Categories:
+
+- Medical college hospital
+- District hospital
+- Upazila health complex
+- Union health centre
+- Community clinic
+- Government hospital
+- Private hospital
+- Clinic
+- Diagnostic centre
+- Specialized hospital
+- Dental clinic
+- Other verified health facilities
+
+Each record should support:
+
+- Facility name
+- Bengali and English names
+- Facility type
+- Ownership
+- Division
+- District
+- Upazila
+- Union
+- Address
+- Contact number, if public
+- Email, if public
+- Website, if available
+- Emergency services, if verified
+- Coordinates
+- Source
+- Last updated date
+
+Allow users to:
+- Search nearby facilities
+- Filter by district
+- Filter by upazila
+- Filter by facility type
+- View on map
+- Open directions using a map service
+
+Do not claim that a hospital provides a service unless the source confirms it.
+
+==================================================
+13. OTHER LOCAL SERVICE DIRECTORIES
+==================================================
+
+Create separate searchable directories for:
+
+A. Government Services
+- District administration
+- Upazila administration
+- Union Parishad
+- Land offices
+- Election offices
+- Social services offices
+- Agriculture offices
+- Fisheries offices
+- Livestock offices
+- Other government offices
+
+B. Emergency Services
+- Police stations
+- Fire service
+- Ambulance services
+- Emergency hospitals
+- Blood banks
+- Disaster shelters
+- Public emergency contacts
+
+C. Infrastructure
+- Roads
+- Bridges
+- Ferries
+- Railway stations
+- Bus terminals
+- Launch terminals
+- Markets
+- Post offices
+- Banks
+- ATMs
+
+D. Community and Religious Places
+- Mosques
+- Temples
+- Churches
+- Buddhist monasteries
+- Cemeteries
+- Eidgahs
+- Community centres
+
+Only include records that have reliable sources or have been submitted and verified.
+
+==================================================
+14. LOCAL CULTURE, FOOD AND HERITAGE
+==================================================
+
+Create a special section:
+
+**আমার এলাকার পরিচয়**
+
+This section should help users discover what makes each area special.
+
+For each district, upazila, union, or village, show available information about:
+
+- Historical background
+- Local traditions
+- Traditional food
+- Famous sweets
+- Special agricultural products
+- Local handicrafts
+- Folk music
+- Local sports
+- Festivals
+- Cultural events
+- Famous personalities
+- Historic places
+- Natural attractions
+- Rivers
+- Lakes
+- Forests
+- Archaeological sites
+- Tourism
+- Local economy
+- Traditional occupations
+- Unique local customs
+
+Example:
+
+If the user selects:
+টাঙ্গাইল → সখীপুর
+
+Show the special identity of Sakhipur based on verified information.
+
+Do not generate generic descriptions and pretend they are verified local facts.
+
+For each cultural item, store:
+- Title
+- Description
+- Related location
+- Category
+- Image, if available and licensed
+- Source
+- Verification status
+- Last updated date
+
+Allow community-submitted information, but label it as:
+"স্থানীয় ব্যবহারকারীর দেওয়া তথ্য — যাচাই করা হয়নি"
+
+An administrator should be able to review and approve it.
+
+==================================================
+15. DISTRICT AND AREA COMPARISON
+==================================================
+
+Create a comparison feature.
+
+Users can select two or more areas.
+
+Example:
+টাঙ্গাইল বনাম ময়মনসিংহ
+
+Compare:
+- Population
+- Area
+- Population density
+- Upazila count
+- Union count
+- Schools
+- Colleges
+- Madrasas
+- Hospitals
+- Health facilities
+- Literacy rate
+- Urban population
+- Rural population
+- Available voter statistics
+- Tourism and cultural highlights
+
+Use charts and comparison tables.
+
+Only compare values with compatible units and reference years.
+
+Clearly identify when the compared data comes from different years.
+
+==================================================
+16. ADVANCED SEARCH AND FILTER
+==================================================
+
+Create a powerful universal search.
+
+Users should be able to search:
+
+- District
+- Upazila
+- Union
+- Village
+- Mouza
+- School
+- College
+- Madrasa
+- Hospital
+- Clinic
+- Government office
+- Market
+- Tourist place
+- Historic site
+- River
+- Famous food
+- Local cultural attraction
+
+Search must support:
+- Bengali
+- English
+- Partial word matches
+- Common spelling variations
+- Autocomplete
+- Category filters
+- Location filters
+
+Example queries:
+
+"সখীপুরের সব কলেজ"
+
+"টাঙ্গাইল জেলার হাসপাতাল"
+
+"হবিগঞ্জের সব উপজেলা"
+
+"সখীপুরে কতটি ইউনিয়ন আছে"
+
+"আমার এলাকার সরকারি হাসপাতাল"
+
+"বাংলাদেশে কোন জেলায় কতটি উপজেলা"
+
+Return results based on actual database records.
+
+==================================================
+17. DATA SOURCES AND OFFICIAL RESEARCH
+==================================================
+
+Use trustworthy and preferably official sources.
+
+Suggested sources:
+
+1. Bangladesh Bureau of Statistics (BBS)
+   https://bbs.gov.bd/
+   https://bbs.portal.gov.bd/
+
+2. Population and Housing Census 2022
+   https://pcs.icms.gov.bd/
+
+3. Bangladesh Election Commission
+   https://ecs.gov.bd/
+
+4. Bangladesh Election Commission NID Portal
+   https://services.nidw.gov.bd/
+
+5. Bangladesh Bureau of Educational Information and Statistics (BANBEIS)
+   https://banbeis.gov.bd/
+
+6. Directorate of Primary Education IPEMIS
+   https://ipemis.dpe.gov.bd/
+
+7. Directorate General of Health Services Facility Registry
+   https://hris.mohfw.gov.bd/public/facility-registry/
+
+8. Bangladesh National Portal
+   https://bangladesh.gov.bd/
+
+9. Bangladesh Open Data
+   https://data.gov.bd/
+
+10. Local Government Engineering Department
+    https://lged.gov.bd/
+
+11. Other official ministry, department, district, and upazila portals.
+
+IMPORTANT:
+
+Do not assume that these websites provide unrestricted APIs.
+
+Do not scrape websites in violation of their terms or access restrictions.
+
+Use official downloadable datasets, public APIs, authorized data exports, and properly licensed open datasets whenever possible.
+
+Record the exact source for every dataset.
+
+==================================================
+18. DATA QUALITY AND VERIFICATION SYSTEM
+==================================================
+
+This section is extremely important.
+
+Every data record must contain:
+
+- Source name
+- Source URL or document reference
+- Source organization
+- Data year
+- Last updated date
+- Last verified date
+- Verification status
+- Geographic coverage
+- Notes
+
+Verification statuses:
+
+1. Official Verified
+2. Verified Secondary Source
+3. Community Submitted
+4. Needs Review
+5. Outdated
+6. Unavailable
+
+Do not mix data from different years without displaying the year.
+
+Do not display an outdated statistic as current.
+
+If data is unavailable, display:
+
+"এই এলাকার নির্ভরযোগ্য তথ্য এখনো যুক্ত করা হয়নি।"
+
+Never fabricate:
+- Population
+- Voter numbers
+- School counts
+- Hospital counts
+- Village names
+- Coordinates
+- Official statistics
+- Historical facts
+
+==================================================
+19. DATA IMPORT AND DATABASE MANAGEMENT
+==================================================
+
+Build a structured data management system.
+
+The system should support importing:
+
+- CSV
+- Excel (XLSX), where supported
+- JSON
+- GeoJSON
+- Shapefile converted to supported GIS formats
+- PDF reports for reference and manual review
+
+Create a reusable database schema.
+
+Suggested entities:
+
+Division
+District
+Upazila
+Union
+Municipality
+Ward
+Mouza
+Village
+Institution
+HealthFacility
+GovernmentOffice
+EmergencyService
+TouristPlace
+CulturalItem
+PopulationStatistic
+VoterStatistic
+GeographicBoundary
+DataSource
+Dataset
+DataUpdateLog
+
+Use unique IDs and parent-child relationships.
+
+Prevent duplicate records.
+
+Validate geographic relationships before importing.
+
+For example:
+A union must belong to an existing upazila.
+
+A village must belong to a valid union or an explicitly identified alternative administrative parent.
+
+Provide:
+- CSV import
+- JSON import
+- Data validation preview
+- Duplicate detection
+- Import report
+- Export CSV
+- Export JSON
+- Data update history
+
+If the existing project has no backend, design a local prototype and a clean backend integration layer.
+
+Do not pretend that local browser storage provides a shared nationwide database.
+
+For production use, recommend a suitable database and backend architecture compatible with the current project.
+
+==================================================
+20. ADMIN DASHBOARD
+==================================================
+
+Create an admin/management dashboard.
+
+Features:
+
+- Add division
+- Add district
+- Add upazila
+- Add union
+- Add village
+- Add institution
+- Add hospital
+- Add government office
+- Add tourist place
+- Add cultural information
+- Update population statistics
+- Update voter statistics
+- Import datasets
+- Review community submissions
+- Verify records
+- Publish records
+- Archive outdated data
+
+Admin permissions must be separated from public user access.
+
+If there is no secure backend authentication, clearly mark the admin interface as a local development feature.
+
+Never pretend that an unsecured frontend-only admin panel is secure.
+
+==================================================
+21. MAP AND LOCATION FEATURES
+==================================================
+
+For each location where valid coordinates exist:
+
+- Show its position on the map.
+- Show nearby institutions.
+- Show nearby health facilities.
+- Show nearby schools.
+- Show nearby markets.
+- Show nearby government offices.
+- Show tourist attractions.
+
+Add:
+- Map layers
+- Category markers
+- Location search
+- Zoom
+- Map popup
+- Open external directions
+
+Do not require users to share precise location just to explore Bangladesh.
+
+If the user chooses "Near Me", request location permission through the browser and explain why.
+
+==================================================
+22. REPORTS AND DATA VISUALIZATION
+==================================================
+
+Create visual dashboards.
+
+Examples:
+
+- Population by district
+- District-wise upazila counts
+- School distribution
+- Hospital distribution
+- Male/female population comparison
+- Urban/rural population
+- Literacy rate comparison
+- Voter statistics by election year
+- Institution categories
+- Geographic distribution
+
+Use:
+- Bar charts
+- Pie charts
+- Line charts
+- Comparison cards
+- Tables
+- Map visualizations
+
+All charts must be generated from actual data.
+
+Show the source and reference year near every chart.
+
+Do not create misleading visualizations from incomplete datasets.
+
+==================================================
+23. USER CONTRIBUTION SYSTEM
+==================================================
+
+Allow users to suggest missing local information.
+
+Examples:
+
+- A missing village
+- A school not listed
+- A new hospital
+- A local market
+- A tourist attraction
+- A traditional food
+- A cultural event
+- A historical fact
+
+Provide a submission form.
+
+Submissions must remain unpublished until reviewed by an administrator.
+
+Display a label:
+"ব্যবহারকারীর জমা দেওয়া তথ্য — যাচাই অপেক্ষমাণ"
+
+Do not allow unverified submissions to overwrite official data.
+
+==================================================
+24. USER INTERFACE AND DESIGN
+==================================================
+
+Use the existing MoSaFa Tools design system.
+
+Brand colors:
+- Ruby Rose
+- Electric Pink
+- Deep Indigo Blue
+
+Design style:
+
+- Premium modern
+- Professional data portal
+- Clean dashboard
+- Responsive
+- Mobile-first
+- Bengali-friendly typography
+- Fast loading
+- Accessible
+- Easy navigation
+
+Main sections:
+
+1. National Overview
+2. Explore Bangladesh
+3. District Directory
+4. Upazila Directory
+5. Union Directory
+6. Village Explorer
+7. Population & Census
+8. Voter Statistics
+9. Education Directory
+10. Healthcare Directory
+11. Government Services
+12. Emergency Services
+13. Culture & Heritage
+14. Tourism
+15. Compare Areas
+16. Data Sources
+
+On mobile:
+- Use collapsible filters.
+- Avoid overcrowded tables.
+- Use cards for statistics.
+- Keep search prominent.
+- Make map controls touch-friendly.
+
+==================================================
+25. PERFORMANCE AND SCALABILITY
+==================================================
+
+Bangladesh contains a very large number of geographic and institutional records.
+
+Therefore:
+
+- Do not load every record into the browser at once.
+- Use pagination.
+- Use search indexing.
+- Use lazy loading.
+- Use database queries and filters.
+- Cache frequently accessed reference data.
+- Optimize map boundaries.
+- Use lightweight geographic data formats.
+- Avoid unnecessary network requests.
+- Handle large CSV/JSON imports efficiently.
+
+The platform should remain responsive even with a large database.
+
+==================================================
+26. PHASED IMPLEMENTATION
+==================================================
+
+Do not attempt to fabricate a complete national database.
+
+Build this project in practical phases.
+
+PHASE 1 — Geographic Foundation
+
+Implement:
+- All available divisions
+- All 64 districts
+- Actual district-to-upazila relationships
+- Actual upazila-to-union relationships
+- Search and cascading selectors
+- National dashboard
+- District and upazila profiles
+
+PHASE 2 — Population and Statistics
+
+Implement:
+- BBS census data
+- District population
+- Upazila population where available
+- Union population where available
+- Demographic charts
+- Data source and year labels
+
+PHASE 3 — Institutions
+
+Implement:
+- Primary schools
+- Secondary schools
+- Colleges
+- Madrasas
+- Universities
+- Hospitals
+- Clinics
+- Community clinics
+- Government offices
+
+Use official institution datasets whenever available.
+
+PHASE 4 — Voter Statistics
+
+Implement:
+- Available official aggregate voter statistics
+- Election year
+- District/upazila/union level where supported
+- Male/female breakdown where published
+
+PHASE 5 — Village Explorer
+
+Implement:
+- Village/mouza database
+- Geographic relationships
+- Village profiles
+- Population where official data exists
+- Local institutions where available
+
+PHASE 6 — Culture, Heritage and Tourism
+
+Implement:
+- Local history
+- Traditional food
+- Sports
+- Festivals
+- Culture
+- Famous personalities
+- Tourism
+- Natural attractions
+
+PHASE 7 — Advanced Features
+
+Implement:
+- Interactive maps
+- Area comparison
+- Community submissions
+- Admin dashboard
+- Dataset import/export
+- Data update management
+
+Make the architecture ready for every phase.
+
+==================================================
+27. IMPORTANT IMPLEMENTATION RULES
+==================================================
+
+1. Build real working functionality.
+2. Do not create fake numbers just to fill dashboard cards.
+3. Do not generate random village names.
+4. Do not invent voter counts.
+5. Do not treat estimated data as official.
+6. Do not mix population and voter counts.
+7. Do not mix village, mouza, union, and ward.
+8. Show source and year for every statistic.
+9. Mark missing data clearly.
+10. Do not claim that every village has a complete profile.
+11. Use actual data imported from reliable sources.
+12. Preserve all existing MoSaFa tools.
+13. Do not break existing routes.
+14. Do not expose private API keys.
+15. Do not use fake placeholder buttons.
+
+If a dataset is not available, implement the relevant module and clearly show that its data is awaiting verification.
+
+==================================================
+28. FINAL TESTING
+==================================================
+
+Before completing the work, verify:
+
+- Existing MoSaFa Tools still works.
+- New tool appears in the tools list.
+- Geographic hierarchy works.
+- Division selection filters districts.
+- District selection filters upazilas.
+- Upazila selection filters unions.
+- Union selection filters available villages.
+- Search works in Bengali and English.
+- District profile works.
+- Upazila profile works.
+- Union profile works.
+- Village profile works when data exists.
+- Population statistics display correct sources and years.
+- Voter statistics do not show fabricated values.
+- Education filters work.
+- Healthcare filters work.
+- Maps work where data is available.
+- Data import validation works.
+- Missing data is handled properly.
+- Mobile interface works.
+- Large datasets do not freeze the browser.
+- No existing tool is broken.
+- No console errors remain.
+
+==================================================
+FINAL INSTRUCTION
+==================================================
+
+Now inspect my existing The MoSaFa / MoSaFa Tools project.
+
+Implement **MoSaFa Bangladesh Service Finder** as a new, independent, fully functional tool.
+
+Do not merely create a UI mockup.
+
+Build the real geographic explorer, data structures, search, filters, dashboards, profiles, map integration, and data management functionality.
+
+Preserve all existing tools and functionality.
+
+If complete official data is not available, do not fabricate it. Build the complete system architecture and populate it with verified data that can actually be sourced.
+
+At the end, provide:
+
+1. Features implemented
+2. Files created or modified
+3. Geographic data currently included
+4. Which statistics are verified
+5. Which datasets are still missing
+6. How to import new datasets
+7. How to update population and voter statistics
+8. How to add villages and institutions
+9. How to verify local culture and historical information
+10. Backend and hosting requirements for nationwide production use
+
+Build the **MoSaFa Bangladesh Service Finder** now.

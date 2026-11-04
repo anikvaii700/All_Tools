@@ -37,6 +37,7 @@ import {
   Hand,
   Building2,
   Video,
+  Camera,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useAppUpdateSync } from './hooks/useAppUpdateSync';
@@ -84,8 +85,10 @@ import { ContentCreatorStudio } from './components/ContentCreatorStudio';
 import { EntrepreneurJourney } from './components/EntrepreneurJourney';
 import { AllFormFillup } from './components/all-form-fillup/AllFormFillup';
 import { GovOfficesHub } from './components/gov-offices/GovOfficesHub';
+import { JobPhotoSignatureResizer } from './components/job-resizer/JobPhotoSignatureResizer';
 
 export type ToolId =
+  | 'job-photo-signature-resizer'
   | 'all-gov-offices'
   | 'studymate-bd'
   | 'all-form-fillup'
@@ -194,6 +197,7 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const toolParam = params.get('tool');
       const validToolIds = [
+        'job-photo-signature-resizer',
         'all-gov-offices',
         'studymate-bd',
         'all-form-fillup',
@@ -254,6 +258,36 @@ export default function App() {
 
   // Complete Tools Registry with Sector Categorization
   const tools: ToolCardInfo[] = [
+    // MoSaFa Job Photo & Signature Resizer (চাকরির আবেদন ছবি ও স্বাক্ষর প্রস্তুতকারী)
+    {
+      id: 'job-photo-signature-resizer',
+      title: 'MoSaFa Job Photo & Signature Resizer',
+      badge: '🔥 সরকারি চাকরির ছবি ও স্বাক্ষর (৩০০×৩০০ / ৩০০×৮০)',
+      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+      category: 'calculator',
+      iconBg: 'from-rose-600 via-pink-600 to-indigo-600',
+      icon: <Camera className="w-6 h-6 text-white" />,
+      description:
+        'এক ক্লিকেই সরকারি চাকরির আবেদনের ছবি (৩০০×৩০০ px, ১০০ KB) ও স্বাক্ষর (৩০০×৮০ px, ৬০ KB) স্বয়ংক্রিয়ভাবে প্রস্তুত করুন। নো ক্রপ, নো ডিস্টরশন, সরাসরি JPG ডাউনলোড ও জিপ ফাইল সুবিধা।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'job photo signature resizer',
+        'job photo resizer',
+        'signature resizer',
+        'teletalk photo resizer',
+        'teletalk signature resizer',
+        'চাকরির ছবি',
+        'স্বাক্ষর রিসাইজার',
+        'টেলিটক ছবি',
+        'ছবি ও স্বাক্ষর রিসাইজার',
+        '৩০০*৩০০',
+        '৩০০*৮০',
+        'চাকরির আবেদন ছবি',
+        'সরকারি চাকরির ছবি',
+        'চাকরির আবেদন ছবি ও স্বাক্ষর প্রস্তুতকারী',
+      ],
+    },
     // 0. MoSaFa All Government Offices (সকল সরকারি অফিস)
     {
       id: 'all-gov-offices',
@@ -388,20 +422,34 @@ export default function App() {
       deviceTag: '📱 মোবাইলে সেরা (১-ক্লিক কপি ও সোশ্যাল শেয়ার)',
       keywords: ['বাংলা স্ট্যাটাস', 'ক্যাপশন', 'bangla status', 'quotes', 'caption', 'ভালোবাসা', 'কষ্ট'],
     },
-    // 8. MoSaFa Poster Studio (NEW)
+    // 8. MoSaFa Poster Studio / AI Photo Status & Frame Studio
     {
       id: 'poster-studio',
-      title: 'MoSaFa Poster Studio (পোস্টার স্টুডিও)',
-      badge: '🎨 পোস্টার ও মিম',
+      title: 'MoSaFa AI Photo Status & Frame Studio',
+      badge: '🔥 AI ফটো স্ট্যাটাস ও ৩২+ ফ্রেম',
       badgeColor: 'bg-rose-50 text-rose-600 border-rose-200',
       category: 'status',
-      iconBg: 'from-rose-500 to-pink-600',
+      iconBg: 'from-rose-500 via-pink-600 to-amber-500',
       icon: <Palette className="w-6 h-6 text-white" />,
       description:
-        'নিউজ স্টাইল পোস্টার, কোটেশন, ব্যানার, স্লোগান ও ফ্রেন্ড মিম তৈরির ব্রাউজার-বেসড ক্রিয়েটিভ স্টুডিও ও PNG এক্সপোর্ট।',
-      deviceTarget: 'desktop',
-      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (বড় ক্যানভাস ডিজাইন)',
-      keywords: ['পোস্টার', 'poster studio', 'মিম', 'meme', 'ব্যানার', 'নিউজ পোস্টার', 'ছবি'],
+        'আপনার ছবি, AI-এর লেখা, পছন্দের ফ্রেম—গোল্ডেন পার্চমেন্ট, ইসলামিক, মোটিভেশনাল, হোয়াইটবোর্ড ও ৩২টি প্রিমিয়াম ফ্রেমে তৈরি করুন নিজের স্টাইলের সোশ্যাল পোস্টার। ১-ক্লিক HD ডাউনলোড।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'পোস্টার',
+        'poster studio',
+        'ai photo status',
+        'frame studio',
+        'ফটো স্ট্যাটাস',
+        'ফ্রেম স্টুডিও',
+        'ছবি দিয়ে স্ট্যাটাস',
+        'গোল্ডেন ফ্রেম',
+        'ইসলামিক ফ্রেম',
+        'হোয়াইটবোর্ড',
+        'মিম',
+        'কোটেশন',
+        'ছবি',
+      ],
     },
     // 9. Random Picker Wheel (NEW)
     {
@@ -885,8 +933,9 @@ export default function App() {
 
   const wrapWithNavbar = (component: React.ReactNode) => (
     <div className="flex flex-col min-h-screen relative text-slate-800">
-      {/* Universal Top Hub Navigation Bar for Shared Links & Quick Back */}
-      <nav className="w-full bg-slate-900 text-white border-b border-slate-800 px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between text-xs sticky top-0 z-50 shadow-md">
+      {/* Universal Top Hub Navigation Bar for Shared Links & Quick Back (Desktop Only - Mobile stays clean without black bar) */}
+      <nav className="hidden sm:flex w-full bg-slate-900 text-white border-b border-slate-800 px-3 sm:px-4 py-2 sm:py-2.5 items-center justify-between text-xs sticky top-0 z-50 shadow-md">
+        {/* Desktop View: Back Button */}
         <button
           type="button"
           onClick={() => navigateToTool(null)}
@@ -897,6 +946,7 @@ export default function App() {
           <span>← সকল {toBanglaNum(tools.length)}টি টুলস (All Tools)</span>
         </button>
 
+        {/* Desktop View: Center Brand */}
         <div
           onClick={handleNavSecretAdmin}
           className="hidden md:flex items-center gap-2 text-slate-300 font-medium select-none cursor-default"
@@ -905,7 +955,8 @@ export default function App() {
           <span>The MoSaFa Tools • সকল {toBanglaNum(tools.length)}টি অনলাইন টুলস এক ক্লিকে</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Desktop View: Actions (Spin, Login, Update, Share) — Hidden on Mobile */}
+        <div className="hidden sm:flex items-center gap-2">
           {/* দৈনিক লাকি স্পিন */}
           <button
             type="button"
@@ -1161,6 +1212,14 @@ export default function App() {
   }
   if (activeTool === 'entrepreneur-journey') {
     return wrapWithNavbar(<EntrepreneurJourney onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'job-photo-signature-resizer') {
+    return wrapWithNavbar(
+      <JobPhotoSignatureResizer
+        onBackToHub={() => navigateToTool(null)}
+        onShowToast={showToast}
+      />
+    );
   }
   if (activeTool === 'all-gov-offices') {
     return wrapWithNavbar(
