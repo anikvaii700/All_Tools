@@ -32,6 +32,7 @@ import { SAMPLE_CV_DATA, INITIAL_EMPTY_CV_DATA } from '../data/sampleCVData';
 import { CVRenderer } from './cv/CVRenderer';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
+import { DownloadPaywallModal } from './DownloadPaywallModal';
 
 interface CVMakerProps {
   onBackToHub: () => void;
@@ -100,9 +101,23 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
   // Current active template object
   const currentTemplate = CV_TEMPLATES.find((t) => t.id === selectedTemplateId) || CV_TEMPLATES[0];
 
-  // All 100 templates are completely free: no watermark, full unlock
+  // All 100 templates: full preview freely accessible, 2 BDT paywall required only when downloading
   const isUnlocked = true;
   const isWatermarked = false;
+
+  // 2 BDT & Mandatory Auth Download Paywall
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [isCvUnlockedInSession, setIsCvUnlockedInSession] = useState(false);
+
+  const executeWithPaywall = (action: () => void) => {
+    if (isCvUnlockedInSession) {
+      action();
+      return;
+    }
+    setPendingAction(() => action);
+    setIsPaywallOpen(true);
+  };
 
   // Filter templates list
   const filteredTemplates = CV_TEMPLATES.filter((tmpl) => {
@@ -259,7 +274,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
   };
 
   // Print CV Cleanly & Reliably (Supports printing from any active tab & iframe environments)
-  const handlePrintCV = () => {
+  const performPrintCV = () => {
     try {
       window.focus();
       onShowToast('প্রিন্ট প্রস্তুত হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...', '🖨️');
@@ -374,8 +389,12 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     }
   };
 
+  const handlePrintCV = () => {
+    executeWithPaywall(performPrintCV);
+  };
+
   // High-Quality Crisp Multi-Page & Single-Page PDF Download (Captures all sections including References)
-  const handleDownloadPDF = async () => {
+  const performDownloadPDF = async () => {
     try {
       setIsDownloadingPdf(true);
       onShowToast('PDF ফাইল তৈরি হচ্ছে, অনুগ্রহ করে একটু অপেক্ষা করুন...', '⏳');
@@ -460,10 +479,14 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     } catch (err) {
       console.error('PDF export error:', err);
       onShowToast('PDF তৈরিতে সমস্যা হয়েছে। সরাসরি প্রিন্ট ডায়ালগ থেকে "Save as PDF" করুন।', '🖨️');
-      handlePrintCV();
+      performPrintCV();
     } finally {
       setIsDownloadingPdf(false);
     }
+  };
+
+  const handleDownloadPDF = () => {
+    executeWithPaywall(performDownloadPDF);
   };
 
   return (
@@ -493,11 +516,11 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
                     The MoSaFa CV Maker
                   </h1>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider border border-emerald-200">
-                    ১০০% ফ্রি
+                    প্রফেশনাল
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-600 font-bold">
-                  (প্রফেশনাল CV ও রেজিউম বিল্ডার) • ১০০টি সম্পূর্ণ ফ্রি টেমপ্লেট
+                  (প্রফেশনাল CV ও রেজিউম বিল্ডার) • ১০০টি আধুনিক প্রফেশনাল টেমপ্লেট
                 </p>
               </div>
             </div>
@@ -616,7 +639,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
               </span>
               <h2 className="text-2xl sm:text-3xl font-black">১০০টি প্রফেশনাল CV ও রেজিউম টেমপ্লেট</h2>
               <p className="text-xs sm:text-sm text-rose-100 max-w-2xl leading-relaxed">
-                পছন্দের যেকোনো টেমপ্লেট নির্বাচন করুন এবং সরাসরি লাইভ এডিট করুন। বর্তমানে সকল ১০০টি টেমপ্লেট সম্পূর্ণ ফ্রি—কোনো ওয়াটারমার্ক ছাড়াই প্রফেশনাল A4 ফরম্যাটে আনলিমিটেড প্রিভিউ, এডিট ও PDF ডাউনলোড করুন!
+                পছন্দের যেকোনো টেমপ্লেট নির্বাচন করুন এবং সরাসরি লাইভ এডিট করুন। সকল ১০০টি আধুনিক টেমপ্লেট—কোনো ওয়াটারমার্ক ছাড়াই প্রফেশনাল A4 ফরম্যাটে আনলিমিটেড প্রিভিউ, এডিট ও PDF ডাউনলোড করুন!
               </p>
             </div>
 
@@ -626,12 +649,12 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
                 <div className="text-[11px] text-rose-100">মোট টেমপ্লেট</div>
               </div>
               <div className="bg-emerald-500/30 backdrop-blur-md border border-emerald-300/40 rounded-2xl p-4 text-center min-w-[110px]">
-                <div className="text-2xl font-black text-emerald-200">১০০% ফ্রি</div>
-                <div className="text-[11px] text-emerald-100 font-bold">আজীবন ফ্রি</div>
+                <div className="text-2xl font-black text-emerald-200">প্রফেশনাল</div>
+                <div className="text-[11px] text-emerald-100 font-bold">লাইভ প্রিভিউ</div>
               </div>
               <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-4 text-center min-w-[100px]">
-                <div className="text-2xl font-black text-white">৳০</div>
-                <div className="text-[11px] text-rose-100 font-bold">কোনো ফি নেই</div>
+                <div className="text-2xl font-black text-white">A4</div>
+                <div className="text-[11px] text-rose-100 font-bold">অফিসিয়াল সাইজ</div>
               </div>
             </div>
           </div>
@@ -653,7 +676,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
 
               <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white px-3.5 py-2 rounded-2xl border border-slate-200 shadow-2xs">
                 <Check className="w-4 h-4 text-emerald-600" />
-                <span>সকল ১০০টি প্রিমিয়াম ও সাধারণ টেমপ্লেট সম্পূর্ণ ফ্রি</span>
+                <span>সকল ১০০টি প্রিমিয়াম ও আধুনিক টেমপ্লেট</span>
               </div>
             </div>
 
@@ -735,7 +758,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
 
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                       <Check className="w-3 h-3 text-emerald-600" />
-                      <span>১০০% ফ্রি</span>
+                      <span>প্রফেশনাল</span>
                     </span>
                   </div>
 
@@ -1430,7 +1453,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
               </div>
 
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black border border-emerald-200">
-                ১০০% ফ্রি
+                প্রফেশনাল টেমপ্লেট
               </span>
             </div>
 
@@ -1662,7 +1685,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
                 <h3 className="text-lg font-black text-slate-900 mt-1">
                   {currentOrder.template.nameBn} আনলক করুন
                 </h3>
-                <p className="text-xs text-slate-500">মূল্য: মাত্র ৳১০ (দশ টাকা) • আজীবন ওয়াটারমার্ক ছাড়া</p>
+                <p className="text-xs text-slate-500">মূল্য: মাত্র ৳৫ (পাঁচ টাকা) • অফিশিয়াল A4 ডাউনলোড</p>
               </div>
               <button
                 type="button"
@@ -1673,41 +1696,21 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
               </button>
             </div>
 
-            {/* Provider Tabs (bKash / Nagad) */}
-            <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setPaymentProvider('bkash')}
-                className={`py-2.5 rounded-xl border transition flex items-center justify-center gap-2 cursor-pointer ${
-                  paymentProvider === 'bkash'
-                    ? 'border-pink-500 bg-pink-50 text-pink-700 ring-2 ring-pink-200'
-                    : 'border-slate-200 text-slate-600'
-                }`}
-              >
-                <span>বিকাশ (bKash)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaymentProvider('nagad')}
-                className={`py-2.5 rounded-xl border transition flex items-center justify-center gap-2 cursor-pointer ${
-                  paymentProvider === 'nagad'
-                    ? 'border-orange-500 bg-orange-50 text-orange-700 ring-2 ring-orange-200'
-                    : 'border-slate-200 text-slate-600'
-                }`}
-              >
-                <span>নগদ (Nagad)</span>
-              </button>
+            {/* Provider Tabs (Only bKash Merchant) */}
+            <div className="text-xs font-bold">
+              <div className="py-2.5 px-4 rounded-xl border border-pink-500 bg-pink-50 text-pink-700 ring-2 ring-pink-200 flex items-center justify-center gap-2">
+                <span>বিকাশ মার্চেন্ট পেমেন্ট (bKash Payment)</span>
+              </div>
             </div>
 
             {/* Instructions Box */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-              <div className="font-bold text-slate-800">পেমেন্ট করার নিয়ম:</div>
-              <ol className="list-decimal list-inside space-y-1 text-slate-600 leading-relaxed text-[11px]">
-                <li>আপনার {paymentProvider === 'bkash' ? 'বিকাশ' : 'নগদ'} অ্যাপে প্রবেশ করুন।</li>
+            <div className="p-3.5 rounded-2xl bg-pink-50/50 border border-pink-200 space-y-2 text-xs">
+              <div className="font-bold text-pink-900">মার্চেন্ট পেমেন্ট করার নিয়ম:</div>
+              <ol className="list-decimal list-inside space-y-1 text-slate-700 leading-relaxed text-[11px]">
+                <li>আপনার বিকাশ অ্যাপে প্রবেশ করে <strong>Payment (পেমেন্ট)</strong> অপশন নির্বাচন করুন (Send Money হবে না)।</li>
                 <li>
-                  Send Money বা Payment অপশনে গিয়ে <strong>০১৭৯৮-০৭৫৭৪৪</strong> নম্বরে <strong>৳১০</strong> পাঠান।
+                  মার্চেন্ট নম্বর: <strong>01868775577</strong> এ <strong>৳৫</strong> পেমেন্ট করুন।
                 </li>
-                <li>রেফারেন্সে আপনার নাম বা <strong>{currentOrder.orderId}</strong> লিখুন।</li>
                 <li>পেমেন্ট শেষে পাওয়া <strong>TrxID</strong> নিচে দিয়ে যাচাই করুন।</li>
               </ol>
             </div>
@@ -1782,6 +1785,22 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
           customId="cv-export-document"
         />
       </div>
+
+      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle={`The MoSaFa CV - ${cvData.personal.fullName || 'প্রফেশনাল জীবনবৃত্তান্ত'}`}
+        documentTypeTag={`টেমপ্লেট: ${currentTemplate.nameBn}`}
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsCvUnlockedInSession(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
+      />
     </div>
   );
 };

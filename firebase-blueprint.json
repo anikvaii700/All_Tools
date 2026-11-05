@@ -33,6 +33,19 @@
           "type": "number",
           "description": "Cumulative coins earned"
         },
+        "status": {
+          "type": "string",
+          "enum": ["active", "suspended", "banned"],
+          "description": "User account status (active, suspended, or banned)"
+        },
+        "banReason": {
+          "type": "string",
+          "description": "Reason for suspension or ban"
+        },
+        "suspendedUntil": {
+          "type": "string",
+          "description": "ISO timestamp until which user account is suspended"
+        },
         "lastSpinDate": {
           "type": "string",
           "description": "Date of latest daily spin in YYYY-MM-DD"

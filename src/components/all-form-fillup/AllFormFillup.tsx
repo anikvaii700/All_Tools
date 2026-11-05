@@ -47,6 +47,7 @@ import { NidBiometricForm1 } from './NidBiometricForm1';
 import { LandlordVoterCertificate } from './LandlordVoterCertificate';
 import { PhotoSignCertificate } from './PhotoSignCertificate';
 import { NidServerCopyApplication } from './NidServerCopyApplication';
+import { DownloadPaywallModal } from '../DownloadPaywallModal';
 
 interface AllFormFillupProps {
   onBackToHub: () => void;
@@ -209,6 +210,20 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
   // Modals
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+
+  // 2 BDT & Mandatory Auth Download Paywall
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [isFormUnlockedInSession, setIsFormUnlockedInSession] = useState(false);
+
+  const executeWithPaywall = (action: () => void) => {
+    if (isFormUnlockedInSession) {
+      action();
+      return;
+    }
+    setPendingAction(() => action);
+    setIsPaywallOpen(true);
+  };
 
   // Saved Drafts
   const [drafts, setDrafts] = useState<SavedDraft[]>(() => {
@@ -394,12 +409,15 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
   };
 
   // Native Browser Print
-  const handlePrint = () => {
+  const performPrint = () => {
     window.print();
+  };
+  const handlePrint = () => {
+    executeWithPaywall(performPrint);
   };
 
   // High-Quality PDF Download
-  const handleDownloadPdf = async () => {
+  const performDownloadPdf = async () => {
     if (!previewDocRef.current || !selectedTemplate) return;
 
     const element = previewDocRef.current;
@@ -452,8 +470,12 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
     }
   };
 
+  const handleDownloadPdf = () => {
+    executeWithPaywall(performDownloadPdf);
+  };
+
   // High-Quality PNG Image Download
-  const handleDownloadPng = async () => {
+  const performDownloadPng = async () => {
     if (!previewDocRef.current || !selectedTemplate) return;
 
     const element = previewDocRef.current;
@@ -487,6 +509,10 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
       element.style.transform = originalTransform;
       setIsExportingPng(false);
     }
+  };
+
+  const handleDownloadPng = () => {
+    executeWithPaywall(performDownloadPng);
   };
 
   // Filtered Templates
@@ -1585,6 +1611,22 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
         onLoadDraft={handleLoadDraft}
         onDeleteDraft={handleDeleteDraft}
         onClearAllData={handleClearAllData}
+      />
+
+      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle={selectedTemplate ? selectedTemplate.name : 'অফিসিয়াল ফরম'}
+        documentTypeTag={selectedTemplate ? `ক্যাটাগরি: ${selectedTemplate.category}` : 'MoSaFa অল ফরম ফিলআপ'}
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsFormUnlockedInSession(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
       />
     </div>
   );

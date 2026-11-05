@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
+import { DownloadPaywallModal } from '../DownloadPaywallModal';
 
 export interface PhotoSignCertificateData {
   // ১। ইউনিয়ন পরিষদ / কর্তৃপক্ষ তথ্য
@@ -144,8 +145,20 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('preview');
   const [previewZoom, setPreviewZoom] = useState<number>(100);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [isFormUnlockedInSession, setIsFormUnlockedInSession] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const certificateRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerProtectedAction = (action: () => void) => {
+    if (isFormUnlockedInSession) {
+      action();
+    } else {
+      setPendingAction(() => action);
+      setIsPaywallOpen(true);
+    }
+  };
 
   const updateField = <K extends keyof PhotoSignCertificateData>(
     field: K,
@@ -283,7 +296,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
 
           <button
             type="button"
-            onClick={handlePrint}
+            onClick={() => triggerProtectedAction(handlePrint)}
             className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
           >
             <Printer className="w-3.5 h-3.5" />
@@ -292,7 +305,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
 
           <button
             type="button"
-            onClick={handleDownloadPdf}
+            onClick={() => triggerProtectedAction(handleDownloadPdf)}
             disabled={isDownloading}
             className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
           >
@@ -897,6 +910,22 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle={`ছবি ও স্বাক্ষর পরিবর্তনের প্রত্যয়ন (${data.applicantName || 'আবেদনকারী'})`}
+        documentTypeTag="A4 ইউনিয়ন পরিষদ প্রত্যয়নপত্র"
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsFormUnlockedInSession(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
+      />
     </div>
   );
 };

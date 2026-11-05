@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
+import { DownloadPaywallModal } from '../DownloadPaywallModal';
 
 export interface LandlordCertificateData {
   // ১। ভাড়াটিয়া / আবেদনকারীর তথ্য
@@ -138,8 +139,20 @@ export const LandlordVoterCertificate: React.FC<LandlordVoterCertificateProps> =
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
   const [includeOfficialBorder, setIncludeOfficialBorder] = useState<boolean>(true);
+  const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
+  const [isFormUnlockedInSession, setIsFormUnlockedInSession] = useState<boolean>(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const triggerProtectedAction = (action: () => void) => {
+    if (isFormUnlockedInSession) {
+      action();
+    } else {
+      setPendingAction(() => action);
+      setIsPaywallOpen(true);
+    }
+  };
 
   const updateField = (field: keyof LandlordCertificateData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -292,7 +305,7 @@ export const LandlordVoterCertificate: React.FC<LandlordVoterCertificateProps> =
 
             <button
               type="button"
-              onClick={handlePrint}
+              onClick={() => triggerProtectedAction(handlePrint)}
               className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -301,7 +314,7 @@ export const LandlordVoterCertificate: React.FC<LandlordVoterCertificateProps> =
 
             <button
               type="button"
-              onClick={handleDownloadPdf}
+              onClick={() => triggerProtectedAction(handleDownloadPdf)}
               disabled={isExportingPdf}
               className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-200 disabled:opacity-50"
             >
@@ -974,6 +987,22 @@ export const LandlordVoterCertificate: React.FC<LandlordVoterCertificateProps> =
           </div>
         </div>
       </div>
+
+      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle={`ভাড়াটিয়ার জন্য বাড়িওয়ালার প্রত্যয়ন (${formData.tenantName || 'ভাড়াটিয়া'})`}
+        documentTypeTag="A4 অফিসিয়াল বাড়িওয়ালা প্রত্যয়ন"
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsFormUnlockedInSession(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
+      />
     </div>
   );
 };

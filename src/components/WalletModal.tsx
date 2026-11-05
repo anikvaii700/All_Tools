@@ -80,7 +80,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({
             </div>
           ) : (
             <p className="text-xs text-amber-100 font-medium mb-3">
-              ফ্রি ভিজিটর মোড (গেস্ট ওয়ালেট)
+              ভিজিটর মোড (গেস্ট ওয়ালেট)
             </p>
           )}
 
@@ -95,11 +95,14 @@ export const WalletModal: React.FC<WalletModalProps> = ({
               <span className="text-sm font-bold text-amber-200">কয়েন</span>
             </div>
             <div className="mt-2 pt-2 border-t border-white/20 flex items-center justify-between text-xs text-amber-100">
-              <span>আনুমানিক নগদ মান:</span>
+              <span>১০০ পয়েন্ট = ১ টাকা মান:</span>
               <span className="font-extrabold text-yellow-200 text-sm">
                 ৳ {approxCashBDT} টাকা
               </span>
             </div>
+            <p className="text-[10px] text-amber-200 mt-1 font-semibold">
+              💡 ৫০০ পয়েন্টে ১টি ৫ টাকার পিডিএফ আনলক করা যায়
+            </p>
           </div>
         </div>
 
@@ -140,10 +143,10 @@ export const WalletModal: React.FC<WalletModalProps> = ({
               <Gift className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-xs font-black text-slate-900 mb-1">
-                  ভবিষ্যতে নগদ টাকা ও বিকাশ রিডিম সুবিধা
+                  পয়েন্ট দিয়ে সরাসরি পিডিএফ ডাউনলোড ও অফিশিয়াল সেবা
                 </h4>
                 <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                  ব্যবহারকারীদের উৎসাহিত করার জন্য এই রিওয়ার্ড সিস্টেম তৈরি হয়েছে। প্রতিদিন অ্যাপে এসে স্পিন করুন ও কয়েন জমা করুন। নির্দিষ্ট কয়েন লক্ষ্য পূরণ হলে সরাসরি বিকাশ, নগদ বা রিচার্জে ক্যাশআউট নেওয়ার ব্যবস্থা খুব শীঘ্রই উন্মুক্ত করা হবে।
+                  প্রতি ১০০ পয়েন্টের মূল্য ১ টাকা। আপনার ওয়ালেটে ৫০০ কয়েন জমা হলে আপনি সরাসরি যেকোনো ৫ টাকার অফিশিয়াল ফরম, আবেদনপত্র বা সিভি ডাউনলোড করতে পারবেন। এছাড়াও বিকাশ মার্চেন্টে টাকা পাঠিয়ে এড মানি করতে পারেন।
                 </p>
               </div>
             </div>
@@ -153,7 +156,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({
           {!isLoggedIn ? (
             <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-center">
               <p className="text-xs font-bold text-rose-900 mb-2">
-                কয়েন ব্যালেন্স সুরক্ষিত রাখতে ফ্রি একাউন্ট তৈরি করুন!
+                কয়েন ব্যালেন্স সুরক্ষিত রাখতে একাউন্ট তৈরি করুন!
               </p>
               <button
                 onClick={() => {

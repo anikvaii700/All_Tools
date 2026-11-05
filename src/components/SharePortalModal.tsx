@@ -196,7 +196,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
               type="button"
               onClick={() =>
                 handleWhatsAppShare(
-                  `The MoSaFa Tools - সকল ফ্রি বাংলা অনলাইন টুলস এক ক্লিকে (StudyMate BD, CV Maker, ভোটার স্থানান্তর, পোস্টার স্টুডিও সহ ${toBanglaNum(totalToolsCount)}টি কার্যকরী টুলস)`,
+                  `The MoSaFa Tools - সকল প্রয়োজনীয় বাংলা অনলাইন টুলস এক ক্লিকে (StudyMate BD, CV Maker, ভোটার স্থানান্তর, পোস্টার স্টুডিও সহ ${toBanglaNum(totalToolsCount)}টি কার্যকরী টুলস)`,
                   publicPortalUrl
                 )
               }
@@ -261,7 +261,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
             onClick={() =>
               handleNativeShare(
                 'The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল',
-                'সকল ফ্রি বাংলা অনলাইন টুলস এক জায়গায় - The MoSaFa StudyMate BD, CV Maker, ভোটার স্থানান্তর ফরম সহ ২২টি কার্যকরী টুলস।',
+                'সকল প্রয়োজনীয় বাংলা অনলাইন টুলস এক জায়গায় - The MoSaFa StudyMate BD, CV Maker, ভোটার স্থানান্তর ফরম সহ প্রয়োজনীয় সকল কার্যকরী টুলস।',
                 publicPortalUrl
               )
             }

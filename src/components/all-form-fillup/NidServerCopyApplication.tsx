@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
+import { DownloadPaywallModal } from '../DownloadPaywallModal';
 
 export interface ServerCopyApplicationData {
   // ১। প্রাপক কর্মকর্তা
@@ -149,12 +150,30 @@ export const NidServerCopyApplication: React.FC<NidServerCopyApplicationProps> =
     onShowToast?.('নমুনা আবেদনপত্র সফলভাবে লোড হয়েছে', '✨');
   };
 
-  const handlePrint = () => {
+  // 2 BDT & Mandatory Auth Download Paywall
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [isFormUnlockedInSession, setIsFormUnlockedInSession] = useState(false);
+
+  const executeWithPaywall = (action: () => void) => {
+    if (isFormUnlockedInSession) {
+      action();
+      return;
+    }
+    setPendingAction(() => action);
+    setIsPaywallOpen(true);
+  };
+
+  const performPrint = () => {
     window.print();
     onShowToast?.('প্রিন্ট উইন্ডো খোলা হয়েছে', '🖨️');
   };
 
-  const handleDownloadPdf = async () => {
+  const handlePrint = () => {
+    executeWithPaywall(performPrint);
+  };
+
+  const performDownloadPdf = async () => {
     if (!applicationRef.current) return;
     try {
       setIsDownloading(true);
@@ -195,6 +214,10 @@ export const NidServerCopyApplication: React.FC<NidServerCopyApplicationProps> =
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleDownloadPdf = () => {
+    executeWithPaywall(performDownloadPdf);
   };
 
   return (
@@ -651,6 +674,22 @@ export const NidServerCopyApplication: React.FC<NidServerCopyApplicationProps> =
           </div>
         </div>
       </div>
+
+      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle={`এনআইডি সার্ভার কপি সংগ্রহের আবেদন (${data.applicantName || 'আবেদনকারী'})`}
+        documentTypeTag="A4 অফিসিয়াল দাপ্তরিক আবেদনপত্র"
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsFormUnlockedInSession(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
+      />
     </div>
   );
 };

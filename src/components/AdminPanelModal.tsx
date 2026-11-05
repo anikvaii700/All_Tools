@@ -25,9 +25,22 @@ import {
   CheckCircle2,
   Trash2,
   XCircle,
+  Users,
+  UserX,
+  Coins,
+  Ban,
+  RotateCcw,
+  Search,
+  Filter,
+  ShieldAlert,
+  Award,
+  AlertTriangle,
+  Clock,
+  Plus,
 } from 'lucide-react';
 import { useDeveloperContact } from '../hooks/useDeveloperContact';
 import { storySubmissionService, SubmittedStory } from '../services/storySubmissionService';
+import { adminUserService, ManagedUser } from '../services/adminUserService';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -44,7 +57,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'support' | 'notice' | 'profile' | 'stories'>('support');
+  const [activeTab, setActiveTab] = useState<'support' | 'notice' | 'profile' | 'stories' | 'users'>('support');
   const [adminPinInput, setAdminPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -54,11 +67,29 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [storyFilter, setStoryFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [storyPreview, setStoryPreview] = useState<SubmittedStory | null>(null);
 
+  // User Management state
+  const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userStatusFilter, setUserStatusFilter] = useState<'all' | 'active' | 'suspended' | 'banned'>('all');
+  const [selectedUserForMoney, setSelectedUserForMoney] = useState<ManagedUser | null>(null);
+  const [addMoneyCoins, setAddMoneyCoins] = useState<number>(500); // 500 coins = 5 BDT
+  const [addMoneyNote, setAddMoneyNote] = useState('');
+  const [selectedUserForStatus, setSelectedUserForStatus] = useState<ManagedUser | null>(null);
+  const [editStatusTarget, setEditStatusTarget] = useState<'active' | 'suspended' | 'banned'>('active');
+  const [editBanReason, setEditBanReason] = useState('');
+  const [editSuspensionDays, setEditSuspensionDays] = useState<number>(7);
+
   useEffect(() => {
-    const unsub = storySubmissionService.subscribe((list) => {
+    const unsubStories = storySubmissionService.subscribe((list) => {
       setSubmittedStories(list);
     });
-    return () => unsub();
+    const unsubUsers = adminUserService.subscribe((list) => {
+      setManagedUsers(list);
+    });
+    return () => {
+      unsubStories();
+      unsubUsers();
+    };
   }, []);
 
   // Enforce password prompt on every single open and reset upon exit
@@ -140,7 +171,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setEditNoticeTitle(config.noticeTitle || 'The MoSaFa Tools — গুরুত্বপূর্ণ নোটিশ ও তথ্যাবলি');
     setEditNoticeContent(
       config.noticeContent ||
-        'আমাদের সকল ২৩টি অনলাইন ডিজিটাল টুলস সম্পূর্ণ ফ্রি ও মোবাইল ফ্রেন্ডলি।'
+        'আমাদের সকল ২৩টি অনলাইন ডিজিটাল টুলস অত্যন্ত সুরক্ষিত, নির্ভরযোগ্য ও মোবাইল ফ্রেন্ডলি।'
     );
     setEditNoticeBadge(config.noticeBadge || 'জরুরি নোটিশ');
     setEditNoticeVariant(config.noticeVariant || 'gradient');
@@ -368,62 +399,79 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               )}
 
               {/* Navigation Tabs */}
-              <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
                 <button
                   type="button"
                   onClick={() => setActiveTab('support')}
-                  className={`flex-1 py-2 px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 min-w-[110px] py-2 px-2 sm:px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     activeTab === 'support'
                       ? 'bg-white text-emerald-700 shadow-xs ring-1 ring-emerald-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <MessageSquare className="w-4 h-4 text-emerald-500" />
-                  <span>১. সাপোর্ট পপআপের লেখা</span>
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>১. সাপোর্ট টেক্সট</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('notice')}
-                  className={`flex-1 py-2 px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 min-w-[110px] py-2 px-2 sm:px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     activeTab === 'notice'
                       ? 'bg-white text-indigo-700 shadow-xs ring-1 ring-indigo-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <Megaphone className="w-4 h-4 text-rose-500" />
-                  <span>২. টুলস নোটিশ ব্যানার</span>
+                  <Megaphone className="w-3.5 h-3.5 text-rose-500" />
+                  <span>২. নোটিশ ব্যানার</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('profile')}
-                  className={`flex-1 py-2 px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 min-w-[90px] py-2 px-2 sm:px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     activeTab === 'profile'
                       ? 'bg-white text-indigo-700 shadow-xs ring-1 ring-indigo-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <User className="w-4 h-4 text-indigo-600" />
+                  <User className="w-3.5 h-3.5 text-indigo-600" />
                   <span>৩. প্রোফাইল</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('stories')}
-                  className={`flex-1 py-2 px-2.5 sm:px-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
+                  className={`flex-1 min-w-[100px] py-2 px-2 sm:px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
                     activeTab === 'stories'
                       ? 'bg-white text-amber-700 shadow-xs ring-1 ring-amber-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <BookOpen className="w-4 h-4 text-amber-600" />
-                  <span>৪. জমা পড়া গল্প</span>
+                  <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+                  <span>৪. জমা গল্প</span>
                   {submittedStories.filter((s) => s.status === 'pending').length > 0 && (
-                    <span className="w-4.5 h-4.5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center font-black animate-pulse">
+                    <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] flex items-center justify-center font-black animate-pulse">
                       {submittedStories.filter((s) => s.status === 'pending').length}
                     </span>
                   )}
+                </button>
+
+                {/* TAB 5: USER CONTROL & ADD MONEY (NEW REQUIREMENT) */}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('users')}
+                  className={`flex-1 min-w-[130px] py-2 px-2 sm:px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer relative ${
+                    activeTab === 'users'
+                      ? 'bg-white text-rose-700 shadow-xs ring-1 ring-rose-200'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5 text-rose-600" />
+                  <span>৫. ইউজার ও এড মানি</span>
+                  <span className="text-[10px] bg-rose-100 text-rose-800 font-extrabold px-1.5 py-0.5 rounded-full">
+                    {managedUsers.length}
+                  </span>
                 </button>
               </div>
 
@@ -1395,6 +1443,639 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                         {storyPreview.content.map((p, i) => (
                           <p key={i}>{p}</p>
                         ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 5: USER MANAGEMENT, ADD MONEY & BAN/SUSPENSION (NEW REQUIREMENT) */}
+              {activeTab === 'users' && (
+                <div className="space-y-5 animate-in fade-in">
+                  {/* Top Intro Banner */}
+                  <div className="p-4 rounded-3xl bg-gradient-to-r from-rose-50 via-pink-50 to-indigo-50 border border-rose-200">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                          <Users className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>ইউজার কন্ট্রোল, ব্যালেন্স এড মানি ও ব্যান ব্যবস্থাপনা</span>
+                            <span className="text-[10px] bg-rose-200 text-rose-900 font-bold px-2 py-0.5 rounded-full">
+                              ফুল কন্ট্রোল
+                            </span>
+                          </h4>
+                          <p className="text-[11px] text-slate-600 mt-0.5">
+                            সকল নিবন্ধিত ব্যবহারকারীদের তথ্য দেখুন, কয়েন বা টাকা এড মানি করে দিন এবং প্রয়োজন অনুযায়ী সাময়িক বন্ধ বা ব্যান করুন।
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          adminUserService.syncFromFirestore();
+                          onShowToast?.('ইউজার তালিকা রিফ্রেশ করা হয়েছে 🔄', '👥');
+                        }}
+                        className="px-3 py-1.5 rounded-xl border border-rose-300 bg-white hover:bg-rose-50 text-rose-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs shrink-0"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">রিফ্রেশ</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Summary Metric Cards */}
+                  {(() => {
+                    const totalUsers = managedUsers.length;
+                    const activeCount = managedUsers.filter((u) => u.status === 'active').length;
+                    const suspendedCount = managedUsers.filter((u) => u.status === 'suspended').length;
+                    const bannedCount = managedUsers.filter((u) => u.status === 'banned').length;
+                    const totalCoinsPool = managedUsers.reduce((sum, u) => sum + (u.coins || 0), 0);
+                    const totalBdtEquivalent = (totalCoinsPool / 100).toFixed(2);
+
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+                          <span className="text-[10px] text-slate-500 font-bold block uppercase">
+                            মোট ইউজার
+                          </span>
+                          <span className="text-xl font-black text-slate-900">
+                            {totalUsers}
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">নিবন্ধিত প্রোফাইল</span>
+                        </div>
+
+                        <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 shadow-2xs">
+                          <span className="text-[10px] text-emerald-700 font-bold block uppercase">
+                            সক্রিয় একাউন্ট
+                          </span>
+                          <span className="text-xl font-black text-emerald-700">
+                            {activeCount}
+                          </span>
+                          <span className="text-[10px] text-emerald-600 block">স্বাভাবিক ব্যবহারকারী</span>
+                        </div>
+
+                        <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 shadow-2xs">
+                          <span className="text-[10px] text-amber-800 font-bold block uppercase">
+                            স্থগিত ও ব্যান
+                          </span>
+                          <span className="text-xl font-black text-amber-900">
+                            {suspendedCount + bannedCount}
+                          </span>
+                          <span className="text-[10px] text-amber-700 block">
+                            স্থগিত: {suspendedCount} • ব্যান: {bannedCount}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200 shadow-2xs">
+                          <span className="text-[10px] text-indigo-700 font-bold block uppercase">
+                            মোট কয়েন পুল
+                          </span>
+                          <span className="text-xl font-black text-indigo-900 font-mono">
+                            {totalCoinsPool}
+                          </span>
+                          <span className="text-[10px] text-indigo-600 block font-bold">
+                            ৳ {totalBdtEquivalent} টাকা মান
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Search & Status Filters */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
+                    <div className="relative w-full sm:w-72">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        placeholder="নাম, মোবাইল বা ইমেইল দিয়ে খুঁজুন..."
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                      {[
+                        { key: 'all', label: 'সকল' },
+                        { key: 'active', label: 'সক্রিয়' },
+                        { key: 'suspended', label: 'স্থগিত' },
+                        { key: 'banned', label: 'ব্যান' },
+                      ].map((tab) => (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setUserStatusFilter(tab.key as any)}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer whitespace-nowrap ${
+                            userStatusFilter === tab.key
+                              ? 'bg-rose-600 text-white shadow-xs'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Filtered Users List */}
+                  {(() => {
+                    const cleanQuery = userSearchQuery.trim().toLowerCase();
+                    const filteredUsers = managedUsers.filter((u) => {
+                      if (userStatusFilter !== 'all' && u.status !== userStatusFilter) {
+                        return false;
+                      }
+                      if (!cleanQuery) return true;
+                      const matchName = u.displayName.toLowerCase().includes(cleanQuery);
+                      const matchPhone = u.phoneNumber ? u.phoneNumber.includes(cleanQuery) : false;
+                      const matchEmail = u.email ? u.email.toLowerCase().includes(cleanQuery) : false;
+                      return matchName || matchPhone || matchEmail;
+                    });
+
+                    if (filteredUsers.length === 0) {
+                      return (
+                        <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-3xl text-slate-500 space-y-2">
+                          <Users className="w-8 h-8 text-slate-300 mx-auto" />
+                          <p className="text-sm font-bold">কোন ব্যবহারকারী পাওয়া যায়নি</p>
+                          <p className="text-xs">অনুসন্ধান বা ফিল্টার পরিবর্তন করে পুনরায় চেষ্টা করুন।</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-3">
+                        {filteredUsers.map((userItem) => {
+                          const today = new Date().toISOString().split('T')[0];
+                          const hasSpunToday = userItem.lastSpinDate === today;
+                          const bdtVal = (userItem.coins / 100).toFixed(2);
+
+                          return (
+                            <div
+                              key={userItem.uid}
+                              className={`p-4 rounded-2xl border transition bg-white shadow-2xs space-y-3 ${
+                                userItem.status === 'banned'
+                                  ? 'border-rose-300 bg-rose-50/20'
+                                  : userItem.status === 'suspended'
+                                  ? 'border-amber-300 bg-amber-50/20'
+                                  : 'border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              {/* User Header */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 shadow-xs ${
+                                      userItem.status === 'banned'
+                                        ? 'bg-rose-600'
+                                        : userItem.status === 'suspended'
+                                        ? 'bg-amber-600'
+                                        : 'bg-gradient-to-tr from-pink-600 to-indigo-600'
+                                    }`}
+                                  >
+                                    {userItem.displayName.charAt(0) || 'U'}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h5 className="font-extrabold text-sm text-slate-900">
+                                        {userItem.displayName}
+                                      </h5>
+                                      {userItem.phoneNumber === '01868775577' && (
+                                        <span className="text-[10px] bg-rose-100 text-rose-800 font-extrabold px-2 py-0.5 rounded-full">
+                                          অ্যাডমিন 👑
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-1.5 py-0.5 rounded-md">
+                                        {userItem.authProvider === 'google' ? 'Google' : 'মোবাইল'}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 font-mono">
+                                      {userItem.phoneNumber || userItem.email || 'তথ্য অপ্রাপ্য'}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Status Badge */}
+                                <div className="flex items-center gap-2">
+                                  {userItem.status === 'active' && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-extrabold">
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                      <span>সক্রিয় (Active)</span>
+                                    </span>
+                                  )}
+                                  {userItem.status === 'suspended' && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 text-[11px] font-extrabold">
+                                      <Clock className="w-3 h-3 text-amber-600" />
+                                      <span>সাময়িক স্থগিত (Suspended)</span>
+                                    </span>
+                                  )}
+                                  {userItem.status === 'banned' && (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-900 text-[11px] font-extrabold">
+                                      <Ban className="w-3 h-3 text-rose-600" />
+                                      <span>স্থায়ী ব্যান (Banned)</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Ban / Suspension Reason Box */}
+                              {userItem.banReason && (
+                                <div className="p-2.5 rounded-xl bg-rose-50/80 border border-rose-200 text-xs text-rose-900 flex items-start gap-2">
+                                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="font-bold">স্থগিত/ব্যানের কারণ: </span>
+                                    <span>{userItem.banReason}</span>
+                                    {userItem.suspendedUntil && (
+                                      <span className="text-[10px] text-rose-700 block mt-0.5">
+                                        মেয়াদকাল: {new Date(userItem.suspendedUntil).toLocaleDateString('bn-BD')} পর্যন্ত
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Balance & Spin details + Action Buttons */}
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+                                <div className="flex flex-wrap items-center gap-3 text-xs">
+                                  <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2">
+                                    <Coins className="w-4 h-4 text-amber-600" />
+                                    <span className="text-slate-600">ব্যালেন্স:</span>
+                                    <strong className="text-amber-900 font-mono text-sm">
+                                      {userItem.coins}
+                                    </strong>
+                                    <span className="text-[11px] text-amber-700 font-bold">
+                                      কয়েন (৳{bdtVal})
+                                    </span>
+                                  </div>
+
+                                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-1.5 text-[11px]">
+                                    <span className="text-slate-500">স্পিন:</span>
+                                    <span className={hasSpunToday ? 'text-slate-500 font-medium' : 'text-emerald-700 font-bold'}>
+                                      {hasSpunToday ? 'আজ সমাপ্ত' : 'আজ এখনও স্পিন করেনি'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Actions Group */}
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {/* Add Money Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedUserForMoney(userItem);
+                                      setAddMoneyCoins(500);
+                                      setAddMoneyNote('বিকাশ মার্চেন্ট TrxID ভেরিফাইড এড মানি');
+                                    }}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1 shadow-xs cursor-pointer transition active:scale-95"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span>এড মানি (+/-)</span>
+                                  </button>
+
+                                  {/* Status / Ban / Suspend Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedUserForStatus(userItem);
+                                      setEditStatusTarget(userItem.status);
+                                      setEditBanReason(userItem.banReason || '');
+                                      setEditSuspensionDays(7);
+                                    }}
+                                    className="px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs flex items-center gap-1 cursor-pointer transition"
+                                  >
+                                    <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                                    <span>স্ট্যাটাস পরিবর্তন</span>
+                                  </button>
+
+                                  {/* Reset Spin */}
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      await adminUserService.resetDailySpin(userItem.uid);
+                                      onShowToast?.(`${userItem.displayName}-এর আজকের স্পিন রিসেট করা হয়েছে 🎡`, '🔄');
+                                    }}
+                                    className="px-2.5 py-1.5 rounded-xl border border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-bold text-xs flex items-center gap-1 cursor-pointer transition"
+                                    title="আজকের স্পিন রিসেট করুন যাতে ইউজার আবারও স্পিন করতে পারে"
+                                  >
+                                    <RotateCcw className="w-3.5 h-3.5" />
+                                    <span>স্পিন রিসেট</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  {/* SUB-MODAL 1: ADD MONEY POPUP */}
+                  {selectedUserForMoney && (
+                    <div className="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 animate-in fade-in duration-150">
+                      <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black">
+                              ৳
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-sm text-slate-900">
+                                ব্যালেন্স এড মানি / কয়েন সমন্বয়
+                              </h4>
+                              <p className="text-[11px] text-slate-500">
+                                ইউজার: {selectedUserForMoney.displayName}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForMoney(null)}
+                            className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center cursor-pointer"
+                          >
+                            <X className="w-4 h-4 text-slate-500" />
+                          </button>
+                        </div>
+
+                        {/* Current User Balance Indicator */}
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs">
+                          <span className="text-amber-900 font-medium">বর্তমান ব্যালেন্স:</span>
+                          <span className="font-black text-amber-950 font-mono text-sm">
+                            {selectedUserForMoney.coins} কয়েন (৳{(selectedUserForMoney.coins / 100).toFixed(2)})
+                          </span>
+                        </div>
+
+                        {/* Quick Presets */}
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700 block">
+                            দ্রুত অ্যামাউন্ট নির্বাচন (১০০ কয়েন = ১ টাকা):
+                          </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { label: '+৫০ (৳০.৫০)', coins: 50 },
+                              { label: '+১০০ (৳১)', coins: 100 },
+                              { label: '+৫০০ (৳৫ = ১ PDF)', coins: 500 },
+                              { label: '+১০০০ (৳১০)', coins: 1000 },
+                              { label: '+২৫০০ (৳২৫)', coins: 2500 },
+                              { label: '-৫০০ (-৳৫)', coins: -500 },
+                            ].map((preset, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => setAddMoneyCoins(preset.coins)}
+                                className={`py-1.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                                  addMoneyCoins === preset.coins
+                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                                }`}
+                              >
+                                {preset.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Custom Coin Input */}
+                        <div>
+                          <label className="text-xs font-bold text-slate-800 block mb-1">
+                            কয়েনের পরিমাণ (Coins):
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={addMoneyCoins}
+                              onChange={(e) => setAddMoneyCoins(Number(e.target.value))}
+                              placeholder="যেমন: 500"
+                              className="w-full pl-3 pr-20 py-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                            />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-700">
+                              = ৳{(addMoneyCoins / 100).toFixed(2)} টাকা
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Admin Note Input */}
+                        <div>
+                          <label className="text-xs font-bold text-slate-800 block mb-1">
+                            এড মানির কারণ / বিকাশ TrxID ভেরিফিকেশন নোট:
+                          </label>
+                          <input
+                            type="text"
+                            value={addMoneyNote}
+                            onChange={(e) => setAddMoneyNote(e.target.value)}
+                            placeholder="যেমন: বিকাশ TrxID: BL6A8D2Q ভেরিফাইড ও অনুমোদিত"
+                            className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Submit Action */}
+                        <div className="flex items-center gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForMoney(null)}
+                            className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition"
+                          >
+                            বাতিল
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await adminUserService.addMoney(
+                                selectedUserForMoney.uid,
+                                addMoneyCoins,
+                                addMoneyNote || 'অ্যাডমিন কর্তৃক ব্যালেন্স এড মানি'
+                              );
+                              onShowToast?.(
+                                `${selectedUserForMoney.displayName}-কে ${addMoneyCoins} কয়েন (${(addMoneyCoins / 100).toFixed(2)} টাকা) সফলভাবে এড করা হয়েছে! 💰`,
+                                '✅'
+                              );
+                              setSelectedUserForMoney(null);
+                            }}
+                            className="flex-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md cursor-pointer transition flex items-center justify-center gap-1.5"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>এড মানি নিশ্চিত করুন</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUB-MODAL 2: STATUS UPDATE (ACTIVE / SUSPEND / BAN) */}
+                  {selectedUserForStatus && (
+                    <div className="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 animate-in fade-in duration-150">
+                      <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-black">
+                              <ShieldAlert className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-sm text-slate-900">
+                                অ্যাকাউন্ট স্ট্যাটাস ও এক্সেস কন্ট্রোল
+                              </h4>
+                              <p className="text-[11px] text-slate-500">
+                                ইউজার: {selectedUserForStatus.displayName}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForStatus(null)}
+                            className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center cursor-pointer"
+                          >
+                            <X className="w-4 h-4 text-slate-500" />
+                          </button>
+                        </div>
+
+                        {/* Status Options */}
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-slate-800 block">
+                            স্ট্যাটাস নির্বাচন করুন:
+                          </label>
+
+                          <label
+                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                              editStatusTarget === 'active'
+                                ? 'bg-emerald-50/80 border-emerald-400 text-emerald-950 font-bold'
+                                : 'bg-white border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="userStatusRadio"
+                              checked={editStatusTarget === 'active'}
+                              onChange={() => setEditStatusTarget('active')}
+                              className="accent-emerald-600 w-4 h-4"
+                            />
+                            <div className="text-xs">
+                              <p className="font-bold">সক্রিয় ও সচল (Active)</p>
+                              <p className="text-[11px] text-slate-500 font-normal">
+                                ইউজার স্বাভাবিকভাবে স্পিন, ডাউনলোড ও সকল টুলস ব্যবহার করতে পারবেন।
+                              </p>
+                            </div>
+                          </label>
+
+                          <label
+                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                              editStatusTarget === 'suspended'
+                                ? 'bg-amber-50/80 border-amber-400 text-amber-950 font-bold'
+                                : 'bg-white border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="userStatusRadio"
+                              checked={editStatusTarget === 'suspended'}
+                              onChange={() => setEditStatusTarget('suspended')}
+                              className="accent-amber-600 w-4 h-4"
+                            />
+                            <div className="text-xs">
+                              <p className="font-bold">সাময়িক বন্ধ / স্থগিত (Suspended)</p>
+                              <p className="text-[11px] text-slate-500 font-normal">
+                                নির্দিষ্ট মেয়াদের জন্য স্পিন ও ডাউনলোড সুবিধা স্থগিত থাকবে।
+                              </p>
+                            </div>
+                          </label>
+
+                          <label
+                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
+                              editStatusTarget === 'banned'
+                                ? 'bg-rose-50/80 border-rose-400 text-rose-950 font-bold'
+                                : 'bg-white border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="userStatusRadio"
+                              checked={editStatusTarget === 'banned'}
+                              onChange={() => setEditStatusTarget('banned')}
+                              className="accent-rose-600 w-4 h-4"
+                            />
+                            <div className="text-xs">
+                              <p className="font-bold">স্থায়ীভাবে নিষিদ্ধ (Banned)</p>
+                              <p className="text-[11px] text-slate-500 font-normal">
+                                একাউন্ট সম্পূর্ণ ব্লক থাকবে এবং কোনো সেবা গ্রহণ করতে পারবে না।
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+
+                        {/* If Suspended, duration selector */}
+                        {editStatusTarget === 'suspended' && (
+                          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 space-y-1.5">
+                            <label className="text-xs font-bold text-amber-900 block">
+                              স্থগিত রাখার মেয়াদকাল:
+                            </label>
+                            <div className="grid grid-cols-4 gap-2">
+                              {[3, 7, 15, 30].map((days) => (
+                                <button
+                                  key={days}
+                                  type="button"
+                                  onClick={() => setEditSuspensionDays(days)}
+                                  className={`py-1.5 text-xs font-bold rounded-lg border transition cursor-pointer ${
+                                    editSuspensionDays === days
+                                      ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                                      : 'bg-white border-amber-300 text-amber-900 hover:bg-amber-100'
+                                  }`}
+                                >
+                                  {days} দিন
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Reason Field */}
+                        <div>
+                          <label className="text-xs font-bold text-slate-800 block mb-1">
+                            কারণ (ইউজারকে দেখানো হবে):
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={editBanReason}
+                            onChange={(e) => setEditBanReason(e.target.value)}
+                            placeholder="যেমন: ভুল TrxID বারবার সাবমিট করায় একাউন্ট সাময়িক স্থগিত রাখা হয়েছে।"
+                            className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Submit Action */}
+                        <div className="flex items-center gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForStatus(null)}
+                            className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition"
+                          >
+                            বাতিল
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              let suspendedUntilDate: string | null = null;
+                              if (editStatusTarget === 'suspended') {
+                                const d = new Date();
+                                d.setDate(d.getDate() + editSuspensionDays);
+                                suspendedUntilDate = d.toISOString();
+                              }
+                              await adminUserService.updateUserStatus(
+                                selectedUserForStatus.uid,
+                                editStatusTarget,
+                                editBanReason.trim() || undefined,
+                                suspendedUntilDate
+                              );
+                              onShowToast?.(
+                                `${selectedUserForStatus.displayName}-এর স্ট্যাটাস "${editStatusTarget}" এ পরিবর্তন করা হয়েছে!`,
+                                editStatusTarget === 'active' ? '✅' : '⚠️'
+                              );
+                              setSelectedUserForStatus(null);
+                            }}
+                            className="flex-2 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md cursor-pointer transition flex items-center justify-center gap-1.5"
+                          >
+                            <Check className="w-4 h-4 text-emerald-400" />
+                            <span>স্ট্যাটাস আপডেট করুন</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

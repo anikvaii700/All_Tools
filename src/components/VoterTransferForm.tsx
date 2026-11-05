@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
+import { DownloadPaywallModal } from './DownloadPaywallModal';
 
 interface VoterTransferFormProps {
   onBackToHub: () => void;
@@ -224,13 +225,31 @@ export const VoterTransferForm: React.FC<VoterTransferFormProps> = ({
     }
   };
 
+  // 2 BDT & Mandatory Auth Download Paywall
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [isFormUnlockedInSession, setIsFormUnlockedInSession] = useState(false);
+
+  const executeWithPaywall = (action: () => void) => {
+    if (isFormUnlockedInSession) {
+      action();
+      return;
+    }
+    setPendingAction(() => action);
+    setIsPaywallOpen(true);
+  };
+
   // Print Handler
-  const handlePrint = () => {
+  const performPrint = () => {
     window.print();
   };
 
+  const handlePrint = () => {
+    executeWithPaywall(performPrint);
+  };
+
   // PDF Export Handler using html2canvas and jsPDF
-  const handleDownloadPdf = async () => {
+  const performDownloadPdf = async () => {
     if (!page1Ref.current || !page2Ref.current) {
       onShowToast('ফরম লোড হওয়া পর্যন্ত অপেক্ষা করুন', '⚠️');
       return;
@@ -285,6 +304,10 @@ export const VoterTransferForm: React.FC<VoterTransferFormProps> = ({
     } finally {
       setIsGeneratingPdf(false);
     }
+  };
+
+  const handleDownloadPdf = () => {
+    executeWithPaywall(performDownloadPdf);
   };
 
   const handleResetForm = () => {
@@ -1405,6 +1428,22 @@ export const VoterTransferForm: React.FC<VoterTransferFormProps> = ({
           </div>
         </div>
       )}
+
+      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle={`ফরম-১৩ ভোটার এলাকা স্থানান্তর (${formData.applicantName || 'আবেদনকারী'})`}
+        documentTypeTag="২-পৃষ্ঠা লিগ্যাল অফিশিয়াল ভোটার স্থানান্তর ফরম"
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsFormUnlockedInSession(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
+      />
     </div>
   );
 };

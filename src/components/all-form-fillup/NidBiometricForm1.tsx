@@ -19,6 +19,7 @@ import {
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { toBanglaDigits } from './numberUtils';
+import { DownloadPaywallModal } from '../DownloadPaywallModal';
 
 interface NidBiometricForm1Props {
   onBackToHub?: () => void;
@@ -247,13 +248,31 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
     }
   };
 
+  // 2 BDT & Mandatory Auth Download Paywall
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [isFormUnlockedInSession, setIsFormUnlockedInSession] = useState(false);
+
+  const executeWithPaywall = (action: () => void) => {
+    if (isFormUnlockedInSession) {
+      action();
+      return;
+    }
+    setPendingAction(() => action);
+    setIsPaywallOpen(true);
+  };
+
   // Print Handler
-  const handlePrint = () => {
+  const performPrint = () => {
     window.print();
   };
 
+  const handlePrint = () => {
+    executeWithPaywall(performPrint);
+  };
+
   // PDF Export
-  const handleDownloadPdf = async () => {
+  const performDownloadPdf = async () => {
     if (!previewRef.current) return;
     try {
       setIsExportingPdf(true);
@@ -290,6 +309,10 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
     } finally {
       setIsExportingPdf(false);
     }
+  };
+
+  const handleDownloadPdf = () => {
+    executeWithPaywall(performDownloadPdf);
   };
 
   const handleReset = () => {
@@ -611,16 +634,16 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 pb-1 border-b border-slate-100 flex items-center justify-between">
                 <span>সরকারি ফি ও সংযুক্ত দলিলের বিবরণ</span>
                 <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  টোটাল ফ্রি (০ টাকা)
+                  সরকারি ফি নেই (০ টাকা)
                 </span>
               </h4>
 
               <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex items-start gap-2.5 text-xs text-emerald-950 font-bold">
                 <span className="text-base leading-none">✅</span>
                 <div className="space-y-0.5">
-                  <div className="text-emerald-900 font-black">বায়োমেট্রিকের কোনো ফি লাগে না — সম্পূর্ণ ফ্রি!</div>
+                  <div className="text-emerald-900 font-black">বায়োমেট্রিকের জন্য কোনো সরকারি ফি লাগে না (সরকারি ফি শূন্য)!</div>
                   <p className="text-[11px] font-normal text-emerald-800 leading-relaxed">
-                    জাতীয় পরিচয়পত্রের ১০ আঙুলের ছাপ ও আইরিশ আপডেটের জন্য কোনো প্রকার সরকারি ফি বা চালান লাগে না। এটি নির্বাচন কমিশনের একটি সম্পূর্ণ ফি-মুক্ত সেবা।
+                    জাতীয় পরিচয়পত্রের ১০ আঙুলের ছাপ ও আইরিশ আপডেটের জন্য কোনো প্রকার সরকারি ফি বা চালান লাগে না। এটি নির্বাচন কমিশনের সরকারি নির্দেশনায় বিনামূল্যে নির্ধারিত।
                   </p>
                 </div>
               </div>
@@ -1075,6 +1098,22 @@ export const NidBiometricForm1: React.FC<NidBiometricForm1Props> = ({
           </div>
         </div>
       </div>
+
+      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle={`ফরম ১ বায়োমেট্রিক আপডেট (${formData.applicantName || 'আবেদনকারী'})`}
+        documentTypeTag="জাতীয় পরিচয়পত্র বায়োমেট্রিক ও ছবি আপডেট ফরম (A4)"
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsFormUnlockedInSession(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
+      />
     </div>
   );
 };

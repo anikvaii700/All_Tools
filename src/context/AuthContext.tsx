@@ -15,6 +15,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../firebase';
+import { adminUserService } from '../services/adminUserService';
 
 export interface UserProfile {
   uid: string;
@@ -26,6 +27,10 @@ export interface UserProfile {
   totalEarnedCoins: number;
   lastSpinDate: string | null;
   authProvider: 'google' | 'phone' | 'guest';
+  status?: 'active' | 'suspended' | 'banned';
+  banReason?: string;
+  suspendedUntil?: string | null;
+  role?: 'admin' | 'user';
 }
 
 export interface CoinTransaction {
@@ -98,25 +103,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: fbUser.email || data.email || null,
               phoneNumber: fbUser.phoneNumber || data.phoneNumber || null,
               photoURL: fbUser.photoURL || data.photoURL || null,
-              coins: typeof data.coins === 'number' ? data.coins : 200,
-              totalEarnedCoins: typeof data.totalEarnedCoins === 'number' ? data.totalEarnedCoins : 200,
+              coins: typeof data.coins === 'number' ? data.coins : 50,
+              totalEarnedCoins: typeof data.totalEarnedCoins === 'number' ? data.totalEarnedCoins : 50,
               lastSpinDate: data.lastSpinDate || null,
               authProvider: 'google',
+              status: data.status || 'active',
+              banReason: data.banReason || undefined,
+              suspendedUntil: data.suspendedUntil || null,
             };
             setUser(profile);
             localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
+            adminUserService.syncCurrentUser(profile);
           } else {
-            // New Google user: give initial 150 welcome bonus coins
+            // New Google user: give initial 50 points welcome bonus as requested
             const newProfile: UserProfile = {
               uid: fbUser.uid,
               displayName: fbUser.displayName || 'ব্যবহারকারী',
               email: fbUser.email || null,
               phoneNumber: fbUser.phoneNumber || null,
               photoURL: fbUser.photoURL || null,
-              coins: 150,
-              totalEarnedCoins: 150,
+              coins: 50,
+              totalEarnedCoins: 50,
               lastSpinDate: null,
               authProvider: 'google',
+              status: 'active',
             };
             await setDoc(userRef, {
               userId: fbUser.uid,
@@ -127,11 +137,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               coins: newProfile.coins,
               totalEarnedCoins: newProfile.totalEarnedCoins,
               lastSpinDate: '',
+              status: 'active',
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             });
             setUser(newProfile);
             localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newProfile));
+            adminUserService.syncCurrentUser(newProfile);
           }
         } catch (err) {
           handleFirestoreError(err, OperationType.GET, `users/${fbUser.uid}`);
@@ -142,12 +154,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: fbUser.email || null,
             phoneNumber: fbUser.phoneNumber || null,
             photoURL: fbUser.photoURL || null,
-            coins: user?.coins || 150,
-            totalEarnedCoins: user?.totalEarnedCoins || 150,
+            coins: user?.coins || 50,
+            totalEarnedCoins: user?.totalEarnedCoins || 50,
             lastSpinDate: user?.lastSpinDate || null,
             authProvider: 'google',
+            status: 'active',
           };
           setUser(fallbackProfile);
+          adminUserService.syncCurrentUser(fallbackProfile);
         }
 
         // Realtime listener for user doc updates
@@ -164,8 +178,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   totalEarnedCoins: typeof d.totalEarnedCoins === 'number' ? d.totalEarnedCoins : prev.totalEarnedCoins,
                   lastSpinDate: d.lastSpinDate || prev.lastSpinDate,
                   displayName: d.displayName || prev.displayName,
+                  status: d.status || prev.status || 'active',
+                  banReason: d.banReason || prev.banReason,
+                  suspendedUntil: d.suspendedUntil || prev.suspendedUntil,
                 };
                 localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated));
+                adminUserService.syncCurrentUser(updated);
                 return updated;
               });
             }
@@ -226,30 +244,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const phoneUid = `phone_${cleanPhone.replace('+', '')}`;
       const userRef = doc(db, 'users', phoneUid);
 
-      let currentCoins = 150;
-      let totalCoins = 150;
+      let currentCoins = 50;
+      let totalCoins = 50;
       let displayName = name || `ইউজার ${cleanPhone.slice(-4)}`;
       let lastSpinDate: string | null = null;
+      let status: 'active' | 'suspended' | 'banned' = 'active';
+      let banReason: string | undefined = undefined;
+      let suspendedUntil: string | null = null;
 
       try {
         const snap = await getDoc(userRef);
         if (snap.exists()) {
           const data = snap.data();
-          currentCoins = data.coins ?? 150;
-          totalCoins = data.totalEarnedCoins ?? 150;
+          currentCoins = data.coins ?? 50;
+          totalCoins = data.totalEarnedCoins ?? 50;
           displayName = data.displayName || displayName;
           lastSpinDate = data.lastSpinDate || null;
+          status = data.status || 'active';
+          banReason = data.banReason;
+          suspendedUntil = data.suspendedUntil || null;
         } else {
-          // New phone user
+          // New phone user: 50 points signup bonus
           await setDoc(userRef, {
             userId: phoneUid,
             displayName,
             email: '',
             phoneNumber: cleanPhone,
             photoURL: '',
-            coins: 150,
-            totalEarnedCoins: 150,
+            coins: 50,
+            totalEarnedCoins: 50,
             lastSpinDate: '',
+            status: 'active',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           });
@@ -269,10 +294,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         totalEarnedCoins: totalCoins,
         lastSpinDate,
         authProvider: 'phone',
+        status,
+        banReason,
+        suspendedUntil,
       };
 
       setUser(phoneProfile);
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(phoneProfile));
+      adminUserService.syncCurrentUser(phoneProfile);
       return true;
     } catch (err) {
       console.error('Phone login error:', err);
@@ -395,6 +424,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const canSpinToday = (): boolean => {
     const today = getTodayDateString();
     if (user) {
+      if (user.status === 'banned' || user.status === 'suspended') {
+        return false;
+      }
       return user.lastSpinDate !== today;
     }
     const guestLastSpin = localStorage.getItem(LOCAL_STORAGE_SPIN_KEY);

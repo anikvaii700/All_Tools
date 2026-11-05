@@ -562,7 +562,7 @@ export const MobileInstallModal: React.FC<MobileInstallModalProps> = ({
         <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
           <div className="flex items-center gap-1.5">
             <Info className="w-4 h-4 text-slate-400" />
-            <span>কোনো বিজ্ঞাপন বা সাবস্ক্রিপশন নেই • ১০০% ফ্রি</span>
+            <span>কোনো বিজ্ঞাপন বা মাসিক সাবস্ক্রিপশন নেই • সুরক্ষিত ডিজিটাল সেবা</span>
           </div>
           <button
             type="button"

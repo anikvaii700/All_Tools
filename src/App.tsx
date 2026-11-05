@@ -595,13 +595,13 @@ export default function App() {
     {
       id: 'cv-maker',
       title: 'The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার)',
-      badge: '📄 ১০০টি ফ্রি টেমপ্লেট',
+      badge: '📄 ১০০টি প্রফেশনাল টেমপ্লেট',
       badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
       category: 'calculator',
       iconBg: 'from-rose-500 via-pink-600 to-indigo-600',
       icon: <FileText className="w-6 h-6 text-white" />,
       description:
-        '১০০টি প্রফেশনাল CV ও রেজিউম টেমপ্লেট থেকে পছন্দ করুন, তথ্য এডিট করুন এবং সম্পূর্ণ ফ্রিতে ওয়াটারমার্ক ছাড়া প্রফেশনাল PDF ডাউনলোড ও প্রিন্ট করুন! ATS-ফ্রেন্ডলি ও ইউরোপাস স্টাইল সহ।',
+        '১০০টি প্রফেশনাল CV ও রেজিউম টেমপ্লেট থেকে পছন্দ করুন, তথ্য এডিট করুন এবং ওয়াটারমার্ক ছাড়া প্রফেশনাল PDF ডাউনলোড ও প্রিন্ট করুন! ATS-ফ্রেন্ডলি ও ইউরোপাস স্টাইল সহ।',
       deviceTarget: 'desktop',
       deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (প্রফেশনাল সিভি ও A4 প্রিন্ট)',
       keywords: [
@@ -1544,8 +1544,8 @@ export default function App() {
               <CheckCircle className="w-6 h-6 text-rose-500" />
               <span>১০০%</span>
             </div>
-            <div className="text-xs font-bold text-slate-800">সম্পূর্ণ ফ্রি</div>
-            <p className="text-[11px] text-slate-500 mt-0.5">কোনো সাবস্ক্রিপশন নেই</p>
+            <div className="text-xs font-bold text-slate-800">সুরক্ষিত ও ডিজিটাল</div>
+            <p className="text-[11px] text-slate-500 mt-0.5">সহজ ও বিশ্বস্ত সেবা</p>
           </div>
 
           <div>

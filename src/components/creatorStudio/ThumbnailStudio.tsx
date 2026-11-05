@@ -29,7 +29,7 @@ export const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '1:1' | '9:16' | '4:5'>('16:9');
   const [headline, setHeadline] = useState(initialTitle || 'মোবাইল দিয়ে ভিডিও এডিটিং');
   const [subheadline, setSubheadline] = useState('মাত্র ৫ মিনিটে শিখুন গোপন কৌশল');
-  const [badgeText, setBadgeText] = useState('🔥 ১০০% ফ্রি');
+  const [badgeText, setBadgeText] = useState('🔥 স্পেশাল গাইড');
   const [bgGradient, setBgGradient] = useState<'sunset' | 'cyber' | 'emerald' | 'dark' | 'royal'>('cyber');
   const [textColor, setTextColor] = useState('#FFFFFF');
   const [badgeBg, setBadgeBg] = useState('#EF4444');
@@ -123,7 +123,7 @@ export const ThumbnailStudio: React.FC<ThumbnailStudioProps> = ({
       }
     }
 
-    // Draw Badge (e.g. "🔥 ১০০% ফ্রি")
+    // Draw Badge (e.g. "🔥 স্পেশাল গাইড")
     if (badgeText.trim()) {
       ctx.save();
       const badgeX = 60;

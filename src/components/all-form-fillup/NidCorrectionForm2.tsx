@@ -18,6 +18,7 @@ import {
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { toBanglaDigits } from './numberUtils';
+import { DownloadPaywallModal } from '../DownloadPaywallModal';
 
 interface NidCorrectionForm2Props {
   onBackToHub?: () => void;
@@ -276,13 +277,31 @@ export const NidCorrectionForm2: React.FC<NidCorrectionForm2Props> = ({
     }
   };
 
+  // 2 BDT & Mandatory Auth Download Paywall
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [isFormUnlockedInSession, setIsFormUnlockedInSession] = useState(false);
+
+  const executeWithPaywall = (action: () => void) => {
+    if (isFormUnlockedInSession) {
+      action();
+      return;
+    }
+    setPendingAction(() => action);
+    setIsPaywallOpen(true);
+  };
+
   // Native Print
-  const handlePrint = () => {
+  const performPrint = () => {
     window.print();
   };
 
+  const handlePrint = () => {
+    executeWithPaywall(performPrint);
+  };
+
   // PDF Download
-  const handleDownloadPdf = async () => {
+  const performDownloadPdf = async () => {
     if (!previewRef.current) return;
     try {
       setIsExportingPdf(true);
@@ -327,6 +346,10 @@ export const NidCorrectionForm2: React.FC<NidCorrectionForm2Props> = ({
     } finally {
       setIsExportingPdf(false);
     }
+  };
+
+  const handleDownloadPdf = () => {
+    executeWithPaywall(performDownloadPdf);
   };
 
   return (
@@ -1113,6 +1136,22 @@ export const NidCorrectionForm2: React.FC<NidCorrectionForm2Props> = ({
           </div>
         </div>
       </div>
+
+      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle="ফরম ২ সংশোধন এর ফরম ফিলাপ"
+        documentTypeTag="জাতীয় পরিচয়পত্র সংশোধন আবেদন (A4 ফরম)"
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsFormUnlockedInSession(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
+      />
     </div>
   );
 };

@@ -82,7 +82,7 @@ export const PosterCanvasRenderer = forwardRef<PosterRendererHandle, PosterCanva
         if (isCancelled) return;
 
         // 3. Render Frame Decorative Elements & Overlays
-        renderFrameDecorations(ctx, width, height, frame, aspectRatio);
+        renderFrameDecorations(ctx, width, height, frame, custom, aspectRatio);
 
         // 4. Render Bengali Text (Headline, Quotes, Author, Badges)
         renderTypography(ctx, width, height, frame, custom, aspectRatio);
@@ -808,6 +808,7 @@ export const PosterCanvasRenderer = forwardRef<PosterRendererHandle, PosterCanva
       w: number,
       h: number,
       f: FrameTemplate,
+      c: PosterCustomization,
       _ar: AspectRatio
     ) => {
       ctx.save();

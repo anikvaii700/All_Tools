@@ -265,7 +265,7 @@ export const AgeCalculator: React.FC<AgeCalculatorProps> = ({ onBackToHub, onSho
     ctx.fillStyle = '#a7f3d0';
     ctx.font = 'bold 15px "Hind Siliguri", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('The MoSaFa Tools • সকল ফ্রি অনলাইন টুলস পোর্টাল', W / 2, 730);
+    ctx.fillText('The MoSaFa Tools • আধুনিক অনলাইন টুলস পোর্টাল', W / 2, 730);
 
     const link = document.createElement('a');
     link.download = `MoSaFa-Age-Card-${birthYear}-${Date.now()}.png`;

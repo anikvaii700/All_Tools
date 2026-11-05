@@ -17,7 +17,7 @@ export const ToolsNoticeBanner: React.FC<ToolsNoticeBannerProps> = ({ onOpenAdmi
   const title = config.noticeTitle || 'The MoSaFa Tools — গুরুত্বপূর্ণ নোটিশ ও তথ্যাবলি';
   const content =
     config.noticeContent ||
-    'আমাদের সকল ২৩টি অনলাইন ডিজিটাল টুলস সম্পূর্ণ ফ্রি ও মোবাইল ফ্রেন্ডলি।';
+    'আমাদের সকল ২৩টি অনলাইন ডিজিটাল টুলস অত্যন্ত সুরক্ষিত, নির্ভরযোগ্য ও মোবাইল ফ্রেন্ডলি।';
   const fullNoticeText = `${title} : ${content}`;
 
   const bgColor = config.noticeBgColor || '#fff1f2';

@@ -234,7 +234,7 @@ export const BanglaStatusHub: React.FC<BanglaStatusHubProps> = ({
     // Footer Brand
     ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
     ctx.font = '400 16px "Hind Siliguri", sans-serif';
-    ctx.fillText('The MoSaFa Tools • সকল ফ্রি অনলাইন টুলস হাব', W / 2, H - 90);
+    ctx.fillText('The MoSaFa Tools • আধুনিক অনলাইন টুলস হাব', W / 2, H - 90);
   }, [isCardModalOpen, cardText, cardAuthor, cardTheme, cardFontSize]);
 
   const downloadCardImage = () => {

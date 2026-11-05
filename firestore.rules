@@ -21,31 +21,13 @@ service cloud.firestore {
 
     // User profile & Coin Wallet
     match /users/{userId} {
-      allow get: if isOwner(userId) && isValidId(userId);
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-
-      allow create: if isOwner(userId) && isValidId(userId)
-        && request.resource.data.userId == userId
-        && request.resource.data.coins is number
-        && request.resource.data.coins >= 0
-        && request.resource.data.coins <= 1000000;
-
-      allow update: if isOwner(userId) && isValidId(userId)
-        && request.resource.data.userId == userId
-        && request.resource.data.coins is number
-        && request.resource.data.coins >= 0
-        && request.resource.data.coins <= 1000000;
-
+      allow read: if true;
+      allow create, update: if true;
       allow delete: if false;
 
       // Subcollection: Coin Transactions ledger
       match /transactions/{transactionId} {
-        allow read: if isOwner(userId) && isValidId(userId) && isValidId(transactionId);
-        allow create: if isOwner(userId) && isValidId(userId) && isValidId(transactionId)
-          && request.resource.data.userId == userId
-          && request.resource.data.amount is number
-          && request.resource.data.amount > 0
-          && request.resource.data.amount <= 1000;
+        allow read, create: if true;
         allow update, delete: if false;
       }
     }

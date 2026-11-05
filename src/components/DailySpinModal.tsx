@@ -20,17 +20,17 @@ interface DailySpinModalProps {
   onOpenAuthWithBonus: (bonus: number) => void;
 }
 
-// Exactly 10 slices as requested: 100 to 1000 coins
+// Exactly 10 slices as requested: 20, 50, 100, 150, 200, 250, 300, 500, 700, 1000
 export const WHEEL_SLICES = [
-  { value: 100, label: '১০০', color: '#f43f5e', textColor: '#ffffff' },
-  { value: 200, label: '২০০', color: '#8b5cf6', textColor: '#ffffff' },
-  { value: 300, label: '৩০০', color: '#06b6d4', textColor: '#ffffff' },
-  { value: 400, label: '৪০০', color: '#10b981', textColor: '#ffffff' },
-  { value: 500, label: '৫০০', color: '#f59e0b', textColor: '#ffffff' },
-  { value: 600, label: '৬০০', color: '#ec4899', textColor: '#ffffff' },
-  { value: 700, label: '৭০০', color: '#6366f1', textColor: '#ffffff' },
-  { value: 800, label: '৮০০', color: '#14b8a6', textColor: '#ffffff' },
-  { value: 900, label: '৯০০', color: '#f97316', textColor: '#ffffff' },
+  { value: 20, label: '২০', color: '#f43f5e', textColor: '#ffffff' },
+  { value: 50, label: '৫০', color: '#8b5cf6', textColor: '#ffffff' },
+  { value: 100, label: '১০০', color: '#06b6d4', textColor: '#ffffff' },
+  { value: 150, label: '১৫০', color: '#10b981', textColor: '#ffffff' },
+  { value: 200, label: '২০০', color: '#f59e0b', textColor: '#ffffff' },
+  { value: 250, label: '২৫০', color: '#ec4899', textColor: '#ffffff' },
+  { value: 300, label: '৩০০', color: '#6366f1', textColor: '#ffffff' },
+  { value: 500, label: '৫০০', color: '#14b8a6', textColor: '#ffffff' },
+  { value: 700, label: '৭০০', color: '#f97316', textColor: '#ffffff' },
   { value: 1000, label: '১০০০', color: '#eab308', textColor: '#0f172a' },
 ];
 
@@ -112,16 +112,15 @@ export const DailySpinModal: React.FC<DailySpinModalProps> = ({
 
     if (!isLoggedIn) {
       // RULE FOR GUEST (NO ACCOUNT):
-      // Must ALWAYS land on the high slots ABOVE 600 (700, 800, 900, 1000)
-      // indices: 6 (700), 7 (800), 8 (900), 9 (1000)
-      const guestEligibleIndices = [6, 7, 8, 9];
+      // Guest sees high slots (500, 700, 1000) to urge signup bonus
+      const guestEligibleIndices = [7, 8, 9];
       chosenSliceIndex =
         guestEligibleIndices[Math.floor(Math.random() * guestEligibleIndices.length)];
     } else {
-      // RULE FOR LOGGED IN ACCOUNT:
-      // Must NEVER exceed 600: "তবে ৬০০ এর বেশি কারো যেন না লাগে। সর্বোচ্চ ৬০০ এর ঘর পর্যন্ত লাগবে বাকিগুলো লাগবে না।"
-      // Allowed slices: 100, 200, 300, 400, 500, 600 (indices 0 to 5)
-      const userEligibleIndices = [0, 1, 2, 3, 4, 5];
+      // RULE FOR LOGGED IN ACCOUNT (EXACT REQUIREMENT):
+      // একাউন্টধারীদের সর্বোচ্চ 300 পর্যন্ত জয়ী হবে এর বেশি হবে না!
+      // Allowed slices: 20, 50, 100, 150, 200, 250, 300 (indices 0 to 6)
+      const userEligibleIndices = [0, 1, 2, 3, 4, 5, 6];
       chosenSliceIndex =
         userEligibleIndices[Math.floor(Math.random() * userEligibleIndices.length)];
     }
@@ -199,8 +198,8 @@ export const DailySpinModal: React.FC<DailySpinModalProps> = ({
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
             {isLoggedIn
-              ? `স্বাগতম ${user?.displayName || ''}! প্রতিদিন ১ বার স্পিন করে ১০০ থেকে ১০০০ কয়েন পর্যন্ত জিতুন।`
-              : 'ফ্রি ভিজিটর স্পিন! ১০০ থেকে ১০০০ কয়েন জেতার বিশাল সুযোগ!'}
+              ? `স্বাগতম ${user?.displayName || ''}! প্রতিদিন ১ বার স্পিন করে ২০ থেকে ৩০০ পয়েন্ট পর্যন্ত জিতুন।`
+              : 'ভিজিটর স্পিন! ২০ থেকে ১০০০ পয়েন্ট জেতার সুযোগ!'}
           </p>
         </div>
 
@@ -357,9 +356,9 @@ export const DailySpinModal: React.FC<DailySpinModalProps> = ({
           )}
 
           {/* Value promise indicator */}
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-500 font-medium">
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-600 font-bold">
             <Coins className="w-3.5 h-3.5 text-amber-500" />
-            <span>প্রতি ১,০০০ কয়েন = ১০ টাকা নগদ / বিকাশ সমমূল্য (ভবিষ্যত ক্যাশআউট)</span>
+            <span>প্রতি ১০০ পয়েন্টের মূল্য ১ টাকা • ৫০০ কয়েন দিয়ে ১টি ৫ টাকার পিডিএফ ডাউনলোড করা যাবে</span>
           </div>
         </div>
       </div>

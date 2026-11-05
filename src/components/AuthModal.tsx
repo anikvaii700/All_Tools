@@ -105,7 +105,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold text-rose-100 mb-3">
             <Gift className="w-3.5 h-3.5 text-yellow-300" />
-            <span>ফ্রি মেম্বারশিপ ও ক্যাশব্যাক রিওয়ার্ড</span>
+            <span>ডিজিটাল মেম্বারশিপ ও কয়েন রিওয়ার্ড</span>
           </div>
 
           <h2 className="text-2xl font-black tracking-tight mb-1">
@@ -113,14 +113,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </h2>
           <p className="text-xs text-rose-100 font-medium leading-relaxed max-w-xs mx-auto">
             {initialBonusPrompt
-              ? `অভিনন্দন! আপনি জিতেছেন ${initialBonusPrompt} কয়েন! অ্যাকাউন্ট খুললেই এই ব্যালেন্স ওয়ালেটে যোগ হবে।`
-              : 'লগইন করে প্রতিদিনের ফ্রি স্পিন ও কয়েন রিওয়ার্ড জিতুন, ভবিষ্যতে টাকার সমমূল্যে ক্যাশআউট করুন!'}
+              ? `অভিনন্দন! আপনি জিতেছেন ${initialBonusPrompt} কয়েন! অ্যাকাউন্ট খুললেই ব্যালেন্স ওয়ালেটে যোগ হবে।`
+              : 'লগইন করে প্রতিদিনের লাকি স্পিন ও পয়েন্ট রিওয়ার্ড জিতুন, পয়েন্ট দিয়ে সরাসরি ফাইল ডাউনলোড করুন!'}
           </p>
 
-          {/* Bonus callout tag */}
+          {/* Bonus callout tag: exactly 50 points as requested */}
           <div className="mt-4 bg-yellow-400 text-slate-950 px-4 py-2 rounded-2xl font-extrabold text-xs shadow-lg inline-flex items-center gap-2">
             <Coins className="w-4 h-4 text-amber-900" />
-            <span>নতুন অ্যাকাউন্টে ১৫০ ফ্রি ওয়েলকাম কয়েন! 🎁</span>
+            <span>নতুন সাইন আপ বোনাস ৫০ পয়েন্ট! 🎁</span>
           </div>
         </div>
 
@@ -262,7 +262,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className="mt-6 pt-5 border-t border-slate-100 grid grid-cols-2 gap-3 text-left">
             <div className="flex items-start gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-slate-600 font-medium">১০০% ফ্রি ও নিরাপদ ডেটা এনক্রিপশন</p>
+              <p className="text-[11px] text-slate-600 font-medium">সম্পূর্ণ নিরাপদ ও আধুনিক ডেটা এনক্রিপশন</p>
             </div>
             <div className="flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />

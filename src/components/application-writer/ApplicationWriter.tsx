@@ -38,6 +38,7 @@ import { DocumentPreview } from './DocumentPreview';
 import { TemplateSelector } from './TemplateSelector';
 import { SavedDocumentsModal } from './SavedDocumentsModal';
 import { AIAssistModal } from './AIAssistModal';
+import { DownloadPaywallModal } from '../DownloadPaywallModal';
 
 interface ApplicationWriterProps {
   onBackToHub: () => void;
@@ -118,6 +119,22 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
   // Mobile View Toggle: 'editor' vs 'preview'
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  // Paywall state for 2 BDT charge & mandatory account
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [paywallDocTitle, setPaywallDocTitle] = useState('MoSaFa Application Writer');
+  const [isSessionUnlocked, setIsSessionUnlocked] = useState(false);
+
+  const executeWithPaywall = (action: () => void, title?: string) => {
+    if (isSessionUnlocked) {
+      action();
+      return;
+    }
+    setPaywallDocTitle(title || formData.subject || selectedType.name || 'MoSaFa Application Writer');
+    setPendingAction(() => action);
+    setIsPaywallOpen(true);
+  };
 
   // Load Saved Documents on mount
   useEffect(() => {
@@ -363,7 +380,7 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
   };
 
   // Export Word (.docx)
-  const handleExportDocx = async () => {
+  const performExportDocx = async () => {
     if (!content.trim()) {
       onShowToast?.('ডাউনলোড করার মতো কোনো লেখা নেই', '⚠️');
       return;
@@ -377,8 +394,12 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
     }
   };
 
+  const handleExportDocx = () => {
+    executeWithPaywall(performExportDocx, `${formData.subject || selectedType.name} (Word Docx)`);
+  };
+
   // Export PDF
-  const handleExportPdf = async () => {
+  const performExportPdf = async () => {
     if (!content.trim()) {
       onShowToast?.('ডাউনলোড করার মতো কোনো লেখা নেই', '⚠️');
       return;
@@ -402,9 +423,17 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
     }
   };
 
+  const handleExportPdf = () => {
+    executeWithPaywall(performExportPdf, `${formData.subject || selectedType.name} (A4 PDF)`);
+  };
+
   // Print Document
-  const handlePrint = () => {
+  const performPrint = () => {
     window.print();
+  };
+
+  const handlePrint = () => {
+    executeWithPaywall(performPrint, `${formData.subject || selectedType.name} (প্রিন্ট কপি)`);
   };
 
   // Copy Content to clipboard
@@ -790,6 +819,22 @@ export const ApplicationWriter: React.FC<ApplicationWriterProps> = ({
         }}
         language={formData.language}
         documentTypeName={selectedType.name}
+      />
+
+      {/* 5 BDT & Auth Download Paywall Modal */}
+      <DownloadPaywallModal
+        isOpen={isPaywallOpen}
+        onClose={() => setIsPaywallOpen(false)}
+        documentTitle={paywallDocTitle}
+        documentTypeTag="অফিসিয়াল অ্যাপ্লিকেশন"
+        priceBDT={5}
+        onConfirmDownload={() => {
+          setIsSessionUnlocked(true);
+          if (pendingAction) {
+            pendingAction();
+            setPendingAction(null);
+          }
+        }}
       />
     </div>
   );

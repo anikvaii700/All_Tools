@@ -202,7 +202,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 font-medium hidden xs:block">
-                সকল ফ্রি অনলাইন টুলস এক ক্লিকে
+                সকল প্রয়োজনীয় অনলাইন টুলস এক ক্লিকে
               </p>
             </div>
           </button>

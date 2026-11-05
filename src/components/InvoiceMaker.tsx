@@ -909,7 +909,7 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
           <div className="bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-indigo-100 mb-8 border border-white/20 print:hidden relative overflow-hidden">
             <div className="max-w-2xl">
               <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold inline-block mb-3 backdrop-blur-xs">
-                ✨ নো-লগইন • নো-ফি • ১০০% ফ্রি
+                ✨ নো-লগইন প্রিভিউ • সুরক্ষিত ও প্রফেশনাল
               </span>
               <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
                 স্বাগতম MoSaFa Invoice Maker-এ!
