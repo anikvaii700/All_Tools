@@ -3,7 +3,7 @@
  * Replaces private 'ais-dev-' URLs with public 'ais-pre-' URLs
  * so mobile devices, QR scanners, and shared links never encounter Google 403 auth errors.
  */
-export const PUBLIC_SHARED_URL = 'https://ais-pre-vzob6g5trhnzc2w7qmf6to-580416772203.asia-southeast1.run.app';
+export const PUBLIC_SHARED_URL = 'https://tools.mosafabd.com';
 
 export function getPublicBaseUrl(): string {
   if (typeof window === 'undefined') return PUBLIC_SHARED_URL;

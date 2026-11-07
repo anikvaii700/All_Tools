@@ -168,7 +168,7 @@ export const LiveUpdateModal: React.FC<LiveUpdateModalProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-500 font-medium">ডোমেইন ও প্ল্যাটফর্ম:</span>
               <span className="font-bold text-indigo-600 flex items-center gap-1">
-                <span>themedosafe.blogspot.com</span>
+                <span>tools.mosafabd.com</span>
                 <ExternalLink className="w-3 h-3" />
               </span>
             </div>

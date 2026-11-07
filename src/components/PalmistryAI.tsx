@@ -1003,7 +1003,7 @@ export const PalmistryAI: React.FC<PalmistryAIProps> = ({ onBackToHub, onShowToa
 
             {/* Footer Disclaimer & Branding */}
             <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] text-slate-500 relative z-10">
-              <span>The MoSaFa Tools • https://themedosafe.blogspot.com/</span>
+              <span>The MoSaFa Tools • https://tools.mosafabd.com/</span>
               <span>⚠️ ফলাফলটি কেবল অনুপ্রেরণামূলক ও বিনোদনের জন্য প্রস্তুতকৃত</span>
             </div>
           </div>

@@ -1,6 +1,6 @@
 # The MoSaFa Tools — সম্পূর্ণ সাইট আর্কিটেকচার, ইউজার ম্যানুয়াল ও শর্ট প্রম্পট কমান্ড গাইড
 
-**ওয়েবসাইট:** [https://themedosafe.blogspot.com/](https://themedosafe.blogspot.com/)  
+**অফিসিয়াল লাইভ ওয়েবসাইট:** [https://tools.mosafabd.com/](https://tools.mosafabd.com/)  
 **অ্যাপ পোর্টাল:** The MoSaFa Tools (২৫টি বহুমুখী অনলাইন বাংলা ইউটিলিটি টুলস)  
 **রক্ষণাবেক্ষণকারী:** AI Studio Build Engine
 

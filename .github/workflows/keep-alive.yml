@@ -13,5 +13,5 @@ jobs:
       - name: Ping MoSaFa Tools on Render
         run: |
           echo "Pinging MoSaFa Tools server..."
-          curl -s -f --max-time 30 https://mosafa-tools.onrender.com/api/health || echo "Ping attempted"
-          echo "Render kept alive successfully!"
+          curl -s -f --max-time 30 https://tools.mosafabd.com/api/health || echo "Ping attempted"
+          echo "Server kept alive successfully!"

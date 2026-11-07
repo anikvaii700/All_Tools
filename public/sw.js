@@ -2,14 +2,16 @@
 // Version: 3.3.0 (Master Command: Update ON)
 // Supports full offline usage for mobile APK/PWA + instant cache purging on update release
 
-const CACHE_NAME = 'mosafa-tools-v3.3.0';
+const CACHE_NAME = 'mosafa-tools-v3.4.2';
 
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192.png',
+  '/icon-maskable-192.png',
   '/icon-512.png',
+  '/icon-maskable-512.png',
   '/icon.svg',
   '/apple-touch-icon.png',
 ];

@@ -2886,7 +2886,7 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
                       type="text"
                       value={business.website}
                       onChange={(e) => setBusiness((prev) => ({ ...prev, website: e.target.value }))}
-                      placeholder="https://themedosafe.blogspot.com"
+                      placeholder="https://tools.mosafabd.com"
                       className="w-full p-2.5 rounded-xl border border-slate-300"
                     />
                   </div>

@@ -119,6 +119,21 @@
         "reviewedAt": { "type": "string" }
       },
       "required": ["id", "userId", "amount", "trxId", "status"]
+    },
+    "UserDailyManager": {
+      "title": "UserDailyManager",
+      "description": "User personal daily financial transactions, todo tasks, memos and habits synced to their account",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "transactions": { "type": "array", "description": "Financial income and expense records" },
+        "tasks": { "type": "array", "description": "To-do items and daily tasks" },
+        "notes": { "type": "array", "description": "Daily notes and memos" },
+        "habits": { "type": "object", "description": "Daily habit tracker checkmarks" },
+        "debts": { "type": "array", "description": "Dena-Paona / Loan records" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last cloud sync" }
+      },
+      "required": ["userId", "updatedAt"]
     }
   },
   "firestore": {
@@ -129,6 +144,10 @@
     "/users/{userId}/transactions/{transactionId}": {
       "schema": "CoinTransaction",
       "description": "User coin transaction history"
+    },
+    "/users/{userId}/dailyManager/{docId}": {
+      "schema": "UserDailyManager",
+      "description": "User personal Daily Hishab, To-Do list, notes, and habits ledger"
     },
     "/depositRequests/{requestId}": {
       "schema": "DepositRequest",

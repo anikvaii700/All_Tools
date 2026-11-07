@@ -30,6 +30,11 @@ service cloud.firestore {
         allow read, create: if true;
         allow update, delete: if false;
       }
+
+      // Subcollection: Daily Manager, To-Do List, Notes & Habits
+      match /dailyManager/{docId} {
+        allow read, write: if true;
+      }
     }
 
     // Public System Settings (Developer Contact & Photo)

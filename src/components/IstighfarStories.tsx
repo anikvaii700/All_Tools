@@ -438,7 +438,7 @@ export const IstighfarStories: React.FC<IstighfarStoriesProps> = ({ onShowToast,
 
   // Copy Full Story Text
   const handleCopyStory = (story: IstighfarStory) => {
-    const textToCopy = `📿 ${story.title}\n\nবিষয়: ${story.categoryLabel}\nবর্ণনাকারী/উৎস: ${story.narrator}\nআমল: ${story.amalDescription}\n\n${story.content.join('\n\n')}\n\n💡 শিক্ষণীয় বার্তা: ${story.lesson}\n${story.reference ? `রেফারেন্স: ${story.reference}\n` : ''}\n— সংগৃহীত: MoSaFa Tools • ইস্তেগফার আমলের গল্প\nhttps://mosafa-tools.onrender.com`;
+    const textToCopy = `📿 ${story.title}\n\nবিষয়: ${story.categoryLabel}\nবর্ণনাকারী/উৎস: ${story.narrator}\nআমল: ${story.amalDescription}\n\n${story.content.join('\n\n')}\n\n💡 শিক্ষণীয় বার্তা: ${story.lesson}\n${story.reference ? `রেফারেন্স: ${story.reference}\n` : ''}\n— সংগৃহীত: MoSaFa Tools • ইস্তেগফার আমলের গল্প\nhttps://tools.mosafabd.com`;
     navigator.clipboard.writeText(textToCopy);
     setCopiedId(story.id);
     onShowToast('সম্পূর্ণ গল্পটি সুন্দর ফরম্যাটে কপি হয়েছে! ফেসবুকে বা হোয়াটসঅ্যাপে শেয়ার করুন।', '📋');
@@ -447,7 +447,7 @@ export const IstighfarStories: React.FC<IstighfarStoriesProps> = ({ onShowToast,
 
   // Share to WhatsApp
   const handleShareWhatsApp = (story: IstighfarStory) => {
-    const text = `*📿 ${story.title}*\n\n_${story.categoryLabel}_\n\n${story.content.slice(0, 2).join('\n\n')}...\n\n👉 সম্পূর্ণ গল্পটি পড়ুন MoSaFa Tools-এ:\nhttps://mosafa-tools.onrender.com/?tool=golpo-ghor`;
+    const text = `*📿 ${story.title}*\n\n_${story.categoryLabel}_\n\n${story.content.slice(0, 2).join('\n\n')}...\n\n👉 সম্পূর্ণ গল্পটি পড়ুন MoSaFa Tools-এ:\nhttps://tools.mosafabd.com/?tool=golpo-ghor`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 

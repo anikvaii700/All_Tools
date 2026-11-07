@@ -57,6 +57,7 @@ import { ToolsNoticeBanner } from './components/ToolsNoticeBanner';
 import { UserReviewsMarquee } from './components/UserReviewsMarquee';
 import { useAuth } from './context/AuthContext';
 import { APP_VERSION_CONFIG } from './versionConfig';
+import { trackPageView, trackEvent } from './utils/analytics';
 
 // Existing Tools
 import { LoveTest } from './components/LoveTest';
@@ -115,6 +116,49 @@ export type ToolId =
   | 'content-creator-studio'
   | null;
 
+export const VALID_TOOL_IDS: readonly ToolId[] = [
+  'job-photo-signature-resizer',
+  'studymate-bd',
+  'all-form-fillup',
+  'love-test',
+  'typing-test',
+  'age-calc',
+  'bangla-status',
+  'poster-studio',
+  'random-picker',
+  'bangla-quiz',
+  'daily-hishab',
+  'life-receipt',
+  'name-reveal',
+  'golpo-ghor',
+  'prepaid-meter',
+  'bangladesh-map',
+  'voter-transfer-form',
+  'cv-maker',
+  'invoice-maker',
+  'bangla-text-converter',
+  'application-writer',
+  'pdf-toolkit',
+  'palmistry-ai',
+  'bd-online-portal',
+  'content-creator-studio',
+  'entrepreneur-journey',
+];
+
+export const getInitialToolFromUrl = (): ToolId => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const toolParam = params.get('tool');
+    if (toolParam && VALID_TOOL_IDS.includes(toolParam as ToolId)) {
+      return toolParam as ToolId;
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+};
+
 export type DeviceSector = 'all' | 'desktop' | 'mobile';
 
 export interface ToolCardInfo {
@@ -132,7 +176,7 @@ export interface ToolCardInfo {
 }
 
 export default function App() {
-  const [activeTool, setActiveTool] = useState<ToolId>(null);
+  const [activeTool, setActiveTool] = useState<ToolId>(getInitialToolFromUrl);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [deviceSector, setDeviceSector] = useState<DeviceSector>('all');
@@ -189,51 +233,20 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastIcon, setToastIcon] = useState<string>('📋');
 
-  // Read URL query parameters on mount and handle history popstate
+  // Read URL query parameters on popstate (browser back/forward navigation)
   useEffect(() => {
     const handleLocationChange = () => {
-      const params = new URLSearchParams(window.location.search);
-      const toolParam = params.get('tool');
-      const validToolIds = [
-        'job-photo-signature-resizer',
-        'studymate-bd',
-        'all-form-fillup',
-        'love-test',
-        'typing-test',
-        'age-calc',
-        'bangla-status',
-        'poster-studio',
-        'random-picker',
-        'bangla-quiz',
-        'daily-hishab',
-        'life-receipt',
-        'name-reveal',
-        'golpo-ghor',
-        'prepaid-meter',
-        'bangladesh-map',
-        'voter-transfer-form',
-        'cv-maker',
-        'invoice-maker',
-        'bangla-text-converter',
-        'application-writer',
-        'pdf-toolkit',
-        'palmistry-ai',
-        'bd-online-portal',
-        'content-creator-studio',
-        'entrepreneur-journey',
-      ];
-      if (toolParam && validToolIds.includes(toolParam)) {
-        setActiveTool(toolParam as ToolId);
-      } else {
-        setActiveTool(null);
-        if (toolParam) {
+      const tool = getInitialToolFromUrl();
+      setActiveTool(tool);
+      if (!tool) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('tool')) {
           window.history.replaceState(null, '', window.location.pathname);
         }
       }
       window.scrollTo(0, 0);
     };
 
-    handleLocationChange();
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
@@ -453,20 +466,20 @@ export default function App() {
       deviceTag: '📱 মোবাইলে সেরা (স্মার্টফোন কুইজ ও ধাঁধা)',
       keywords: ['ধাঁধা', 'quiz', 'কুইজ', 'সাধারণ জ্ঞান', 'আইকিউ', 'বাংলা কুইজ', 'সাহিত্য'],
     },
-    // 13. Daily Hishab (NEW)
+    // 13. Daily Hishab & To-Do List (NEW)
     {
       id: 'daily-hishab',
-      title: 'Daily Hishab (ডেইলি হিসাব ট্র্যাকার)',
-      badge: '৳ বাজেট ও আয়-ব্যয়',
+      title: 'Daily Hishab & To-Do (হিসাব ও করণীয় ট্র্যাকার)',
+      badge: '💼 অল-ইন-ওয়ান লাইফ ম্যানেজার',
       badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       category: 'calculator',
       iconBg: 'from-emerald-600 to-green-700',
       icon: <Wallet className="w-6 h-6 text-white" />,
       description:
-        'প্রতিদিনের আয়-ব্যয় হিসাব রাখুন বাংলাদেশী টাকায় (৳)। ব্যালেন্স সামারি, ক্যাটাগরি ফিল্টার ও CSV এক্সপোর্ট।',
+        'সাইটের ইউজার একাউন্টে আপনার দৈনন্দিন আয়-ব্যয়, সম্পূর্ণ To-Do List, প্রতিদিনের নোটস ও অভ্যাস ক্লাউড সিঙ্কসহ সংরক্ষণ করুন।',
       deviceTarget: 'both',
       deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
-      keywords: ['daily hishab', 'হিসাব', 'আয় ব্যয়', 'টাকা', 'বাজেট', 'ব্যালেন্স', 'খরচ'],
+      keywords: ['daily hishab', 'to do list', 'টু ডু লিস্ট', 'টাস্ক ম্যানেজার', 'হিসাব', 'আয় ব্যয়', 'নোটস', 'বাজেট', 'ব্যালেন্স', 'খরচ'],
     },
     // 14. MoSaFa Life Receipt (NEW)
     {
@@ -866,6 +879,45 @@ export default function App() {
   // Helper to find the active tool metadata
   const currentActiveToolInfo = tools.find((t) => t.id === activeTool);
 
+  // Google Analytics 4 (GA4) SPA Navigation Tracking
+  // Guarantees:
+  // 1. Exactly one page_view event on initial load (with accurate tool or homepage title and URL)
+  // 2. Exactly one page_view event on every SPA navigation (tool switch or back to home)
+  // 3. No duplicate page_view events on state re-renders
+  // 4. select_tool event receives tool_id, tool_name, and full tool_url
+  const lastTrackedPathRef = React.useRef<string | null>(null);
+
+  useEffect(() => {
+    const title = currentActiveToolInfo
+      ? `${currentActiveToolInfo.title} | The MoSaFa Tools`
+      : 'The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল';
+    const path = activeTool ? `/?tool=${activeTool}` : '/';
+
+    document.title = title;
+
+    // Prevent duplicate page_view tracking if path hasn't changed
+    if (lastTrackedPathRef.current === path) {
+      return;
+    }
+    lastTrackedPathRef.current = path;
+
+    // Send SPA Page View (exactly 1 on initial load, and exactly 1 on each subsequent navigation)
+    trackPageView(path, title);
+
+    // If a tool is active, send select_tool event with tool ID, correct name, and full URL
+    if (activeTool && currentActiveToolInfo) {
+      const fullToolUrl = `${window.location.origin}/?tool=${activeTool}`;
+      trackEvent('select_tool', {
+        tool_id: activeTool,
+        tool_name: currentActiveToolInfo.title,
+        tool_title: currentActiveToolInfo.title,
+        tool_url: fullToolUrl,
+        page_location: fullToolUrl,
+        page_path: path,
+      });
+    }
+  }, [activeTool, currentActiveToolInfo]);
+
   const toBanglaNum = (n: number | string): string => {
     const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     return String(n).replace(/\d/g, (d) => bnDigits[Number(d)]);
@@ -1038,7 +1090,13 @@ export default function App() {
     return wrapWithNavbar(<BanglaQuiz onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'daily-hishab') {
-    return wrapWithNavbar(<DailyHishab onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+    return wrapWithNavbar(
+      <DailyHishab
+        onBackToHub={() => navigateToTool(null)}
+        onShowToast={showToast}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+      />
+    );
   }
   if (activeTool === 'life-receipt') {
     return wrapWithNavbar(<LifeReceipt onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);

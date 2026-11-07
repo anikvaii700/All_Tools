@@ -13,7 +13,7 @@ export const defaultBusinessProfile: BusinessProfile = {
   businessAddress: 'হাউজ #১২, রোড #৪, ধানমন্ডি, ঢাকা-১২০৯, বাংলাদেশ',
   phone: '+880 1700-000000',
   email: 'contact@mosafa.com',
-  website: 'https://themedosafe.blogspot.com',
+  website: 'https://tools.mosafabd.com',
   logoUrl: null,
   tradeLicense: 'TRAD/DNCC/024851/2024',
   binVatNumber: 'BIN-002948512-0102',
