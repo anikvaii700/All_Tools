@@ -37,5 +37,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if true;
     }
+
+    // Deposit / Add Money Verification Requests (bKash TrxID verification)
+    match /depositRequests/{requestId} {
+      allow read, create, update: if true;
+      allow delete: if false;
+    }
   }
 }

@@ -5,21 +5,23 @@ import {
   Download,
   CheckCircle2,
   Copy,
-  Sparkles,
-  ShieldCheck,
-  AlertCircle,
   Coins,
   Phone,
   FileText,
   UserCheck,
-  AlertTriangle,
-  QrCode,
+  AlertCircle,
+  CreditCard,
+  RefreshCw,
   MessageCircle,
-  ExternalLink,
-  HelpCircle,
+  ShieldCheck,
+  AlertTriangle,
+  ArrowRight,
+  PlusCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../context/AuthContext';
+import { adminUserService } from '../services/adminUserService';
+import { usePaymentMode } from '../hooks/usePaymentMode';
 
 export interface DownloadPaywallModalProps {
   isOpen: boolean;
@@ -27,10 +29,10 @@ export interface DownloadPaywallModalProps {
   documentTitle: string;
   documentTypeTag?: string;
   onConfirmDownload: () => void;
-  priceBDT?: number; // Defaults to 5 BDT
+  priceBDT?: number; // Default 5 BDT
 }
 
-const BKASH_PAYMENT_NUMBER = '01868775577';
+const BKASH_MERCHANT_NUMBER = '01868775577';
 
 export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
   isOpen,
@@ -40,49 +42,77 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
   onConfirmDownload,
   priceBDT = 5,
 }) => {
-  const { user, isLoggedIn, loginWithGoogle, loginOrRegisterWithPhone, awardCoins } = useAuth();
+  const {
+    user,
+    isLoggedIn,
+    loginWithGoogle,
+    loginOrRegisterWithPhone,
+    deductMainBalance,
+    addMainBalance,
+    convertCoinsToMainBalance,
+  } = useAuth();
 
-  const [trxId, setTrxId] = useState('');
+  // Mode: 'download' | 'add-money' | 'convert-coins'
+  const [activeTab, setActiveTab] = useState<'download' | 'add-money' | 'convert-coins'>('download');
+
+  // Auth form states (if not logged in)
   const [authMethod, setAuthMethod] = useState<'google' | 'phone'>('google');
-
-  // Phone Auth state
   const [phoneInput, setPhoneInput] = useState('');
   const [pinInput, setPinInput] = useState('');
   const [nameInput, setNameInput] = useState('');
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  // Payment State
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [paymentError, setPaymentError] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
-  const [showPaymentSupport, setShowPaymentSupport] = useState(false);
-  const [paymentViewMode, setPaymentViewMode] = useState<'number' | 'barcode'>('number');
+  // Add Money states
+  const [addMoneyAmount, setAddMoneyAmount] = useState<number>(50); // Minimum 50 BDT
+  const [trxId, setTrxId] = useState('');
+  const [copiedNumber, setCopiedNumber] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  if (!isOpen) return null;
+  // Success state for downloading
+  const [isDownloadSuccess, setIsDownloadSuccess] = useState(false);
 
-  const handleCopyNumber = (num: string) => {
-    navigator.clipboard.writeText(num);
-    setCopiedNumber(num);
-    setTimeout(() => setCopiedNumber(null), 2000);
+  // Quick Payment Support popup state in Download section
+  const [isSupportPopupOpen, setIsSupportPopupOpen] = useState(false);
+
+  const { isPaymentEnabled } = usePaymentMode();
+
+  // If Payment is OFF (100% Free Mode), automatically trigger download without deducting money or showing paywall
+  React.useEffect(() => {
+    if (isOpen && !isPaymentEnabled) {
+      onConfirmDownload();
+      onClose();
+    }
+  }, [isOpen, isPaymentEnabled, onConfirmDownload, onClose]);
+
+  if (!isOpen || !isPaymentEnabled) return null;
+
+  const mainBalance = Number(user?.balance || 0);
+  const coinBalance = Number(user?.coins || 0);
+  const hasSufficientBalance = mainBalance >= priceBDT;
+
+  const handleCopyNumber = () => {
+    navigator.clipboard.writeText(BKASH_MERCHANT_NUMBER);
+    setCopiedNumber(true);
+    setTimeout(() => setCopiedNumber(false), 2000);
   };
 
-  // Google Login inside paywall
+  // Google Login
   const handleGoogleSignIn = async () => {
     setAuthError('');
     setIsAuthLoading(true);
     try {
       await loginWithGoogle();
     } catch (err: any) {
-      console.warn('Google login error in paywall:', err);
+      console.warn('Google sign-in error:', err);
       setAuthError('গুগল সাইন-ইনে সমস্যা হয়েছে। মোবাইল নম্বর দিয়ে চেষ্টা করুন।');
     } finally {
       setIsAuthLoading(false);
     }
   };
 
-  // Phone Register/Login inside paywall
+  // Phone Login / Register
   const handlePhoneSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -92,7 +122,7 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
       return;
     }
     if (pinInput.length < 4) {
-      setAuthError('ন্যূনতম ৪ ডিজিটের পিন বা পাসওয়ার্ড দিন');
+      setAuthError('ন্যূনতম ৪ ডিজিটের পাসওয়ার্ড বা পিন দিন');
       return;
     }
 
@@ -106,89 +136,189 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
     }
   };
 
-  // Payment Verification & Complete Download
-  const handleConfirmPayment = async (isCoinPayment = false) => {
-    setPaymentError('');
+  // 1. Direct Download: Deduct 5 BDT from Main Balance
+  const handleDeductAndDownload = async () => {
+    setFeedbackMessage(null);
+    if (!user) return;
 
-    if (isCoinPayment) {
-      const requiredCoins = priceBDT * 100; // 500 coins for 5 BDT
-      if ((user?.coins || 0) < requiredCoins) {
-        setPaymentError(`৫ টাকা চার্জ কিন্তু আপনার একাউন্টে পর্যাপ্ত ব্যালেন্স নাই। নিচে উল্লেখিত বিকাশ মার্চেন্ট নম্বরে ${priceBDT} টাকা পেমেন্ট (Make Payment) করুন।`);
+    if (!hasSufficientBalance) {
+      setFeedbackMessage({
+        type: 'error',
+        text: `আপনার মূল ব্যালেন্স অপর্যাপ্ত। পিডিএফ ডাউনলোডের জন্য ${priceBDT} টাকা প্রয়োজন। অনুগ্রহ করে ব্যালেন্সে টাকা লোড করুন।`,
+      });
+      setActiveTab('add-money');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const ok = await deductMainBalance(priceBDT, `পিডিএফ ডাউনলোড: ${documentTitle}`);
+      if (!ok) {
+        setFeedbackMessage({
+          type: 'error',
+          text: 'ব্যালেন্স কর্তন করতে সমস্যা হয়েছে। পর্যাপ্ত ব্যালেন্স রয়েছে কি না নিশ্চিত করুন।',
+        });
+        setIsProcessing(false);
         return;
       }
-      setIsVerifying(true);
-      await awardCoins(-requiredCoins, `ডাউনলোড চার্জ: ${documentTitle}`);
-      completeSuccessFlow('কয়েন ওয়ালেট');
+
+      // Celebrate & download
+      try {
+        confetti({
+          particleCount: 60,
+          spread: 60,
+          origin: { y: 0.6 },
+        });
+      } catch {}
+
+      setIsProcessing(false);
+      setIsDownloadSuccess(true);
+
+      setTimeout(() => {
+        onConfirmDownload();
+        onClose();
+        setIsDownloadSuccess(false);
+      }, 1200);
+    } catch (err: any) {
+      setIsProcessing(false);
+      setFeedbackMessage({
+        type: 'error',
+        text: err?.message || 'ডাউনলোড সম্পন্ন করতে ব্যর্থ হয়েছে।',
+      });
+    }
+  };
+
+  // 2. Add Money: Minimum 50 BDT
+  const handleAddMoneySubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setFeedbackMessage(null);
+
+    if (addMoneyAmount < 50) {
+      setFeedbackMessage({
+        type: 'error',
+        text: 'মিনিমাম ৫০ টাকা এড মানি করতে পারবেন।',
+      });
       return;
     }
 
     const cleanTrx = trxId.trim();
     if (!cleanTrx || cleanTrx.length < 4) {
-      setPaymentError('অনুগ্রহ করে বিকাশের সঠিক ট্রানজেকশন আইডি (TrxID) লিখুন।');
+      setFeedbackMessage({
+        type: 'error',
+        text: 'অনুগ্রহ করে বিকাশ পেমেন্টের সঠিক TrxID লিখুন।',
+      });
       return;
     }
 
-    setIsVerifying(true);
-    // Simulate real verification check
-    setTimeout(() => {
-      completeSuccessFlow('বিকাশ', cleanTrx);
-    }, 1000);
-  };
-
-  // Quick 1-click test confirmation helper
-  const handleInstantDemoConfirm = () => {
-    setIsVerifying(true);
-    setTimeout(() => {
-      completeSuccessFlow('বিকাশ (অনুমোদিত)', 'BKASH_' + Math.random().toString(36).substring(2, 7).toUpperCase());
-    }, 600);
-  };
-
-  const completeSuccessFlow = (method: string, tx = 'WALLET_CONFIRMED') => {
+    setIsProcessing(true);
     try {
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.6 },
+      try {
+        await adminUserService.submitDepositRequest({
+          userId: user?.uid || `guest_${Date.now()}`,
+          userName: user?.displayName || 'ব্যবহারকারী',
+          userPhone: user?.phoneNumber || '',
+          userEmail: user?.email || '',
+          amount: addMoneyAmount,
+          trxId: cleanTrx,
+          paymentMethod: 'বিকাশ মার্চেন্ট',
+        });
+      } catch {}
+
+      await addMainBalance(addMoneyAmount, 'বিকাশ মার্চেন্ট', cleanTrx);
+      try {
+        confetti({ particleCount: 40, spread: 50 });
+      } catch {}
+      setFeedbackMessage({
+        type: 'success',
+        text: `সফলভাবে ৳${addMoneyAmount} টাকা আপনার মূল ব্যালেন্সে যোগ হয়েছে! এখন ৫ টাকা কর্তন করে ডাউনলোড করুন।`,
       });
-    } catch {}
-
-    // Save payment record in local history
-    try {
-      const key = `mosafa_paid_receipts_${user?.uid || 'guest'}`;
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      existing.unshift({
-        documentTitle,
-        priceBDT,
-        method,
-        tx,
-        timestamp: new Date().toISOString(),
-      });
-      localStorage.setItem(key, JSON.stringify(existing.slice(0, 30)));
-    } catch {}
-
-    setIsVerifying(false);
-    setIsSuccess(true);
-
-    setTimeout(() => {
-      onConfirmDownload();
-      onClose();
-      setIsSuccess(false);
       setTrxId('');
-    }, 1400);
+      setIsProcessing(false);
+      setActiveTab('download');
+    } catch (err: any) {
+      setIsProcessing(false);
+      setFeedbackMessage({
+        type: 'error',
+        text: err?.message || 'টাকা যোগ করতে সমস্যা হয়েছে।',
+      });
+    }
   };
 
-  const userCoins = user?.coins || 0;
-  const coinCost = priceBDT * 100;
-  const hasSufficientWalletBalance = userCoins >= coinCost;
+  // Instant Demo Add Money Helper
+  const handleInstantDemoAddMoney = async () => {
+    setIsProcessing(true);
+    try {
+      const demoTrx = 'BK' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      await addMainBalance(50, 'বিকাশ (অনুমোদিত)', demoTrx);
+      try {
+        confetti({ particleCount: 40, spread: 50 });
+      } catch {}
+      setFeedbackMessage({
+        type: 'success',
+        text: 'পরীক্ষামূলক ৳৫০ টাকা আপনার মূল ব্যালেন্সে যোগ হয়েছে! এখন ডাউনলোড করুন।',
+      });
+      setIsProcessing(false);
+      setActiveTab('download');
+    } catch (err: any) {
+      setIsProcessing(false);
+      setFeedbackMessage({ type: 'error', text: err?.message || 'সমস্যা হয়েছে' });
+    }
+  };
+
+  // 3. Convert Coin Balance to Main Balance (100 coins = 1 BDT)
+  const handleConvertCoins = async (coinsToConvert: number) => {
+    setFeedbackMessage(null);
+    if (coinsToConvert < 100) {
+      setFeedbackMessage({
+        type: 'error',
+        text: 'কনভার্ট করতে ন্যূনতম ১০০ কয়েন প্রয়োজন।',
+      });
+      return;
+    }
+    if (coinBalance < coinsToConvert) {
+      setFeedbackMessage({
+        type: 'error',
+        text: 'আপনার কয়েন ব্যালেন্স পর্যাপ্ত নয়।',
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const res = await convertCoinsToMainBalance(coinsToConvert);
+      setIsProcessing(false);
+      if (res.success) {
+        try {
+          confetti({ particleCount: 45, spread: 55 });
+        } catch {}
+        setFeedbackMessage({
+          type: 'success',
+          text: res.message,
+        });
+        setActiveTab('download');
+      } else {
+        setFeedbackMessage({
+          type: 'error',
+          text: res.message,
+        });
+      }
+    } catch (err: any) {
+      setIsProcessing(false);
+      setFeedbackMessage({
+        type: 'error',
+        text: err?.message || 'কয়েন কনভার্ট করতে সমস্যা হয়েছে।',
+      });
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[94vh] animate-in zoom-in-95 duration-200"
+        className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Header */}
-        <div className="relative bg-gradient-to-r from-pink-700 via-rose-700 to-indigo-800 p-5 sm:p-6 text-white text-center">
+        {/* Simple & Clean Header */}
+        <div className="relative bg-gradient-to-r from-rose-600 via-pink-600 to-indigo-700 p-5 text-white">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer"
@@ -197,98 +327,65 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
             <X className="w-4 h-4" />
           </button>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold text-rose-100 mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-rose-100 text-[11px] font-bold mb-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-yellow-300" />
-            <span>অফিসিয়াল ডাউনলোড পেওয়াল • ফি {priceBDT} টাকা</span>
+            <span>{isLoggedIn ? `অফিসিয়াল পিডিএফ ডাউনলোড • ফি ${priceBDT} টাকা` : 'অফিসিয়াল পিডিএফ ডাউনলোড'}</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight mb-1">
-            {!isLoggedIn ? 'ডাউনলোড করতে অ্যাকাউন্ট তৈরি করুন' : 'পিডিএফ ডাউনলোড ফি'}
+          <h2 className="text-xl font-black tracking-tight leading-tight">
+            {!isLoggedIn ? 'ডাউনলোড করতে একাউন্ট প্রয়োজন' : 'পিডিএফ ডাউনলোড'}
           </h2>
-          <p className="text-xs text-rose-100 font-medium max-w-md mx-auto line-clamp-2">
-            {!isLoggedIn
-              ? 'ফাইলটি অফিশিয়াল হাই-রেজ্যুলেশন ফরম্যাটে ডাউনলোড করতে প্রথমে আপনার অ্যাকাউন্টে প্রবেশ বা সাইন-আপ করুন।'
-              : `নথিপত্র: ${documentTitle}`}
+          <p className="text-xs text-rose-100 font-medium line-clamp-1 mt-0.5">
+            {documentTitle}
           </p>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
+        {/* Modal Content */}
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
           {/* SUCCESS SCREEN */}
-          {isSuccess ? (
-            <div className="text-center py-8 space-y-4">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-black animate-bounce shadow-inner">
+          {isDownloadSuccess ? (
+            <div className="text-center py-6 space-y-3">
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl font-black animate-bounce shadow-inner">
                 ✓
               </div>
-              <h3 className="text-xl font-black text-slate-900">পেমেন্ট সফল হয়েছে!</h3>
-              <p className="text-sm text-slate-600 font-medium">
-                আপনার কাঙ্ক্ষিত ফাইলটি এখন সরাসরি ডাউনলোড হচ্ছে...
+              <h3 className="text-lg font-black text-slate-900">৫ টাকা কর্তন সফল হয়েছে!</h3>
+              <p className="text-xs text-slate-600 font-medium">
+                আপনার কাঙ্ক্ষিত পিডিএফ ফাইলটি এখন ডাউনলোড হচ্ছে...
               </p>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs border border-emerald-200">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{priceBDT} টাকা ফি পরিশোধ সম্পন্ন • ডাউনলোড প্রস্তুত</span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-xs border border-emerald-200">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>ডাউনলোড শুরু হয়েছে</span>
               </div>
             </div>
           ) : !isLoggedIn ? (
-            /* STEP 1: AUTH REQUIRED SCREEN (Prompt to create account first) */
+            /* STEP 1: AUTHENTICATION IF NOT LOGGED IN */
             <div className="space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 text-amber-900">
-                <Lock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div className="text-xs leading-relaxed">
-                  <p className="font-bold text-sm mb-1 text-amber-950">
-                    ডাউনলোড করার পূর্বে অ্যাকাউন্ট তৈরি আবশ্যক
-                  </p>
-                  <p>
-                    আপনার পূরণকৃত ডেটা সুরক্ষিত রাখা হয়েছে। ফাইলটি ডাউনলোড করার জন্য প্রথমে গুগল অথবা মোবাইল নম্বর দিয়ে অ্যাকাউন্টে লগইন বা সাইন-আপ করুন।
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex items-start gap-2.5 text-amber-900 text-xs">
+                <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-amber-950 text-sm mb-0.5">লগইন বা একাউন্ট তৈরি করুন</p>
+                  <p className="leading-relaxed">
+                    আপনার ফরমের ডেটা সুরক্ষিত রয়েছে। ফাইলটি ডাউনলোড করতে প্রথমে গুগল অথবা মোবাইল নম্বর দিয়ে লগইন বা সাইন-আপ করুন।
                   </p>
                 </div>
               </div>
 
-              {/* Auth Mode Toggle */}
-              <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-2xl">
+              {/* Mode Toggle */}
+              <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl">
                 <button
                   type="button"
-                  onClick={() => {
-                    setAuthMethod('google');
-                    setAuthError('');
-                  }}
-                  className={`py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                    authMethod === 'google'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                  onClick={() => setAuthMethod('google')}
+                  className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                    authMethod === 'google' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
                   }`}
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
                   <span>Google সাইন-ইন</span>
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => {
-                    setAuthMethod('phone');
-                    setAuthError('');
-                  }}
-                  className={`py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                    authMethod === 'phone'
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
+                  onClick={() => setAuthMethod('phone')}
+                  className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                    authMethod === 'phone' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
                   }`}
                 >
                   <Phone className="w-3.5 h-3.5 text-rose-600" />
@@ -297,67 +394,37 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
               </div>
 
               {authError && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{authError}</span>
                 </div>
               )}
 
-              {/* Google Fast Sign-in View */}
-              {authMethod === 'google' && (
-                <div className="space-y-3 pt-2 text-center">
+              {authMethod === 'google' ? (
+                <div className="space-y-2 pt-1 text-center">
                   <button
                     type="button"
                     disabled={isAuthLoading}
                     onClick={handleGoogleSignIn}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-white border-2 border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-800 font-bold text-sm shadow-xs flex items-center justify-center gap-3 transition cursor-pointer active:scale-[0.99]"
+                    className="w-full py-3 px-4 rounded-xl bg-white border-2 border-slate-200 hover:border-slate-400 text-slate-800 font-bold text-xs shadow-xs flex items-center justify-center gap-2 transition cursor-pointer"
                   >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                      />
-                    </svg>
-                    <span>
-                      {isAuthLoading ? 'লগইন হচ্ছে...' : 'Google দিয়ে অ্যাকাউন্ট তৈরি / লগইন করুন'}
-                    </span>
+                    <span>{isAuthLoading ? 'লগইন হচ্ছে...' : 'Google দিয়ে দ্রুত অ্যাকাউন্ট তৈরি / লগইন করুন'}</span>
                   </button>
-                  <p className="text-[11px] text-slate-500">
-                    ⚡ সুরক্ষিত ও দ্রুত একাউন্ট ভেরিফিকেশন।
-                  </p>
                 </div>
-              )}
-
-              {/* Phone Registration View */}
-              {authMethod === 'phone' && (
+              ) : (
                 <form onSubmit={handlePhoneSignIn} className="space-y-3 pt-1">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      আপনার নাম
-                    </label>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">আপনার নাম (ঐচ্ছিক)</label>
                     <input
                       type="text"
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
-                      placeholder="যেমন: মোঃ আনিসুল ইসলাম"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                      placeholder="নাম লিখুন"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-rose-500 focus:outline-none"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
                       মোবাইল নম্বর <span className="text-rose-500">*</span>
                     </label>
                     <input
@@ -366,13 +433,12 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
                       value={phoneInput}
                       onChange={(e) => setPhoneInput(e.target.value)}
                       placeholder="017xxxxxxxx বা 018xxxxxxxx"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-rose-500 focus:outline-none"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      ৪ ডিজিটের পাসওয়ার্ড / গোপন পিন <span className="text-rose-500">*</span>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      ৪ ডিজিটের পাসওয়ার্ড / পিন <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="password"
@@ -381,488 +447,435 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
                       value={pinInput}
                       onChange={(e) => setPinInput(e.target.value)}
                       placeholder="••••"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono tracking-widest focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono tracking-widest focus:ring-2 focus:ring-rose-500 focus:outline-none"
                     />
                   </div>
-
                   <button
                     type="submit"
                     disabled={isAuthLoading}
-                    className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <UserCheck className="w-4 h-4 text-emerald-400" />
-                    <span>
-                      {isAuthLoading ? 'যাচাই করা হচ্ছে...' : 'লগইন / অ্যাকাউন্ট নিশ্চিত করুন ➔'}
-                    </span>
+                    <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{isAuthLoading ? 'যাচাই করা হচ্ছে...' : 'লগইন করুন ➔'}</span>
                   </button>
                 </form>
               )}
             </div>
           ) : (
-            /* STEP 2: USER IS LOGGED IN */
+            /* STEP 2: USER IS LOGGED IN - FOCUSED DOWNLOAD FLOW */
             <div className="space-y-4">
-              {/* User Logged In Bar */}
-              <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-rose-600 text-white font-black flex items-center justify-center text-xs">
-                    {user?.displayName?.charAt(0) || 'U'}
+              {/* Separate Balances Overview (মূল ব্যালেন্স vs কয়েন ব্যালেন্স) */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* 1. মূল ব্যালেন্স */}
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/70 border border-emerald-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-bold text-emerald-950 flex items-center gap-1">
+                      <CreditCard className="w-3 h-3 text-emerald-600" />
+                      <span>মূল ব্যালেন্স</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-semibold">টাকা</span>
                   </div>
-                  <div>
-                    <p className="font-bold text-slate-900">{user?.displayName}</p>
-                    <p className="text-[10px] text-slate-500 font-mono">
-                      {user?.phoneNumber || user?.email || 'অ্যাকাউন্ট ভেরিফাইড'}
+                  <div className="text-xl font-black text-emerald-700 tracking-tight">
+                    ৳ {mainBalance.toFixed(2)}
+                  </div>
+                  <p className="text-[10px] text-emerald-800/80 font-medium mt-0.5">
+                    ডাউনলোড ফি কর্তন হবে
+                  </p>
+                </div>
+
+                {/* 2. কয়েন ব্যালেন্স */}
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/70 border border-amber-200">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-bold text-amber-950 flex items-center gap-1">
+                      <Coins className="w-3 h-3 text-amber-600" />
+                      <span>কয়েন ব্যালেন্স</span>
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-semibold">পয়েন্ট</span>
+                  </div>
+                  <div className="text-xl font-black text-amber-600 tracking-tight">
+                    {coinBalance}
+                  </div>
+                  <p className="text-[10px] text-amber-800/80 font-medium mt-0.5">
+                    ১০০ কয়েন = ১ টাকা
+                  </p>
+                </div>
+              </div>
+
+              {/* Feedback messages */}
+              {feedbackMessage && (
+                <div
+                  className={`p-3 rounded-2xl text-xs font-semibold flex items-center gap-2 border ${
+                    feedbackMessage.type === 'success'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                      : 'bg-rose-50 border-rose-200 text-rose-800'
+                  }`}
+                >
+                  {feedbackMessage.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  )}
+                  <span>{feedbackMessage.text}</span>
+                </div>
+              )}
+
+              {/* TAB 1: DEFAULT DOWNLOAD VIEW */}
+              {activeTab === 'download' && (
+                <div className="space-y-4">
+                  {/* The exact clear statement requested */}
+                  <div className="p-4 rounded-2xl bg-rose-50/70 border-2 border-rose-200 text-center space-y-2">
+                    <span className="inline-block px-3 py-0.5 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[11px]">
+                      ডাউনলোড নিয়মাবলী
+                    </span>
+                    <p className="text-sm font-bold text-slate-800 leading-snug">
+                      পিডিএফ ডাউনলোড করার জন্য আপনার মূল ব্যালেন্স থেকে{' '}
+                      <span className="text-rose-600 text-base font-black">{priceBDT} টাকা</span> কর্তন করা হবে।
+                    </p>
+                    <p className="text-xs text-slate-500 font-medium">
+                      কাঙ্ক্ষিত ফাইল: <span className="font-semibold text-slate-700">{documentTitle}</span>
                     </p>
                   </div>
-                </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  <span>অ্যাকাউন্ট সংযুক্ত</span>
-                </div>
-              </div>
 
-              {/* Document Summary Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-pink-50/50 border border-pink-200 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5" />
+                  {/* CASE A: USER HAS AT LEAST 5 BDT */}
+                  {hasSufficientBalance ? (
+                    <div className="space-y-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={isProcessing}
+                        onClick={handleDeductAndDownload}
+                        className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-sm shadow-lg shadow-emerald-700/20 flex items-center justify-center gap-2 transition cursor-pointer active:scale-98 disabled:opacity-50"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>
+                          {isProcessing ? 'কর্তন ও ডাউনলোড হচ্ছে...' : `${priceBDT} টাকা কর্তন করে ডাউনলোড করুন ➔`}
+                        </span>
+                      </button>
+                      <p className="text-[11px] text-center text-slate-500 font-medium">
+                        ব্যালেন্স কর্তনের পর আপনার অবশিষ্ট ব্যালেন্স থাকবে: ৳{(mainBalance - priceBDT).toFixed(2)} টাকা
+                      </p>
+                    </div>
+                  ) : (
+                    /* CASE B: USER HAS INSUFFICIENT BALANCE */
+                    <div className="space-y-3">
+                      <div className="p-3.5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs flex items-start gap-2.5">
+                        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="leading-relaxed">
+                          <p className="font-bold text-sm text-amber-950">
+                            মূল ব্যালেন্স অপর্যাপ্ত (বর্তমান: ৳{mainBalance.toFixed(2)})
+                          </p>
+                          <p className="text-amber-900 text-xs mt-0.5">
+                            পিডিএফ ডাউনলোড করার জন্য একাউন্টে ন্যূনতম <strong>{priceBDT} টাকা</strong> থাকতে হবে।
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Prominent "ব্যালেন্সে টাকা লোড করুন" Button */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('add-money')}
+                        className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-700 hover:from-pink-700 hover:to-indigo-800 text-white font-extrabold text-xs shadow-md flex items-center justify-center gap-2 transition cursor-pointer active:scale-98"
+                      >
+                        <PlusCircle className="w-4 h-4" />
+                        <span>ব্যালেন্সে টাকা লোড করুন (মিনিমাম ৫০ টাকা) ➔</span>
+                      </button>
+
+                      {/* Convert Coin Balance option if user has coins */}
+                      {coinBalance >= 100 && (
+                        <div className="p-3 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <Coins className="w-4 h-4 text-amber-600 shrink-0" />
+                            <div>
+                              <p className="font-bold text-amber-950">কয়েন ব্যালেন্স রয়েছে</p>
+                              <p className="text-[11px] text-amber-800">
+                                {coinBalance} কয়েন = ৳{Math.floor(coinBalance / 100)} টাকা
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('convert-coins')}
+                            className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[11px] transition cursor-pointer shadow-xs"
+                          >
+                            কনভার্ট করুন 🔄
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 2: "ব্যালেন্সে টাকা লোড করুন" (MINIMUM 50 BDT) */}
+              {activeTab === 'add-money' && (
+                <div className="space-y-3.5 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <CreditCard className="w-4 h-4 text-pink-600" />
+                      <span>ব্যালেন্সে টাকা লোড করুন</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('download')}
+                      className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                    >
+                      ← ব্যাকে যান
+                    </button>
                   </div>
+
+                  {/* Explicit Minimum 50 Taka Notice */}
+                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold">
+                    💡 <strong>মিনিমাম ৫০ টাকা</strong> এড মানি করতে পারবেন। (১টি রিচার্জে ১০টি পিডিএফ পর্যন্ত ডাউনলোড করতে পারবেন)।
+                  </div>
+
+                  {/* Amount Presets */}
                   <div>
-                    <h4 className="font-bold text-sm text-slate-900 line-clamp-1">
-                      {documentTitle}
-                    </h4>
-                    <p className="text-xs text-slate-500">{documentTypeTag}</p>
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-[10px] text-slate-500 block font-medium">পিডিএফ ডাউনলোড ফি</span>
-                  <span className="text-2xl font-black text-pink-700">৳ {priceBDT}</span>
-                  <span className="text-[10px] text-slate-500 ml-1">টাকা</span>
-                </div>
-              </div>
-
-              {/* USER SUSPENDED / BANNED CHECK */}
-              {user?.status === 'banned' || user?.status === 'suspended' ? (
-                <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-900 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
-                    <h4 className="font-extrabold text-sm text-rose-900">
-                      {user.status === 'banned' ? 'অ্যাকাউন্টটি স্থায়ীভাবে নিষিদ্ধ (Banned)' : 'অ্যাকাউন্টটি সাময়িক স্থগিত (Suspended)'}
-                    </h4>
-                  </div>
-                  <p className="text-xs text-rose-800 leading-relaxed">
-                    {user.banReason || 'কর্তৃপক্ষের নিয়মানুযায়ী আপনার অ্যাকাউন্টটির কার্যক্রম সাময়িকভাবে স্থগিত রাখা হয়েছে।'}
-                    {user.suspendedUntil && ` মেয়াদ: ${new Date(user.suspendedUntil).toLocaleDateString('bn-BD')}`}
-                  </p>
-                  <p className="text-[11px] text-rose-700">
-                    একাউন্ট সচল করতে বা বিস্তারিত জানতে নিচে <strong>"Payment Support"</strong> বাটনে ক্লিক করে সরাসরি হোয়াটসঅ্যাপে অ্যাডমিনের সাথে যোগাযোগ করুন।
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setShowPaymentSupport(true)}
-                    className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>অ্যাডমিন হোয়াটসঅ্যাপ সাপোর্ট (01868775577)</span>
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* SPECIFIC INSUFFICIENT BALANCE WARNING (Exact requirement: 5 BDT) */}
-                  {!hasSufficientWalletBalance && (
-                    <div className="p-3.5 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs flex items-start gap-2.5 shadow-xs">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div className="leading-relaxed">
-                        <p className="font-bold text-sm text-amber-950">
-                          ৫ টাকা চার্জ কিন্তু আপনার একাউন্টে পর্যাপ্ত ব্যালেন্স নাই
-                        </p>
-                        <p className="text-amber-800 text-[11px] mt-0.5 font-medium">
-                          পিডিএফ ডাউনলোড ফি মাত্র <strong>{priceBDT} টাকা</strong>। আপনার একাউন্টে পর্যাপ্ত ব্যালেন্স না থাকায় নিচে সরাসরি বিকাশ মার্চেন্ট নম্বরে অথবা বারকোড স্ক্যান করে {priceBDT} টাকা পেমেন্ট (Make Payment) করুন এবং TrxID লিখে ডাউনলোড সম্পন্ন করুন।
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* BKASH MERCHANT PAYMENT SECTION (ONLY BKASH MERCHANT - NO SEND MONEY) */}
-                  <div className="space-y-3 bg-gradient-to-br from-pink-50 via-rose-50 to-pink-100/60 border-2 border-pink-300 rounded-2xl p-4 shadow-xs">
-                    {/* Header + Support Popup Trigger + View Mode Toggle */}
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-pink-600 text-white font-black flex items-center justify-center text-xs shadow-xs">
-                          b
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-pink-950 block">
-                            বিকাশ মার্চেন্ট পেমেন্ট (Make Payment)
-                          </span>
-                          <span className="text-[10px] text-pink-700 font-semibold">
-                            নম্বর: 01868775577
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        {/* PAYMENT SUPPORT POPUP BUTTON (CRITICAL REQUIREMENT) */}
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                      টাকার পরিমাণ নির্বাচন করুন (মিনিমাম ৫০ টাকা)
+                    </label>
+                    <div className="grid grid-cols-4 gap-1.5 mb-2">
+                      {[50, 100, 200, 500].map((amt) => (
                         <button
+                          key={amt}
                           type="button"
-                          onClick={() => setShowPaymentSupport(true)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] transition cursor-pointer shadow-sm active:scale-95 animate-pulse"
-                          title="টাকা এড মানি করে মেসেজ দিন"
+                          onClick={() => setAddMoneyAmount(amt)}
+                          className={`py-2 rounded-xl text-xs font-black transition cursor-pointer border ${
+                            addMoneyAmount === amt
+                              ? 'bg-pink-600 text-white border-pink-600 shadow-xs'
+                              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span>Payment Support</span>
+                          ৳{amt}
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleCopyNumber(BKASH_PAYMENT_NUMBER)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-bold text-[11px] transition cursor-pointer shadow-xs"
-                        >
-                          <Copy className="w-3 h-3" />
-                          <span>{copiedNumber === BKASH_PAYMENT_NUMBER ? 'কপি হয়েছে!' : 'কপি'}</span>
-                        </button>
-                      </div>
+                      ))}
                     </div>
-
-                    {/* View Switcher: Number vs Barcode/QR */}
-                    <div className="grid grid-cols-2 p-1 bg-white/80 rounded-xl border border-pink-200">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentViewMode('number')}
-                        className={`py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                          paymentViewMode === 'number'
-                            ? 'bg-pink-600 text-white shadow-xs'
-                            : 'text-pink-900 hover:text-pink-600'
-                        }`}
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                        <span>নম্বর ডায়াল</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentViewMode('barcode')}
-                        className={`py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
-                          paymentViewMode === 'barcode'
-                            ? 'bg-pink-600 text-white shadow-xs'
-                            : 'text-pink-900 hover:text-pink-600'
-                        }`}
-                      >
-                        <QrCode className="w-3.5 h-3.5" />
-                        <span>বারকোড ও QR কোড</span>
-                      </button>
-                    </div>
-
-                    {/* MODE 1: NUMBER VIEW */}
-                    {paymentViewMode === 'number' ? (
-                      <div className="space-y-2.5">
-                        <div className="bg-white p-3 rounded-xl border border-pink-300 font-mono text-lg sm:text-xl font-black text-pink-700 text-center tracking-wider shadow-inner">
-                          {BKASH_PAYMENT_NUMBER}
-                        </div>
-
-                        {/* Merchant Warning Notice: No Send Money */}
-                        <div className="flex items-center gap-2 p-2 bg-rose-100/90 border border-rose-300 rounded-xl text-rose-950 text-[11px] font-bold">
-                          <span className="text-sm">⚠️</span>
-                          <span>এটি বিকাশ মার্চেন্ট একাউন্ট — Send Money হবে না, শুধুমাত্র "Payment" করতে হবে।</span>
-                        </div>
-
-                        <div className="text-[11.5px] text-pink-950 space-y-1.5 leading-relaxed bg-white/80 p-3 rounded-xl border border-pink-200">
-                          <p className="flex items-start gap-1.5">
-                            <span className="font-bold text-pink-700">১।</span>
-                            <span>বিকাশ অ্যাপে গিয়ে <strong>Payment (পেমেন্ট)</strong> অপশন নির্বাচন করুন (Send Money করবেন না)।</span>
-                          </p>
-                          <p className="flex items-start gap-1.5">
-                            <span className="font-bold text-pink-700">২।</span>
-                            <span>মার্চেন্ট নম্বরে <strong>01868775577</strong> লিখুন এবং টাকার পরিমাণ <strong>{priceBDT} টাকা</strong> দিয়ে পেমেন্ট করুন।</span>
-                          </p>
-                          <p className="flex items-start gap-1.5">
-                            <span className="font-bold text-pink-700">৩।</span>
-                            <span>পেমেন্ট সফল হওয়ার পর বিকাশ থেকে প্রাপ্ত <strong>TrxID (ট্রানজেকশন আইডি)</strong> নিচের বক্সে লিখুন।</span>
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      /* MODE 2: BARCODE & QR CODE SYSTEM (NEW REQUIREMENT) */
-                      <div className="bg-white p-4 rounded-xl border-2 border-pink-300 space-y-3.5 text-center shadow-xs">
-                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-pink-100 text-pink-800 text-[11px] font-extrabold rounded-full">
-                          <span>বিকাশ অ্যাপ দিয়ে মার্চেন্ট পেমেন্ট স্ক্যান করুন</span>
-                        </div>
-
-                        {/* Visual bKash QR Code & Barcode */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-1">
-                          {/* QR Code Container */}
-                          <div className="relative p-2.5 bg-white border-2 border-pink-500 rounded-2xl shadow-sm">
-                            {/* Realistic SVG bKash QR pattern representation */}
-                            <svg className="w-36 h-36" viewBox="0 0 100 100" fill="none">
-                              {/* Position Detection Outer Squares */}
-                              <rect x="5" y="5" width="28" height="28" rx="4" fill="#E2136E" />
-                              <rect x="9" y="9" width="20" height="20" rx="2" fill="white" />
-                              <rect x="13" y="13" width="12" height="12" rx="1" fill="#E2136E" />
-
-                              <rect x="67" y="5" width="28" height="28" rx="4" fill="#E2136E" />
-                              <rect x="71" y="9" width="20" height="20" rx="2" fill="white" />
-                              <rect x="75" y="13" width="12" height="12" rx="1" fill="#E2136E" />
-
-                              <rect x="5" y="67" width="28" height="28" rx="4" fill="#E2136E" />
-                              <rect x="9" y="71" width="20" height="20" rx="2" fill="white" />
-                              <rect x="13" y="75" width="12" height="12" rx="1" fill="#E2136E" />
-
-                              {/* Matrix Pattern representing 01868775577 */}
-                              <rect x="38" y="7" width="6" height="6" fill="#1e293b" />
-                              <rect x="48" y="7" width="6" height="6" fill="#1e293b" />
-                              <rect x="58" y="7" width="6" height="6" fill="#1e293b" />
-                              <rect x="38" y="17" width="6" height="6" fill="#1e293b" />
-                              <rect x="52" y="17" width="6" height="6" fill="#1e293b" />
-                              <rect x="38" y="27" width="6" height="6" fill="#1e293b" />
-                              <rect x="48" y="27" width="6" height="6" fill="#1e293b" />
-                              <rect x="58" y="27" width="6" height="6" fill="#1e293b" />
-
-                              <rect x="7" y="38" width="6" height="6" fill="#1e293b" />
-                              <rect x="17" y="38" width="6" height="6" fill="#1e293b" />
-                              <rect x="27" y="38" width="6" height="6" fill="#1e293b" />
-                              <rect x="37" y="38" width="6" height="6" fill="#1e293b" />
-                              <rect x="57" y="38" width="6" height="6" fill="#1e293b" />
-                              <rect x="67" y="38" width="6" height="6" fill="#1e293b" />
-                              <rect x="87" y="38" width="6" height="6" fill="#1e293b" />
-
-                              {/* Center bKash Bird / Logo Emblem */}
-                              <rect x="42" y="42" width="16" height="16" rx="4" fill="#E2136E" />
-                              <text x="50" y="54" fill="white" fontSize="12" fontWeight="bold" textAnchor="middle" fontFamily="sans-serif">b</text>
-
-                              {/* Bottom pattern */}
-                              <rect x="38" y="67" width="6" height="6" fill="#1e293b" />
-                              <rect x="48" y="67" width="6" height="6" fill="#1e293b" />
-                              <rect x="58" y="67" width="6" height="6" fill="#1e293b" />
-                              <rect x="68" y="67" width="6" height="6" fill="#1e293b" />
-                              <rect x="78" y="67" width="6" height="6" fill="#1e293b" />
-                              <rect x="88" y="67" width="6" height="6" fill="#1e293b" />
-
-                              <rect x="38" y="77" width="6" height="6" fill="#1e293b" />
-                              <rect x="52" y="77" width="6" height="6" fill="#1e293b" />
-                              <rect x="66" y="77" width="6" height="6" fill="#1e293b" />
-                              <rect x="80" y="77" width="6" height="6" fill="#1e293b" />
-
-                              <rect x="38" y="87" width="6" height="6" fill="#1e293b" />
-                              <rect x="48" y="87" width="6" height="6" fill="#1e293b" />
-                              <rect x="62" y="87" width="6" height="6" fill="#1e293b" />
-                              <rect x="76" y="87" width="6" height="6" fill="#1e293b" />
-                              <rect x="88" y="87" width="6" height="6" fill="#1e293b" />
-                            </svg>
-                            <span className="block text-[10px] font-black text-pink-700 mt-1">bKash QR</span>
-                          </div>
-
-                          {/* Barcode Strip System Container */}
-                          <div className="flex-1 flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-2xl">
-                            <span className="text-[10px] text-slate-500 font-bold mb-1">
-                              বিকাশ মার্চেন্ট বারকোড সিস্টেম
-                            </span>
-                            {/* Realistic Barcode Stripes */}
-                            <svg className="w-48 h-14" viewBox="0 0 190 50">
-                              <g fill="#0f172a">
-                                {/* Guard bars */}
-                                <rect x="5" y="0" width="3" height="40" />
-                                <rect x="11" y="0" width="3" height="40" />
-                                {/* Encoded barcode stripes for 01868775577 */}
-                                <rect x="18" y="0" width="2" height="35" />
-                                <rect x="23" y="0" width="5" height="35" />
-                                <rect x="31" y="0" width="2" height="35" />
-                                <rect x="36" y="0" width="6" height="35" />
-                                <rect x="45" y="0" width="4" height="35" />
-                                <rect x="52" y="0" width="2" height="35" />
-                                <rect x="57" y="0" width="5" height="35" />
-                                <rect x="65" y="0" width="3" height="35" />
-                                <rect x="71" y="0" width="6" height="35" />
-                                <rect x="80" y="0" width="2" height="35" />
-                                <rect x="85" y="0" width="5" height="35" />
-                                {/* Center guard */}
-                                <rect x="93" y="0" width="3" height="40" />
-                                <rect x="99" y="0" width="3" height="40" />
-                                {/* Right half */}
-                                <rect x="106" y="0" width="4" height="35" />
-                                <rect x="113" y="0" width="2" height="35" />
-                                <rect x="118" y="0" width="6" height="35" />
-                                <rect x="127" y="0" width="3" height="35" />
-                                <rect x="133" y="0" width="5" height="35" />
-                                <rect x="141" y="0" width="2" height="35" />
-                                <rect x="146" y="0" width="5" height="35" />
-                                <rect x="154" y="0" width="4" height="35" />
-                                <rect x="161" y="0" width="3" height="35" />
-                                <rect x="167" y="0" width="6" height="35" />
-                                {/* End guard */}
-                                <rect x="176" y="0" width="3" height="40" />
-                                <rect x="182" y="0" width="3" height="40" />
-                              </g>
-                              <text x="95" y="48" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle" fill="#334155">
-                                0 1 8 6 8 7 7 5 5 7 7
-                              </text>
-                            </svg>
-                            <span className="text-[11px] font-mono font-black text-pink-700 mt-1">
-                              01868775577 (Merchant Pay)
-                            </span>
-                            <span className="text-[10px] text-slate-500 mt-0.5">
-                              মূল্য: ৳{priceBDT} টাকা
-                            </span>
-                          </div>
-                        </div>
-
-                        <p className="text-[11px] text-slate-600 font-medium">
-                          বিকাশ অ্যাপের <strong>"পেমেন্ট"</strong> আইকনে চাপ দিয়ে এই কিউআর স্ক্যান করুন অথবা ০১৮৬৮৭৭৫৫৭৭ লিখে পেমেন্ট নিশ্চিত করুন।
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Transaction ID input */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
-                        বিকাশ TrxID (ট্রানজেকশন আইডি) <span className="text-pink-600">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={trxId}
-                        onChange={(e) => setTrxId(e.target.value.toUpperCase())}
-                        placeholder="যেমন: BL6A8D2Q"
-                        className="w-full px-3.5 py-2.5 rounded-xl border-2 border-pink-300 bg-white text-xs font-mono uppercase tracking-widest focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                      />
-                    </div>
+                    <input
+                      type="number"
+                      min={50}
+                      value={addMoneyAmount}
+                      onChange={(e) => setAddMoneyAmount(Math.max(50, Number(e.target.value)))}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold text-xs focus:ring-2 focus:ring-pink-500 focus:outline-none bg-white"
+                      placeholder="টাকার পরিমাণ (মিনিমাম ৫০)"
+                    />
                   </div>
 
-                  {/* Optional Wallet Balance Quick Use (If user has 500+ coins: 100 coins = 1 BDT) */}
-                  {hasSufficientWalletBalance && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <Coins className="w-4 h-4 text-amber-600" />
-                        <span>অ্যাকাউন্ট কয়েন ব্যালেন্স: <strong>{userCoins} কয়েন</strong> ({Math.floor(userCoins / 100)} টাকা)</span>
-                      </div>
+                  {/* bKash Merchant Number Box */}
+                  <div className="p-3 bg-pink-50 rounded-xl border border-pink-200 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-pink-950">বিকাশ মার্চেন্ট (Make Payment):</span>
                       <button
                         type="button"
-                        onClick={() => handleConfirmPayment(true)}
-                        className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition cursor-pointer text-[11px]"
+                        onClick={handleCopyNumber}
+                        className="text-[11px] font-bold text-pink-700 hover:text-pink-900 flex items-center gap-1 cursor-pointer"
                       >
-                        {coinCost} কয়েন দিয়ে ডাউনলোড
+                        <Copy className="w-3 h-3" />
+                        <span>{copiedNumber ? 'কপি হয়েছে' : 'নম্বর কপি'}</span>
                       </button>
                     </div>
-                  )}
-
-                  {paymentError && (
-                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>{paymentError}</span>
+                    <div className="p-2 bg-white rounded-lg border border-pink-300 font-mono font-black text-center text-pink-700 text-base">
+                      {BKASH_MERCHANT_NUMBER}
                     </div>
-                  )}
+                    <p className="text-[10px] text-pink-900">
+                      বিকাশ অ্যাপের <strong>Payment (পেমেন্ট)</strong> অপশন থেকে <strong>৳{addMoneyAmount} টাকা</strong> পাঠিয়ে TrxID লিখুন।
+                    </p>
+                  </div>
 
-                  {/* Verify & Download Button */}
-                  <div className="space-y-2 pt-1">
+                  {/* TrxID Input */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      বিকাশ TrxID (ট্রানজেকশন আইডি) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={trxId}
+                      onChange={(e) => setTrxId(e.target.value.toUpperCase())}
+                      placeholder="যেমন: BL6A8D2Q"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono uppercase text-xs focus:ring-2 focus:ring-pink-500 focus:outline-none bg-white"
+                    />
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="space-y-1.5 pt-1">
                     <button
                       type="button"
-                      disabled={isVerifying}
-                      onClick={() => handleConfirmPayment(false)}
-                      className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-700 hover:from-pink-700 hover:to-indigo-800 text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 transition cursor-pointer active:scale-[0.99] disabled:opacity-60"
+                      disabled={isProcessing}
+                      onClick={handleAddMoneySubmit}
+                      className="w-full py-2.5 px-4 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                     >
-                      <Download className="w-4 h-4" />
-                      <span>
-                        {isVerifying ? 'যাচাই করা হচ্ছে...' : 'বিকাশ পেমেন্ট নিশ্চিত করুন ও ডাউনলোড করুন ➔'}
-                      </span>
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>{isProcessing ? 'যাচাই করা হচ্ছে...' : `৳${addMoneyAmount} টাকা এড করুন ➔`}</span>
                     </button>
 
-                    {/* Instant Verification fallback button */}
                     <button
                       type="button"
-                      onClick={handleInstantDemoConfirm}
-                      className="w-full py-2 text-[11px] text-slate-500 hover:text-slate-800 font-medium underline transition cursor-pointer text-center"
+                      onClick={handleInstantDemoAddMoney}
+                      className="w-full py-1 text-[10px] text-slate-500 hover:text-slate-800 underline text-center cursor-pointer"
                     >
-                      (সরাসরি {priceBDT} টাকা বিকাশ পেমেন্ট নিশ্চিতকরণ ও ডাউনলোড)
+                      (পরীক্ষামূলক দ্রুত ৳৫০ টাকা এড করুন)
                     </button>
                   </div>
-                </>
+                </div>
+              )}
+
+              {/* TAB 3: "কয়েন কনভার্ট করে মূল ব্যালেন্সে নিন" */}
+              {activeTab === 'convert-coins' && (
+                <div className="space-y-3.5 bg-amber-50/70 border border-amber-200 rounded-2xl p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                      <RefreshCw className="w-4 h-4 text-amber-600" />
+                      <span>কয়েন ব্যালেন্স কনভার্ট</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('download')}
+                      className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                    >
+                      ← ব্যাকে যান
+                    </button>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-xl border border-amber-200 text-xs space-y-1 text-slate-700">
+                    <p className="font-bold text-amber-900">কনভার্ট রেট: ১০০ কয়েন = ১ টাকা মূল ব্যালেন্স</p>
+                    <p className="text-[11px]">
+                      আপনার বর্তমান কয়েন: <strong>{coinBalance} কয়েন</strong> (সর্বোচ্চ কনভার্ট মান: ৳{Math.floor(coinBalance / 100)} টাকা)
+                    </p>
+                  </div>
+
+                  {/* Convert Presets */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[100, 300, 500].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        disabled={coinBalance < c || isProcessing}
+                        onClick={() => handleConvertCoins(c)}
+                        className="py-2.5 px-2 rounded-xl bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 font-extrabold text-[11px] transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex flex-col items-center"
+                      >
+                        <span>{c} কয়েন</span>
+                        <span className="text-[10px] text-emerald-700 font-bold">= ৳{c / 100} টাকা</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {coinBalance >= 500 && (
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() => handleConvertCoins(500)}
+                      className="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Coins className="w-3.5 h-3.5 text-yellow-200" />
+                      <span>৫০০ কয়েন কনভার্ট করে ১টি ফ্রি পিডিএফ (৳৫) আনলক করুন ➔</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )}
         </div>
 
-        {/* PAYMENT SUPPORT POPUP MODAL (Direct WhatsApp Notification to 01868775577) */}
-        {showPaymentSupport && (
-          <div className="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
-            <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-200">
-                    <MessageCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-sm sm:text-base text-slate-900 leading-tight">
-                      পেমেন্ট ও এড মানি সাপোর্ট
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      সরাসরি হোয়াটসঅ্যাপে অ্যাডমিনকে জানান
-                    </p>
-                  </div>
-                </div>
+        {/* Modal Footer with Quick Support link - ONLY shown after user logs in / has account (Download Section) */}
+        {isLoggedIn && (
+          <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span className="flex items-center gap-1 font-medium">
+              <span>ফি:</span>
+              <strong className="text-rose-600">{priceBDT} টাকা</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsSupportPopupOpen(true)}
+              className="text-emerald-700 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+              title="পেমেন্ট ও এড মানি সাপোর্ট"
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span>পেমেন্ট সাপোর্ট (01868775577)</span>
+            </button>
+          </div>
+        )}
+
+        {/* Interactive Payment Support Popup Dialog in Download Section */}
+        {isSupportPopupOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150"
+            onClick={() => setIsSupportPopupOpen(false)}
+          >
+            <div
+              className="bg-white w-full max-w-sm rounded-3xl shadow-2xl border-2 border-emerald-400 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gradient-to-r from-emerald-700 to-teal-800 p-4 text-white relative">
                 <button
                   type="button"
-                  onClick={() => setShowPaymentSupport(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer transition"
+                  onClick={() => setIsSupportPopupOpen(false)}
+                  className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer"
+                  aria-label="Close"
                 >
                   <X className="w-4 h-4" />
                 </button>
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-900/60 text-emerald-200 text-[10px] font-bold mb-1">
+                  <ShieldCheck className="w-3 h-3 text-yellow-300" />
+                  <span>অফিসিয়াল হেল্পডেস্ক</span>
+                </div>
+                <h4 className="text-base font-black text-white">পেমেন্ট ও এড মানি সাপোর্ট</h4>
+                <p className="text-[11px] text-emerald-100 mt-0.5">
+                  যেকোনো প্রয়োজনে আমাদের সাথে সরাসরি যোগাযোগ করুন
+                </p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 text-xs leading-relaxed space-y-2">
-                <p className="font-bold flex items-center gap-1.5 text-emerald-900 text-sm">
-                  <span>💡 কেন মেসেজ দিবেন?</span>
-                </p>
-                <p>
-                  আপনি যদি বিকাশ মার্চেন্ট নম্বরে <strong>টাকা পেমেন্ট বা ব্যালেন্স এড মানি</strong> করে থাকেন, তবে সাথে সাথে নিচের হোয়াটসঅ্যাপ বাটনে ক্লিক করে মেসেজ দিন। অ্যাডমিন সেকশন থেকে দ্রুত আপনার TrxID ভেরিফাই করে ব্যালেন্স এড করে দেওয়া হবে।
-                </p>
-              </div>
-
-              {/* Number and details card */}
-              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 font-medium">হোয়াটসঅ্যাপ / বিকাশ নম্বর:</span>
+              <div className="p-4 space-y-3">
+                {/* bKash Merchant copy */}
+                <div className="p-3 bg-pink-50 rounded-2xl border border-pink-200 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-pink-900 block">বিকাশ মার্চেন্ট নম্বর (Make Payment)</span>
+                    <span className="font-mono font-black text-pink-700 text-sm">{BKASH_MERCHANT_NUMBER}</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => handleCopyNumber(BKASH_PAYMENT_NUMBER)}
-                    className="text-pink-600 hover:text-pink-700 font-bold flex items-center gap-1"
+                    onClick={handleCopyNumber}
+                    className="px-2.5 py-1 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs"
                   >
                     <Copy className="w-3 h-3" />
-                    <span>{copiedNumber === BKASH_PAYMENT_NUMBER ? 'কপি হয়েছে' : 'কপি নম্বর'}</span>
+                    <span>{copiedNumber ? 'কপি হয়েছে' : 'কপি'}</span>
                   </button>
                 </div>
-                <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-center font-mono font-black text-lg text-slate-900">
-                  {BKASH_PAYMENT_NUMBER}
-                </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-1">
+                {/* WhatsApp Chat button */}
                 <a
                   href={`https://wa.me/8801868775577?text=${encodeURIComponent(
-                    `আসসালামু আলাইকুম অ্যাডমিন,\nআমি MoSaFa পোর্টাল থেকে পেমেন্ট/এড মানি করেছি। অনুগ্রহ করে দ্রুত আমার ব্যালেন্স এড মানি ও অনুমোদন করে দিন।\n\n📌 ব্যবহারকারীর নাম: ${user?.displayName || 'ব্যবহারকারী'}\n📱 ফোন নম্বর: ${user?.phoneNumber || ''}\n💰 টাকার পরিমাণ: ${priceBDT} টাকা\n🧾 TrxID: ${trxId || 'এখনই পাঠাচ্ছি'}\n\nধন্যবাদ!`
+                    `আসসালামু আলাইকুম, The MoSaFa Tools-এ "${documentTitle}" ডাউনলোড ও পেমেন্ট সংক্রান্ত বিষয়ে সহায়তা প্রয়োজন।`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition active:scale-95"
+                  className="w-full py-2.5 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span>WhatsApp-এ মেসেজ পাঠান (01868775577)</span>
-                  <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-80" />
+                  <span>WhatsApp-এ সরাসরি চ্যাট করুন</span>
                 </a>
 
+                {/* Direct Call button */}
                 <a
                   href="tel:01868775577"
-                  className="w-full py-2.5 px-4 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition text-center"
+                  className="w-full py-2.5 px-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Phone className="w-3.5 h-3.5 text-slate-500" />
-                  <span>সরাসরি কল দিন (01868775577)</span>
+                  <Phone className="w-4 h-4 text-emerald-400" />
+                  <span>সরাসরি কল করুন (01868775577)</span>
                 </a>
+
+                {/* Switch to Add Money tab */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSupportPopupOpen(false);
+                    setActiveTab('add-money');
+                  }}
+                  className="w-full py-2 px-3 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <CreditCard className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>ব্যালেন্সে টাকা লোড করুন (মিনিমাম ৫০ টাকা) ➔</span>
+                </button>
               </div>
             </div>
           </div>
         )}
-
-        {/* Modal Footer Security Badge */}
-        <div className="p-3 bg-slate-50 border-t border-slate-200 text-center flex items-center justify-center gap-2 text-[11px] text-slate-500">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>অফিসিয়াল ও সুরক্ষিত • The MoSaFa Official Security</span>
-        </div>
       </div>
     </div>
   );

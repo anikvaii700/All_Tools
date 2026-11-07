@@ -46,48 +46,15 @@ const CATEGORY_ICONS: Record<string, string> = {
   'অন্যান্য (Other)': '📝',
 };
 
-const DEFAULT_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'tx_1',
-    type: 'income',
-    amount: 35000,
-    category: 'বেতন (Salary)',
-    date: new Date().toISOString().split('T')[0],
-    note: 'মাসিক বেতন',
-  },
-  {
-    id: 'tx_2',
-    type: 'expense',
-    amount: 5200,
-    category: 'খাদ্য ও বাজার (Food)',
-    date: new Date().toISOString().split('T')[0],
-    note: 'সাপ্তাহিক পারিবারিক বাজার',
-  },
-  {
-    id: 'tx_3',
-    type: 'expense',
-    amount: 1450,
-    category: 'বিল ও ইউটিলিটি (Bills)',
-    date: new Date().toISOString().split('T')[0],
-    note: 'ইন্টারনেট ও বিদ্যুৎ বিল',
-  },
-  {
-    id: 'tx_4',
-    type: 'expense',
-    amount: 850,
-    category: 'যাতায়াত (Transport)',
-    date: new Date().toISOString().split('T')[0],
-    note: 'অফিস যাতায়াত রিকশা ভাড়া',
-  },
-];
+const DEFAULT_TRANSACTIONS: Transaction[] = [];
 
 const toBanglaNum = (n: number | string): string => {
   const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
   return String(n).replace(/\d/g, (d) => bnDigits[Number(d)]);
 };
 
-export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub, onShowToast }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>(DEFAULT_TRANSACTIONS);
+export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub: _onBackToHub, onShowToast }) => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -101,18 +68,26 @@ export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub, onShowToa
 
   const reportCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Load from localStorage
+  // Load from localStorage: Starts clean with NO demo data
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('mosafa_daily_hishab_v2');
-      if (stored) setTransactions(JSON.parse(stored));
-    } catch {}
+      const stored = localStorage.getItem('mosafa_daily_hishab_user_data');
+      if (stored) {
+        setTransactions(JSON.parse(stored));
+      } else {
+        // Clear out old demo data keys
+        localStorage.removeItem('mosafa_daily_hishab_v2');
+        setTransactions([]);
+      }
+    } catch {
+      setTransactions([]);
+    }
   }, []);
 
   const saveTransactions = (updated: Transaction[]) => {
     setTransactions(updated);
     try {
-      localStorage.setItem('mosafa_daily_hishab_v2', JSON.stringify(updated));
+      localStorage.setItem('mosafa_daily_hishab_user_data', JSON.stringify(updated));
     } catch {}
   };
 
@@ -329,58 +304,20 @@ export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub, onShowToa
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="w-full max-w-5xl mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-200">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBackToHub}
-            className="p-2 rounded-xl bg-white text-slate-700 hover:text-emerald-600 border border-slate-200 shadow-xs transition flex items-center gap-1 text-xs font-bold cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>সকল টুলস</span>
-          </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-bold text-slate-900">Daily Hishab (ডেইলি হিসাব)</h1>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200">
-                ব্যক্তিগত ফিন্যান্স
-              </span>
-            </div>
-            <p className="text-xs text-slate-500">স্টাইলিশ ও কার্যকরী আয়-ব্যয় ট্র্যাকিং (টাকা ৳)</p>
-          </div>
-        </div>
+      {/* Tool Header: শুধু টুলের নাম ও হিসাব যোগ করার অ্যাকশন */}
+      <header className="w-full bg-white border-b border-slate-200 py-3 sm:py-3.5 px-4 shadow-2xs">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+          <h1 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>Daily Hishab (ডেইলি হিসাব)</span>
+          </h1>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={copyHishabSummary}
-            className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
-            title="হিসাব সামারি কপি করুন"
-          >
-            <Copy className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="hidden sm:inline">কপি সামারি</span>
-          </button>
-          <button
-            onClick={exportToCsv}
-            className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-xs"
-            title="CSV এক্সপোর্ট"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="hidden sm:inline">CSV</span>
-          </button>
-          <button
-            onClick={downloadSummaryCard}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-            title="রিপোর্ট কার্ড ডাউনলোড"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">কার্ড PNG</span>
-          </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-200 transition flex items-center gap-1 cursor-pointer active:scale-95"
+            className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            <span>হিসাব যোগ</span>
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>+ নতুন হিসাব</span>
           </button>
         </div>
       </header>
@@ -457,12 +394,12 @@ export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub, onShowToa
           </div>
         )}
 
-        {/* Filter Controls & Search */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs mb-5">
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold w-full sm:w-auto">
+        {/* Filter Controls, Search & Export Actions */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-xs mb-5">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold w-full md:w-auto">
             <button
               onClick={() => setFilterType('all')}
-              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
+              className={`flex-1 md:flex-none px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
                 filterType === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
               }`}
             >
@@ -470,7 +407,7 @@ export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub, onShowToa
             </button>
             <button
               onClick={() => setFilterType('income')}
-              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
+              className={`flex-1 md:flex-none px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
                 filterType === 'income' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600'
               }`}
             >
@@ -478,7 +415,7 @@ export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub, onShowToa
             </button>
             <button
               onClick={() => setFilterType('expense')}
-              className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
+              className={`flex-1 md:flex-none px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
                 filterType === 'expense' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600'
               }`}
             >
@@ -486,15 +423,50 @@ export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub, onShowToa
             </button>
           </div>
 
-          <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="খোঁজ করুন..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="relative flex-1 md:w-52">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="খোঁজ করুন..."
+                className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+            </div>
+
+            {/* Quick Export Actions (Visible when transactions exist) */}
+            {transactions.length > 0 && (
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={copyHishabSummary}
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  title="হিসাব সামারি কপি"
+                >
+                  <Copy className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="hidden sm:inline">কপি</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={exportToCsv}
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  title="CSV এক্সপোর্ট"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="hidden sm:inline">CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadSummaryCard}
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  title="রিপোর্ট কার্ড ডাউনলোড"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-600" />
+                  <span className="hidden sm:inline">PNG</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -550,8 +522,22 @@ export const DailyHishab: React.FC<DailyHishabProps> = ({ onBackToHub, onShowToa
           })}
 
           {filteredList.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 text-slate-400">
-              <p>কোনো হিসাব পাওয়া যায়নি।</p>
+            <div className="text-center py-12 px-4 bg-white rounded-3xl border border-slate-200 shadow-xs">
+              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
+                <Wallet className="w-8 h-8" />
+              </div>
+              <h4 className="font-bold text-slate-800 text-base">আপনার হিসাব খাতা সম্পূর্ণ প্রস্তুত</h4>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
+                কোনো ডেমো ডাটা রাখা হয়নি। আপনার নতুন হিসাব চলমান রাখতে নিচে বা উপরের বাটনে ক্লিক করে আয় বা ব্যয় যোগ করুন।
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(true)}
+                className="mt-4 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ প্রথম হিসাব যোগ করুন</span>
+              </button>
             </div>
           )}
         </div>

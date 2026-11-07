@@ -25,6 +25,10 @@
           "type": "string",
           "description": "User avatar image URL"
         },
+        "balance": {
+          "type": "number",
+          "description": "Current main cash balance in BDT"
+        },
         "coins": {
           "type": "number",
           "description": "Current active coin wallet balance"
@@ -96,6 +100,25 @@
         }
       },
       "required": ["transactionId", "userId", "amount", "type"]
+    },
+    "DepositRequest": {
+      "title": "DepositRequest",
+      "description": "User bKash Add Money verification requests with TrxID",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhone": { "type": "string" },
+        "amount": { "type": "number", "description": "Cash amount in BDT" },
+        "trxId": { "type": "string", "description": "bKash transaction ID" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "adminNote": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "reviewedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "trxId", "status"]
     }
   },
   "firestore": {
@@ -106,6 +129,13 @@
     "/users/{userId}/transactions/{transactionId}": {
       "schema": "CoinTransaction",
       "description": "User coin transaction history"
+    },
+    "/depositRequests/{requestId}": {
+      "schema": "DepositRequest",
+      "description": "bKash add money payment verification requests"
+    },
+    "/settings/{settingId}": {
+      "description": "Public system configurations (paymentMode, developerContact, notices)"
     }
   }
 }

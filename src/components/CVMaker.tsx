@@ -25,11 +25,14 @@ import {
   Check,
   Pencil,
   Edit3,
+  UserCheck,
+  User,
 } from 'lucide-react';
 import { CVData, CVTemplate, PaymentTransaction, CVQualityIssue } from '../types/cvMaker';
 import { CV_CATEGORIES, CV_TEMPLATES } from '../data/cvTemplates';
 import { SAMPLE_CV_DATA, INITIAL_EMPTY_CV_DATA } from '../data/sampleCVData';
 import { CVRenderer } from './cv/CVRenderer';
+import { CVMasterProfileModal, MASTER_PROFILE_STORAGE_KEY } from './cv/CVMasterProfileModal';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { DownloadPaywallModal } from './DownloadPaywallModal';
@@ -46,13 +49,36 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
   // Selected Template
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('tmpl-01');
 
-  // CV Data
+  // Master Profile Modal State
+  const [isMasterProfileModalOpen, setIsMasterProfileModalOpen] = useState(false);
+  const [hasMasterProfile, setHasMasterProfile] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return Boolean(parsed?.personal?.fullName);
+      }
+    } catch (e) {
+      // ignore
+    }
+    return false;
+  });
+
+  // CV Data - Auto-fills from Master Profile if saved, otherwise draft or sample
   const [cvData, setCvData] = useState<CVData>(() => {
     try {
+      // 1. First priority: Saved Master Profile
+      const storedMaster = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
+      if (storedMaster) {
+        const parsedMaster = JSON.parse(storedMaster);
+        if (parsedMaster?.personal?.fullName) {
+          return parsedMaster;
+        }
+      }
+      // 2. Second priority: Draft
       const saved = localStorage.getItem('mosafa_cv_draft_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // If draft has old demo name, automatically migrate to new demo name
         if (parsed?.personal?.fullName?.includes('মোফাসসিরুল ইসলাম')) {
           return SAMPLE_CV_DATA;
         }
@@ -117,6 +143,54 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     }
     setPendingAction(() => action);
     setIsPaywallOpen(true);
+  };
+
+  // Template selection with automatic auto-fill from saved master profile
+  const handleSelectTemplate = (templateId: string, targetTab?: 'editor' | 'preview') => {
+    setSelectedTemplateId(templateId);
+    if (targetTab) {
+      setActiveTab(targetTab);
+    }
+    const tmpl = CV_TEMPLATES.find((t) => t.id === templateId);
+
+    // Auto-fill from Master CV Profile if available
+    try {
+      const stored = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
+      if (stored) {
+        const master = JSON.parse(stored);
+        if (master?.personal?.fullName) {
+          setCvData(master);
+          onShowToast(`"${tmpl?.nameBn || 'টেমপ্লেট'}" এ আপনার প্রোফাইল তথ্য স্বয়ংক্রিয়ভাবে অটু-ফিল হয়েছে! ✨`, '✅');
+          return;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    if (tmpl) {
+      onShowToast(`"${tmpl.nameBn}" নির্বাচন করা হয়েছে!`, '🎨');
+    }
+  };
+
+  // Re-apply master profile anytime
+  const handleAutoFillFromProfile = () => {
+    try {
+      const stored = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
+      if (stored) {
+        const master = JSON.parse(stored);
+        if (master?.personal?.fullName) {
+          setCvData(master);
+          setHasMasterProfile(true);
+          onShowToast('আপনার প্রোফাইল তথ্য দিয়ে সম্পূর্ণ সিভি অটো-ফিল হয়েছে! ✨', '✅');
+          return;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+    setIsMasterProfileModalOpen(true);
+    onShowToast('অনুগ্রহ করে প্রথমে আপনার প্রোফাইল তথ্য পূরণ করে সেভ করুন।', '👤');
   };
 
   // Filter templates list
@@ -497,15 +571,6 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs print:hidden">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <button
-              onClick={onBackToHub}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
-              title="সকল টুলস তালিকায় ফিরুন"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">সকল টুলস</span>
-            </button>
-
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-200">
                 <FileText className="w-5 h-5" />
@@ -528,6 +593,20 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
 
           {/* Quick Action Buttons */}
           <div className="flex items-center flex-wrap gap-2">
+            {/* নিজের প্রোফাইল (Auto-Fill Profile) বাটন */}
+            <button
+              type="button"
+              onClick={() => setIsMasterProfileModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-200 active:scale-95"
+              title="নিজের তথ্য একবার সেভ রাখুন, যে কোনো সিভিতে অটো-ফিল হবে"
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>নিজের প্রোফাইল</span>
+              <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-full font-bold">
+                {hasMasterProfile ? 'অটো-ফিল অন ✅' : 'সেটআপ'}
+              </span>
+            </button>
+
             <button
               type="button"
               onClick={handleLoadSample}
@@ -587,6 +666,19 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
             <Palette className="w-4 h-4" />
             <span>১০০টি টেমপ্লেট গ্যালারি</span>
             <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded-full font-bold">১০০টি ফ্রি</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsMasterProfileModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 font-bold"
+            title="নিজের সিভি প্রোফাইল এডিট ও অটো-ফিল করুন"
+          >
+            <UserCheck className="w-4 h-4 text-emerald-600" />
+            <span>👤 নিজের প্রোফাইল (Auto-Fill)</span>
+            <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded-full font-bold">
+              {hasMasterProfile ? 'সংরক্ষিত ✅' : 'সেটআপ'}
+            </span>
           </button>
 
           <button
@@ -741,8 +833,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
                 <div
                   key={tmpl.id}
                   onClick={() => {
-                    setSelectedTemplateId(tmpl.id);
-                    onShowToast(`"${tmpl.nameBn}" নির্বাচন করা হয়েছে!`, '🎨');
+                    handleSelectTemplate(tmpl.id);
                   }}
                   className={`bg-white rounded-3xl p-4 border transition-all duration-200 flex flex-col justify-between group cursor-pointer relative ${
                     isSelected
@@ -923,8 +1014,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedTemplateId(tmpl.id);
-                        setActiveTab('preview');
+                        handleSelectTemplate(tmpl.id, 'preview');
                       }}
                       className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs text-center transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                     >
@@ -936,8 +1026,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedTemplateId(tmpl.id);
-                        setActiveTab('editor');
+                        handleSelectTemplate(tmpl.id, 'editor');
                       }}
                       className="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs text-center transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                       title="এই টেমপ্লেট নির্বাচন করে সরাসরি এডিট করুন"
@@ -956,6 +1045,44 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
       {/* ================= TAB 2: CV DATA INPUT WIZARD ================= */}
       {activeTab === 'editor' && (
         <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+          {/* Quick Profile Auto-Fill Banner */}
+          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 border border-emerald-200 rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <UserCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                  নিজের সিভি প্রোফাইল {hasMasterProfile ? '(তথ্য সংরক্ষিত রয়েছে ✅)' : '(এখনই সেটআপ করুন)'}
+                </h3>
+                <p className="text-[11px] text-slate-600">
+                  একবার তথ্য সেভ রাখলে যে কোনো ফরম্যাট পছন্দ করলেই আপনার সব তথ্য স্বয়ংক্রিয়ভাবে অটু-ফিল হবে।
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {hasMasterProfile && (
+                <button
+                  type="button"
+                  onClick={handleAutoFillFromProfile}
+                  className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-300 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>প্রোফাইল থেকে অটো-ফিল করুন</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsMasterProfileModalOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>{hasMasterProfile ? 'প্রোফাইল এডিট' : 'নিজের প্রোফাইল পূরণ করুন'}</span>
+              </button>
+            </div>
+          </div>
+
           {/* Personal Information Card */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-2 border-b">
@@ -1617,8 +1744,7 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
                       <button
                         type="button"
                         onClick={() => {
-                          setSelectedTemplateId(t.id);
-                          setActiveTab('preview');
+                          handleSelectTemplate(t.id, 'preview');
                         }}
                         className="px-3 py-1 rounded-xl bg-slate-900 text-white font-bold text-[11px] cursor-pointer"
                       >
@@ -1800,6 +1926,17 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
             setPendingAction(null);
           }
         }}
+      />
+
+      {/* Master CV Profile Modal */}
+      <CVMasterProfileModal
+        isOpen={isMasterProfileModalOpen}
+        onClose={() => setIsMasterProfileModalOpen(false)}
+        onSaveAndApply={(profileData) => {
+          setCvData(profileData);
+          setHasMasterProfile(true);
+        }}
+        onShowToast={onShowToast}
       />
     </div>
   );

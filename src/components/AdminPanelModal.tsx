@@ -37,10 +37,14 @@ import {
   AlertTriangle,
   Clock,
   Plus,
+  CreditCard,
+  Copy,
 } from 'lucide-react';
 import { useDeveloperContact } from '../hooks/useDeveloperContact';
 import { storySubmissionService, SubmittedStory } from '../services/storySubmissionService';
-import { adminUserService, ManagedUser } from '../services/adminUserService';
+import { adminUserService, ManagedUser, DepositRequest } from '../services/adminUserService';
+import { usePaymentMode } from '../hooks/usePaymentMode';
+import { PaymentMode } from '../services/paymentModeService';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -71,13 +75,37 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userStatusFilter, setUserStatusFilter] = useState<'all' | 'active' | 'suspended' | 'banned'>('all');
+  const [depositRequests, setDepositRequests] = useState<DepositRequest[]>([]);
+  const [copiedTrxId, setCopiedTrxId] = useState<string | null>(null);
+
+  // Add Money Sub-Modal State (Default to 'balance' / মূল ব্যালেন্স)
   const [selectedUserForMoney, setSelectedUserForMoney] = useState<ManagedUser | null>(null);
+  const [addMoneyTarget, setAddMoneyTarget] = useState<'balance' | 'coins'>('balance'); // 'balance' (টাকা / BDT) vs 'coins'
+  const [addMoneyBdt, setAddMoneyBdt] = useState<number>(50); // Minimum 50 BDT
   const [addMoneyCoins, setAddMoneyCoins] = useState<number>(500); // 500 coins = 5 BDT
   const [addMoneyNote, setAddMoneyNote] = useState('');
+
+  // Status Modal State
   const [selectedUserForStatus, setSelectedUserForStatus] = useState<ManagedUser | null>(null);
   const [editStatusTarget, setEditStatusTarget] = useState<'active' | 'suspended' | 'banned'>('active');
   const [editBanReason, setEditBanReason] = useState('');
   const [editSuspensionDays, setEditSuspensionDays] = useState<number>(7);
+
+  // Global Site Payment Mode: 'ON' vs 'OFF'
+  const { mode: paymentMode, setPaymentMode } = usePaymentMode();
+
+  const handleTogglePaymentMode = async (newMode: PaymentMode) => {
+    try {
+      await setPaymentMode(newMode);
+      if (newMode === 'ON') {
+        onShowToast?.('পেমেন্ট গেটওয়ে সফলভাবে চালু করা হয়েছে (Payment ON) 💳', '🟢');
+      } else {
+        onShowToast?.('পেমেন্ট গেটওয়ে বন্ধ করা হয়েছে (Payment OFF - সম্পূর্ণ ফ্রি সাইট) 🆓', '🟢');
+      }
+    } catch {
+      onShowToast?.('মোড পরিবর্তন করতে সমস্যা হয়েছে', '⚠️');
+    }
+  };
 
   useEffect(() => {
     const unsubStories = storySubmissionService.subscribe((list) => {
@@ -86,9 +114,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     const unsubUsers = adminUserService.subscribe((list) => {
       setManagedUsers(list);
     });
+    const unsubDeposits = adminUserService.subscribeDeposits((reqs) => {
+      setDepositRequests(reqs);
+    });
     return () => {
       unsubStories();
       unsubUsers();
+      unsubDeposits();
     };
   }, []);
 
@@ -397,6 +429,81 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   <span>সকল তথ্য ও নোটিশ সফলভাবে সংরক্ষিত হয়েছে এবং লাইভ আপডেট হয়েছে! 🎉</span>
                 </div>
               )}
+
+              {/* Global System Payment Mode Controller: Payment ON vs Payment OFF */}
+              <div
+                className={`p-4 rounded-3xl border-2 transition-all shadow-sm ${
+                  paymentMode === 'ON'
+                    ? 'bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-emerald-400'
+                    : 'bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-amber-400'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className={`w-3 h-3 rounded-full ${
+                          paymentMode === 'ON' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                        }`}
+                      />
+                      <h4 className="text-sm font-black text-slate-900">
+                        সিস্টেম পেমেন্ট মোড:{' '}
+                        <span
+                          className={
+                            paymentMode === 'ON'
+                              ? 'text-emerald-700 font-extrabold'
+                              : 'text-amber-700 font-extrabold'
+                          }
+                        >
+                          Payment {paymentMode}
+                        </span>
+                      </h4>
+                      <span
+                        className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                          paymentMode === 'ON'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-amber-600 text-white'
+                        }`}
+                      >
+                        {paymentMode === 'ON' ? 'পেমেন্ট সক্রিয় (৫ টাকা ফি)' : 'সম্পূর্ণ ফ্রি সাইট (কোনো ফি নেই)'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-snug">
+                      {paymentMode === 'ON'
+                        ? '🟢 বর্তমানে পেমেন্ট চালু আছে: প্রতিটি পিডিএফ ডাউনলোড করতে মূল ব্যালেন্স থেকে ৫ টাকা কর্তন করা হবে।'
+                        : '🟡 বর্তমানে পেমেন্ট বন্ধ (ফ্রি মোড): কোনো ইউজার থেকে কোনো টাকা কাটা হবে না, ক্লিক করলেই সরাসরি ডাউনলোড হবে।'}
+                    </p>
+                  </div>
+
+                  {/* Mode Toggle Buttons */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePaymentMode('ON')}
+                      className={`px-3.5 py-2 rounded-xl font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                        paymentMode === 'ON'
+                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200 ring-2 ring-emerald-500 ring-offset-1'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>Payment ON</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePaymentMode('OFF')}
+                      className={`px-3.5 py-2 rounded-xl font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                        paymentMode === 'OFF'
+                          ? 'bg-amber-600 text-white shadow-md shadow-amber-200 ring-2 ring-amber-500 ring-offset-1'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>Payment OFF (ফ্রি)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               {/* Navigation Tabs */}
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
@@ -1544,6 +1651,116 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     );
                   })()}
 
+                  {/* PENDING DEPOSIT REQUESTS VERIFICATION QUEUE */}
+                  {(() => {
+                    const pendingList = depositRequests.filter((r) => r.status === 'pending');
+                    if (pendingList.length === 0) return null;
+
+                    return (
+                      <div className="p-4 rounded-3xl bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 border-2 border-emerald-300 shadow-sm space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                              ৳
+                            </div>
+                            <div>
+                              <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2">
+                                <span>বিকাশ এড মানি রিকোয়েস্ট যাচাই ও অনুমোদন</span>
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black animate-pulse">
+                                  {pendingList.length}টি পেন্ডিং
+                                </span>
+                              </h4>
+                              <p className="text-[11px] text-slate-600">
+                                ইউজারের পাঠানো TrxID বিকাশ স্টেটমেন্টের সাথে মিলিয়ে নিশ্চিত হয়ে মূল ব্যালেন্সে টাকা এড করুন।
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {pendingList.map((req) => (
+                            <div
+                              key={req.id}
+                              className="p-3.5 rounded-2xl bg-white border border-emerald-200 shadow-2xs space-y-2.5 flex flex-col justify-between"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-extrabold text-xs text-slate-900">{req.userName}</span>
+                                    <span className="text-[10px] text-slate-500 font-mono">({req.userPhone})</span>
+                                  </div>
+                                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                                    {new Date(req.createdAt).toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })} • {new Date(req.createdAt).toLocaleDateString('bn-BD')}
+                                  </span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-sm sm:text-base font-black text-emerald-700 font-mono block">
+                                    ৳{req.amount}
+                                  </span>
+                                  <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
+                                    মূল ব্যালেন্স
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* TrxID Box with Copy Button */}
+                              <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                                <div>
+                                  <span className="text-[10px] text-slate-500 font-bold block">বিকাশ TrxID:</span>
+                                  <span className="font-mono font-black text-indigo-700 tracking-wider">
+                                    {req.trxId}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(req.trxId);
+                                    setCopiedTrxId(req.id);
+                                    setTimeout(() => setCopiedTrxId(null), 2000);
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                  <span>{copiedTrxId === req.id ? 'কপি হয়েছে!' : 'কপি TrxID'}</span>
+                                </button>
+                              </div>
+
+                              {/* Approve / Reject Actions */}
+                              <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (window.confirm(`${req.userName}-এর রিকোয়েস্টটি বাতিল করতে চান?`)) {
+                                      await adminUserService.rejectDepositRequest(req.id, 'ভুল বা অকার্যকর TrxID');
+                                      onShowToast?.('রিকোয়েস্ট বাতিল করা হয়েছে।', '⚠️');
+                                    }
+                                  }}
+                                  className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-xs font-bold transition cursor-pointer"
+                                >
+                                  বাতিল
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    await adminUserService.approveDepositRequest(req.id);
+                                    onShowToast?.(
+                                      `${req.userName}-এর মূল ব্যালেন্সে ৳${req.amount} টাকা সফলভাবে যোগ করা হয়েছে! 💰`,
+                                      '✅'
+                                    );
+                                  }}
+                                  className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>যাচাই ও মূল ব্যালেন্সে ৳{req.amount} দিন</span>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Search & Status Filters */}
                   <div className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
                     <div className="relative w-full sm:w-72">
@@ -1697,19 +1914,26 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
                               {/* Balance & Spin details + Action Buttons */}
                               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
-                                <div className="flex flex-wrap items-center gap-3 text-xs">
-                                  <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2">
-                                    <Coins className="w-4 h-4 text-amber-600" />
-                                    <span className="text-slate-600">ব্যালেন্স:</span>
-                                    <strong className="text-amber-900 font-mono text-sm">
+                                <div className="flex flex-wrap items-center gap-2 text-xs">
+                                  <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-1.5">
+                                    <span className="text-emerald-800 font-bold">মূল ব্যালেন্স:</span>
+                                    <strong className="text-emerald-950 font-mono text-sm font-black">
+                                      ৳{(userItem.balance || 0).toFixed(2)}
+                                    </strong>
+                                  </div>
+
+                                  <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-1.5">
+                                    <Coins className="w-3.5 h-3.5 text-amber-600" />
+                                    <span className="text-amber-800 font-bold">কয়েন:</span>
+                                    <strong className="text-amber-950 font-mono text-sm font-black">
                                       {userItem.coins}
                                     </strong>
-                                    <span className="text-[11px] text-amber-700 font-bold">
-                                      কয়েন (৳{bdtVal})
+                                    <span className="text-[10px] text-amber-700">
+                                      (৳{bdtVal})
                                     </span>
                                   </div>
 
-                                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-1.5 text-[11px]">
+                                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-1 text-[11px]">
                                     <span className="text-slate-500">স্পিন:</span>
                                     <span className={hasSpunToday ? 'text-slate-500 font-medium' : 'text-emerald-700 font-bold'}>
                                       {hasSpunToday ? 'আজ সমাপ্ত' : 'আজ এখনও স্পিন করেনি'}
@@ -1724,6 +1948,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                                     type="button"
                                     onClick={() => {
                                       setSelectedUserForMoney(userItem);
+                                      setAddMoneyTarget('balance'); // Default to main balance (টাকা / BDT)
+                                      setAddMoneyBdt(50);
                                       setAddMoneyCoins(500);
                                       setAddMoneyNote('বিকাশ মার্চেন্ট TrxID ভেরিফাইড এড মানি');
                                     }}
@@ -1798,105 +2024,257 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                         </div>
 
                         {/* Current User Balance Indicator */}
-                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs">
-                          <span className="text-amber-900 font-medium">বর্তমান ব্যালেন্স:</span>
-                          <span className="font-black text-amber-950 font-mono text-sm">
-                            {selectedUserForMoney.coins} কয়েন (৳{(selectedUserForMoney.coins / 100).toFixed(2)})
-                          </span>
-                        </div>
-
-                        {/* Quick Presets */}
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-700 block">
-                            দ্রুত অ্যামাউন্ট নির্বাচন (১০০ কয়েন = ১ টাকা):
-                          </label>
-                          <div className="grid grid-cols-3 gap-2">
-                            {[
-                              { label: '+৫০ (৳০.৫০)', coins: 50 },
-                              { label: '+১০০ (৳১)', coins: 100 },
-                              { label: '+৫০০ (৳৫ = ১ PDF)', coins: 500 },
-                              { label: '+১০০০ (৳১০)', coins: 1000 },
-                              { label: '+২৫০০ (৳২৫)', coins: 2500 },
-                              { label: '-৫০০ (-৳৫)', coins: -500 },
-                            ].map((preset, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => setAddMoneyCoins(preset.coins)}
-                                className={`py-1.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
-                                  addMoneyCoins === preset.coins
-                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
-                                }`}
-                              >
-                                {preset.label}
-                              </button>
-                            ))}
+                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between text-xs">
+                          <div>
+                            <span className="text-slate-500 font-medium">মূল ব্যালেন্স: </span>
+                            <span className="font-black text-emerald-700 font-mono text-sm">
+                              ৳{(selectedUserForMoney.balance || 0).toFixed(2)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 font-medium">কয়েন: </span>
+                            <span className="font-black text-amber-600 font-mono text-sm">
+                              {selectedUserForMoney.coins}
+                            </span>
                           </div>
                         </div>
 
-                        {/* Custom Coin Input */}
-                        <div>
-                          <label className="text-xs font-bold text-slate-800 block mb-1">
-                            কয়েনের পরিমাণ (Coins):
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              value={addMoneyCoins}
-                              onChange={(e) => setAddMoneyCoins(Number(e.target.value))}
-                              placeholder="যেমন: 500"
-                              className="w-full pl-3 pr-20 py-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                            />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-700">
-                              = ৳{(addMoneyCoins / 100).toFixed(2)} টাকা
+                        {/* TARGET BALANCE TOGGLE: মূল ব্যালেন্স vs কয়েন ব্যালেন্স */}
+                        <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-2xl gap-1 text-xs font-bold">
+                          <button
+                            type="button"
+                            onClick={() => setAddMoneyTarget('balance')}
+                            className={`py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                              addMoneyTarget === 'balance'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>মূল ব্যালেন্স (টাকা / BDT)</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAddMoneyTarget('coins')}
+                            className={`py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                              addMoneyTarget === 'coins'
+                                ? 'bg-amber-500 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            <Coins className="w-3.5 h-3.5" />
+                            <span>কয়েন ব্যালেন্স (Coins)</span>
+                          </button>
+                        </div>
+
+                        {/* ================= OPTION A: মূল ব্যালেন্সে টাকা এড মানি ================= */}
+                        {addMoneyTarget === 'balance' ? (
+                          <>
+                            {/* Notice Banner */}
+                            <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 font-medium leading-relaxed">
+                              ✓ বিকাশ TrxID ও পেমেন্ট যাচাই করে ইউজারের <strong>মূল ব্যালেন্সে টাকা</strong> যোগ করুন। ইউজার এই ব্যালেন্স দিয়ে সরকারি ফরম ও সিভি ডাউনলোড করতে পারবে।
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Admin Note Input */}
-                        <div>
-                          <label className="text-xs font-bold text-slate-800 block mb-1">
-                            এড মানির কারণ / বিকাশ TrxID ভেরিফিকেশন নোট:
-                          </label>
-                          <input
-                            type="text"
-                            value={addMoneyNote}
-                            onChange={(e) => setAddMoneyNote(e.target.value)}
-                            placeholder="যেমন: বিকাশ TrxID: BL6A8D2Q ভেরিফাইড ও অনুমোদিত"
-                            className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                          />
-                        </div>
+                            {/* BDT Quick Presets */}
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-700 block">
+                                দ্রুত টাকার পরিমাণ নির্বাচন (টাকা / BDT):
+                              </label>
+                              <div className="grid grid-cols-4 gap-1.5">
+                                {[
+                                  { label: '+৳৫০', amount: 50 },
+                                  { label: '+৳১০০', amount: 100 },
+                                  { label: '+৳২০০', amount: 200 },
+                                  { label: '+৳৫০০', amount: 500 },
+                                  { label: '+৳১০০০', amount: 1000 },
+                                  { label: '+৳২০০০', amount: 2000 },
+                                  { label: '-৳৫০', amount: -50 },
+                                ].map((preset, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setAddMoneyBdt(preset.amount)}
+                                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                                      addMoneyBdt === preset.amount
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                                    }`}
+                                  >
+                                    {preset.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
 
-                        {/* Submit Action */}
-                        <div className="flex items-center gap-2 pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedUserForMoney(null)}
-                            className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition"
-                          >
-                            বাতিল
-                          </button>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              await adminUserService.addMoney(
-                                selectedUserForMoney.uid,
-                                addMoneyCoins,
-                                addMoneyNote || 'অ্যাডমিন কর্তৃক ব্যালেন্স এড মানি'
-                              );
-                              onShowToast?.(
-                                `${selectedUserForMoney.displayName}-কে ${addMoneyCoins} কয়েন (${(addMoneyCoins / 100).toFixed(2)} টাকা) সফলভাবে এড করা হয়েছে! 💰`,
-                                '✅'
-                              );
-                              setSelectedUserForMoney(null);
-                            }}
-                            className="flex-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md cursor-pointer transition flex items-center justify-center gap-1.5"
-                          >
-                            <Check className="w-4 h-4" />
-                            <span>এড মানি নিশ্চিত করুন</span>
-                          </button>
-                        </div>
+                            {/* Custom BDT Amount Input */}
+                            <div>
+                              <label className="text-xs font-bold text-slate-800 block mb-1">
+                                মূল ব্যালেন্সে টাকার পরিমাণ (টাকা / ৳ BDT):
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-black text-emerald-700 font-mono">
+                                  ৳
+                                </span>
+                                <input
+                                  type="number"
+                                  value={addMoneyBdt}
+                                  onChange={(e) => setAddMoneyBdt(Number(e.target.value))}
+                                  placeholder="যেমন: 50 বা 100 বা 500"
+                                  className="w-full pl-8 pr-24 py-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-700">
+                                  টাকা (BDT)
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1 font-medium">
+                                <span>বর্তমান: ৳{(selectedUserForMoney.balance || 0).toFixed(2)}</span>
+                                <span className="font-bold text-emerald-700">
+                                  ➔ নতুন ব্যালেন্স হবে: ৳{Math.max(0, (selectedUserForMoney.balance || 0) + addMoneyBdt).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* TrxID / Verification Note */}
+                            <div>
+                              <label className="text-xs font-bold text-slate-800 block mb-1">
+                                বিকাশ TrxID / ভেরিফিকেশন নোট:
+                              </label>
+                              <input
+                                type="text"
+                                value={addMoneyNote}
+                                onChange={(e) => setAddMoneyNote(e.target.value)}
+                                placeholder="যেমন: বিকাশ TrxID: BL6A8D2Q যাচাইকৃত ও অনুমোদিত"
+                                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                              />
+                            </div>
+
+                            {/* Submit Main Balance Action */}
+                            <div className="flex items-center gap-2 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUserForMoney(null)}
+                                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition"
+                              >
+                                বাতিল
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await adminUserService.addMainBalance(
+                                    selectedUserForMoney.uid,
+                                    addMoneyBdt,
+                                    addMoneyNote || `বিকাশ TrxID ভেরিফাইড এড মানি (+৳${addMoneyBdt})`
+                                  );
+                                  onShowToast?.(
+                                    `${selectedUserForMoney.displayName}-এর মূল একাউন্টে ৳${addMoneyBdt} টাকা সফলভাবে যুক্ত হয়েছে! 💰`,
+                                    '✅'
+                                  );
+                                  setSelectedUserForMoney(null);
+                                }}
+                                className="flex-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md cursor-pointer transition flex items-center justify-center gap-1.5 active:scale-95"
+                              >
+                                <Check className="w-4 h-4" />
+                                <span>মূল ব্যালেন্সে ৳{addMoneyBdt} টাকা নিশ্চিত করুন</span>
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          /* ================= OPTION B: কয়েন ব্যালেন্স সমন্বয় ================= */
+                          <>
+                            {/* Coin Presets */}
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-700 block">
+                                দ্রুত কয়েন নির্বাচন (১০০ কয়েন = ১ টাকা):
+                              </label>
+                              <div className="grid grid-cols-3 gap-2">
+                                {[
+                                  { label: '+৫০ (৳০.৫০)', coins: 50 },
+                                  { label: '+১০০ (৳১)', coins: 100 },
+                                  { label: '+৫০০ (৳৫)', coins: 500 },
+                                  { label: '+১০০০ (৳১০)', coins: 1000 },
+                                  { label: '+২৫০০ (৳২৫)', coins: 2500 },
+                                  { label: '-৫০০ (-৳৫)', coins: -500 },
+                                ].map((preset, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setAddMoneyCoins(preset.coins)}
+                                    className={`py-1.5 px-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                                      addMoneyCoins === preset.coins
+                                        ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                                    }`}
+                                  >
+                                    {preset.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Custom Coin Input */}
+                            <div>
+                              <label className="text-xs font-bold text-slate-800 block mb-1">
+                                কয়েনের পরিমাণ (Coins):
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  value={addMoneyCoins}
+                                  onChange={(e) => setAddMoneyCoins(Number(e.target.value))}
+                                  placeholder="যেমন: 500"
+                                  className="w-full pl-3 pr-20 py-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-700">
+                                  = ৳{(addMoneyCoins / 100).toFixed(2)} টাকা
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Admin Note Input */}
+                            <div>
+                              <label className="text-xs font-bold text-slate-800 block mb-1">
+                                কয়েন এড মানির কারণ / নোট:
+                              </label>
+                              <input
+                                type="text"
+                                value={addMoneyNote}
+                                onChange={(e) => setAddMoneyNote(e.target.value)}
+                                placeholder="যেমন: রেফারেল বা বোনাস কয়েন প্রদান"
+                                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                              />
+                            </div>
+
+                            {/* Submit Coin Action */}
+                            <div className="flex items-center gap-2 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedUserForMoney(null)}
+                                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition"
+                              >
+                                বাতিল
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await adminUserService.addMoney(
+                                    selectedUserForMoney.uid,
+                                    addMoneyCoins,
+                                    addMoneyNote || 'অ্যাডমিন কর্তৃক কয়েন সমন্বয়'
+                                  );
+                                  onShowToast?.(
+                                    `${selectedUserForMoney.displayName}-কে ${addMoneyCoins} কয়েন সফলভাবে যোগ করা হয়েছে! 🪙`,
+                                    '✅'
+                                  );
+                                  setSelectedUserForMoney(null);
+                                }}
+                                className="flex-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-md cursor-pointer transition flex items-center justify-center gap-1.5 active:scale-95"
+                              >
+                                <Check className="w-4 h-4" />
+                                <span>কয়েন সমন্বয় নিশ্চিত করুন</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}

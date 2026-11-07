@@ -30,6 +30,7 @@ import {
   Smartphone,
   Download,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface Message {
   id: string;
@@ -93,6 +94,15 @@ export const StudyMateBD: React.FC<StudyMateBDProps> = ({
   onShowToast,
   onOpenMobileInstall,
 }) => {
+  const { user, isLoggedIn } = useAuth();
+
+  const buildPersonalizedWelcomeText = (studentName?: string): string => {
+    if (studentName && studentName.trim()) {
+      return `আসসালামু আলাইকুম, ${studentName.trim()}! 🎓\n\n'The MoSaFa StudyMate BD'-তে আপনাকে স্বাগতম। আপনি আজ পড়াশোনা বা পরীক্ষার কোন বিষয়ে পরামর্শ ও সহযোগিতা চান বলুন?\n\nআপনি স্কুল (Class 6-10 / SSC), কলেজ (HSC), বিশ্ববিদ্যালয়/মেডিকেল ভর্তি পরীক্ষা, বিসিএস বা যেকোনো চাকরির পরীক্ষার প্রস্তুতি নিচ্ছেন কি না জানালে—আমি আপনাকে বিষয়ভিত্তিক সঠিক দিকনির্দেশনা, সিলেবাস গাইড ও পড়াশোনায় পূর্ণাঙ্গ সহযোগিতা প্রদান করব। আজ আপনার কী সেবা প্রয়োজন বলুন!`;
+    }
+    return `আসসালামু আলাইকুম! 🎓\n\n'The MoSaFa StudyMate BD'-তে স্বাগতম। আপনি বর্তমানে স্কুল, কলেজ বা কোন পরীক্ষার প্রস্তুতি নিচ্ছেন?\n\nআপনার নাম ও লক্ষ্য জানালে আমি আপনাকে সেই অনুযায়ী পূর্ণাঙ্গ পরামর্শ, সিলেবাস গাইড ও পড়াশোনায় সহযোগিতা করব। আপনি আজ কী বিষয়ে সহযোগিতা চান বলুন!`;
+  };
+
   // Student Profile state
   const [profile, setProfile] = useState<StudentProfile>(() => {
     const saved = localStorage.getItem('mosafa_studymate_profile');
@@ -112,6 +122,16 @@ export const StudyMateBD: React.FC<StudyMateBDProps> = ({
     };
   });
 
+  // Auto-sync profile name with logged-in user
+  useEffect(() => {
+    if (isLoggedIn && user?.displayName) {
+      setProfile((prev) => ({
+        ...prev,
+        name: prev.name || user.displayName || '',
+      }));
+    }
+  }, [isLoggedIn, user?.displayName]);
+
   // Conversation messages state
   const [messages, setMessages] = useState<Message[]>(() => {
     const saved = localStorage.getItem('mosafa_studymate_messages');
@@ -126,11 +146,26 @@ export const StudyMateBD: React.FC<StudyMateBDProps> = ({
       {
         id: 'msg-welcome',
         role: 'model',
-        text: `স্বাগতম 'The MoSaFa StudyMate BD'-তে! 🎓\n\nআমি তোমার অল-ইন-ওয়ান AI প্রাইভেট টিউটর। পড়াশোনা সহজ করা, কঠিন বিষয় বুঝিয়ে দেওয়া, কুইজ নেওয়া এবং পরীক্ষার প্রস্তুতিতে তোমাকে ধাপে ধাপে সাহায্য করব।\n\nতোমার পরীক্ষার সেরা প্রস্তুতির জন্য আমাকে সাহায্য করো। তুমি বর্তমানে কোন ক্লাসে বা কোন কোর্সে পড়ছো?\n\n১. ষষ্ঠ–দশম শ্রেণি (Class 6–10 / SSC)\n২. একাদশ–দ্বাদশ শ্রেণি (HSC)\n৩. বিশ্ববিদ্যালয় / মেডিকেল / ইঞ্জিনিয়ারিং ভর্তি পরীক্ষা (Admission)\n৪. বিসিএস / সরকারি-বেসরকারি চাকরির প্রস্তুতি (BCS / Job Prep)\n৫. মাদ্রাসা / কারিগরি শিক্ষা\n৬. অন্য কোনো পরীক্ষা বা কোর্স\n\nশুধু তোমার ক্লাস বা পরীক্ষার নাম লিখলেই হবে। 😊`,
+        text: buildPersonalizedWelcomeText(),
         timestamp: new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }),
       },
     ];
   });
+
+  // Dynamically update initial greeting if student name becomes available
+  useEffect(() => {
+    const activeName = profile.name || (isLoggedIn ? user?.displayName : '');
+    if (activeName && messages.length === 1 && messages[0].id.startsWith('msg-welcome')) {
+      setMessages([
+        {
+          id: 'msg-welcome-personalized',
+          role: 'model',
+          text: buildPersonalizedWelcomeText(activeName),
+          timestamp: new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    }
+  }, [profile.name, isLoggedIn, user?.displayName]);
 
   // Active Tool Tabs: 'chat' | 'visual_solver' | 'mcq_quiz' | 'study_routine' | 'formula_book'
   const [activeTab, setActiveTab] = useState<'chat' | 'visual_solver' | 'mcq_quiz' | 'study_routine' | 'formula_book'>('chat');
@@ -459,10 +494,11 @@ export const StudyMateBD: React.FC<StudyMateBDProps> = ({
   // Reset conversation
   const handleResetChat = () => {
     if (confirm('আপনি কি পূর্বের সকল কথোপকথন মুছে নতুন করে শুরু করতে চান?')) {
+      const activeName = profile.name || (isLoggedIn ? user?.displayName : '');
       const initial: Message = {
         id: 'msg-welcome-fresh',
         role: 'model',
-        text: `স্বাগতম 'StudyMate BD'-তে! 🎓\n\nআমি তোমার অল-ইন-ওয়ান AI প্রাইভেট টিউটর। পড়াশোনা সহজ করা, কঠিন বিষয় বুঝিয়ে দেওয়া, কুইজ নেওয়া এবং পরীক্ষার প্রস্তুতিতে তোমাকে ধাপে ধাপে সাহায্য করব।\n\nতোমার পরীক্ষার সেরা প্রস্তুতির জন্য আমাকে সাহায্য করো। তুমি বর্তমানে কোন ক্লাসে বা কোন কোর্সে পড়ছো? 😊`,
+        text: buildPersonalizedWelcomeText(activeName),
         timestamp: new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages([initial]);
@@ -479,7 +515,10 @@ export const StudyMateBD: React.FC<StudyMateBDProps> = ({
       isOnboarded: true,
     }));
 
-    const greeting = profile.name ? `আমার নাম ${profile.name} এবং আমি ${levelLabel}-এ পড়ছি।` : `আমি ${levelLabel}-এর শিক্ষার্থী।`;
+    const activeName = profile.name || (isLoggedIn ? user?.displayName : '');
+    const greeting = activeName
+      ? `আসসালামু আলাইকুম, আমার নাম ${activeName}। আমি বর্তমানে ${levelLabel}-এর প্রস্তুতি নিচ্ছি। আমাকে এই পরীক্ষার সিলেবাস অনুযায়ী কার্যকর পরামর্শ ও পড়াশোনায় সার্বিক সহযোগিতা করুন।`
+      : `আমি ${levelLabel}-এর শিক্ষার্থী। আমাকে এই পরীক্ষার সঠিক প্রস্তুতি, সিলেবাস ও পড়াশোনায় পরামর্শ দিন।`;
 
     sendMessage(greeting, 'chat');
   };
@@ -527,11 +566,23 @@ export const StudyMateBD: React.FC<StudyMateBDProps> = ({
               <span>⚡ টার্বো স্পিড সক্রিয়</span>
             </div>
 
-            {profile.name && (
+            {(profile.name || user?.displayName) && (
               <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
-                <span>👤 {profile.name}</span>
-                {profile.educationLevel && <span className="text-indigo-400">|</span>}
-                <span className="text-slate-600 truncate max-w-[140px]">{profile.educationLevel}</span>
+                <span>👤 {profile.name || user?.displayName}</span>
+                {profile.educationLevel && (
+                  <>
+                    <span className="text-indigo-400">|</span>
+                    <span className="text-slate-600 truncate max-w-[140px]">{profile.educationLevel}</span>
+                    <button
+                      type="button"
+                      onClick={() => setProfile((p) => ({ ...p, educationLevel: '' }))}
+                      className="ml-1 text-[10px] text-indigo-600 hover:text-indigo-900 underline cursor-pointer"
+                      title="শ্রেণি বা পরীক্ষা পরিবর্তন করুন"
+                    >
+                      পরিবর্তন
+                    </button>
+                  </>
+                )}
               </div>
             )}
 
@@ -628,26 +679,31 @@ export const StudyMateBD: React.FC<StudyMateBDProps> = ({
       {/* Main Workspace Layout */}
       <main className="flex-1 max-w-5xl mx-auto w-full px-3 sm:px-4 py-4 flex flex-col gap-4">
         {/* Onboarding Quick Card if student profile is empty */}
-        {(!profile.name || !profile.educationLevel) && (
-          <div className="bg-gradient-to-r from-indigo-500 via-purple-600 to-rose-600 rounded-3xl p-5 sm:p-6 text-white shadow-xl shadow-indigo-100/50">
+        {/* Onboarding Quick Card if student profile has not selected education level */}
+        {!profile.educationLevel && (
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-rose-600 rounded-3xl p-5 sm:p-6 text-white shadow-xl shadow-indigo-100/50">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xl">🎓</span>
               <h2 className="text-base sm:text-lg font-bold">
-                তোমার ক্লাসের উপযোগী সেরা প্রস্তুতি শুরু করো!
+                {profile.name || user?.displayName
+                  ? `আসসালামু আলাইকুম, ${profile.name || user?.displayName}! আপনার ক্লাসের উপযোগী সেরা প্রস্তুতি শুরু করুন`
+                  : 'আপনার ক্লাসের উপযোগী সেরা প্রস্তুতি শুরু করুন!'}
               </h2>
             </div>
             <p className="text-xs sm:text-sm text-indigo-100 max-w-2xl leading-relaxed">
-              তোমার নাম ও শ্রেণি নির্ধারণ করলে টিউটর তোমার সিলেবাস অনুযায়ী সঠিক সমাধান ও কুইজ প্রদান করবে।
+              {profile.name || user?.displayName
+                ? 'আপনি কোন শ্রেণি বা পরীক্ষার প্রস্তুতি নিচ্ছেন নির্বাচন করুন। টিউটর আপনার সিলেবাস অনুযায়ী সঠিক সমাধান, কুইজ ও পরামর্শ প্রদান করবে।'
+                : 'আপনার নাম ও শ্রেণি নির্ধারণ করলে টিউটর আপনার সিলেবাস অনুযায়ী সঠিক সমাধান ও কুইজ প্রদান করবে।'}
             </p>
 
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-1">
                 <label className="block text-xs font-medium text-indigo-100 mb-1">
-                  তোমার নাম:
+                  আপনার নাম:
                 </label>
                 <input
                   type="text"
-                  value={profile.name}
+                  value={profile.name || user?.displayName || ''}
                   onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
                   placeholder="যেমন: মোফাচ্ছির / রাহিম"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white text-slate-800 placeholder-slate-400 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-300"
@@ -656,7 +712,7 @@ export const StudyMateBD: React.FC<StudyMateBDProps> = ({
 
               <div className="sm:col-span-2">
                 <label className="block text-xs font-medium text-indigo-100 mb-1">
-                  তোমার শ্রেণি বা পরীক্ষা নির্বাচন করো:
+                  আপনার শ্রেণি বা পরীক্ষা নির্বাচন করুন:
                 </label>
                 <div className="flex flex-wrap gap-1.5">
                   {CLASS_OPTIONS.map((cls) => (

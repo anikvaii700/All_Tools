@@ -6,9 +6,10 @@ interface GovOfficeLogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   alt?: string;
+  customUrl?: string; // Optional custom external logo link (e.g. Imgur, Cloudinary, ImgBB)
 }
 
-// 1:1 Mapping to the 9 official logos uploaded by the user
+// 1:1 Mapping to the 9 official logos (Optimized to tiny ~20-50KB size for instant loading)
 export const GOV_OFFICE_LOGOS: Record<OfficeId, { primary: string; fallback: string; title: string }> = {
   // 1. নির্বাচন অফিস (বাংলাদেশ নির্বাচন কমিশন - লাল ব্যালট বক্স "নি ক")
   'election-commission': {
@@ -71,6 +72,7 @@ export const GovOfficeLogo: React.FC<GovOfficeLogoProps> = ({
   className = '',
   size = 'lg',
   alt,
+  customUrl,
 }) => {
   const [hasError, setHasError] = useState(false);
   const logoInfo = GOV_OFFICE_LOGOS[officeId];
@@ -86,17 +88,20 @@ export const GovOfficeLogo: React.FC<GovOfficeLogoProps> = ({
 
   if (!logoInfo) return null;
 
+  const imageSrc = customUrl || (hasError ? logoInfo.fallback : logoInfo.primary);
+
   return (
     <div
       className={`relative flex items-center justify-center p-1.5 transition-transform duration-300 ${dim} ${className}`}
     >
       <img
-        src={hasError ? logoInfo.fallback : logoInfo.primary}
+        src={imageSrc}
         alt={alt || logoInfo.title}
         onError={() => {
           if (!hasError) setHasError(true);
         }}
-        loading="lazy"
+        loading="eager"
+        decoding="async"
         className="w-full h-full object-contain filter drop-shadow-md select-none transition-all duration-300"
       />
     </div>

@@ -23,7 +23,8 @@ export interface UserProfile {
   email: string | null;
   phoneNumber: string | null;
   photoURL: string | null;
-  coins: number;
+  balance: number; // মূল ব্যালেন্স (টাকা / BDT)
+  coins: number; // কয়েন ব্যালেন্স
   totalEarnedCoins: number;
   lastSpinDate: string | null;
   authProvider: 'google' | 'phone' | 'guest';
@@ -36,6 +37,7 @@ export interface UserProfile {
 export interface CoinTransaction {
   id: string;
   amount: number;
+  unit?: 'bdt' | 'coins';
   type: string;
   description: string;
   date: string;
@@ -49,6 +51,9 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginOrRegisterWithPhone: (phoneNumber: string, pin: string, name?: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  deductMainBalance: (amount: number, reason: string) => Promise<boolean>;
+  addMainBalance: (amount: number, method: string, trxId?: string) => Promise<boolean>;
+  convertCoinsToMainBalance: (coinAmount: number) => Promise<{ success: boolean; bdtAdded: number; message: string }>;
   awardCoins: (amount: number, reason: string) => Promise<boolean>;
   recordDailySpin: (coinsWon: number) => Promise<boolean>;
   canSpinToday: () => boolean;
@@ -103,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: fbUser.email || data.email || null,
               phoneNumber: fbUser.phoneNumber || data.phoneNumber || null,
               photoURL: fbUser.photoURL || data.photoURL || null,
+              balance: typeof data.balance === 'number' ? data.balance : 0,
               coins: typeof data.coins === 'number' ? data.coins : 50,
               totalEarnedCoins: typeof data.totalEarnedCoins === 'number' ? data.totalEarnedCoins : 50,
               lastSpinDate: data.lastSpinDate || null,
@@ -122,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: fbUser.email || null,
               phoneNumber: fbUser.phoneNumber || null,
               photoURL: fbUser.photoURL || null,
+              balance: 0,
               coins: 50,
               totalEarnedCoins: 50,
               lastSpinDate: null,
@@ -134,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: newProfile.email || '',
               phoneNumber: newProfile.phoneNumber || '',
               photoURL: newProfile.photoURL || '',
+              balance: 0,
               coins: newProfile.coins,
               totalEarnedCoins: newProfile.totalEarnedCoins,
               lastSpinDate: '',
@@ -154,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: fbUser.email || null,
             phoneNumber: fbUser.phoneNumber || null,
             photoURL: fbUser.photoURL || null,
+            balance: user?.balance || 0,
             coins: user?.coins || 50,
             totalEarnedCoins: user?.totalEarnedCoins || 50,
             lastSpinDate: user?.lastSpinDate || null,
@@ -174,6 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (!prev) return null;
                 const updated: UserProfile = {
                   ...prev,
+                  balance: typeof d.balance === 'number' ? d.balance : (prev.balance || 0),
                   coins: typeof d.coins === 'number' ? d.coins : prev.coins,
                   totalEarnedCoins: typeof d.totalEarnedCoins === 'number' ? d.totalEarnedCoins : prev.totalEarnedCoins,
                   lastSpinDate: d.lastSpinDate || prev.lastSpinDate,
@@ -244,6 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const phoneUid = `phone_${cleanPhone.replace('+', '')}`;
       const userRef = doc(db, 'users', phoneUid);
 
+      let currentBalance = 0;
       let currentCoins = 50;
       let totalCoins = 50;
       let displayName = name || `ইউজার ${cleanPhone.slice(-4)}`;
@@ -256,6 +267,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const snap = await getDoc(userRef);
         if (snap.exists()) {
           const data = snap.data();
+          currentBalance = typeof data.balance === 'number' ? data.balance : 0;
           currentCoins = data.coins ?? 50;
           totalCoins = data.totalEarnedCoins ?? 50;
           displayName = data.displayName || displayName;
@@ -271,6 +283,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: '',
             phoneNumber: cleanPhone,
             photoURL: '',
+            balance: 0,
             coins: 50,
             totalEarnedCoins: 50,
             lastSpinDate: '',
@@ -290,6 +303,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: null,
         phoneNumber: cleanPhone,
         photoURL: null,
+        balance: currentBalance,
         coins: currentCoins,
         totalEarnedCoins: totalCoins,
         lastSpinDate,
@@ -323,6 +337,187 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
       setUser(null);
     }
+  };
+
+  // 1. Deduct from Main Cash Balance (টাকা / BDT) - e.g. 5 BDT for PDF Download
+  const deductMainBalance = async (amount: number, reason: string): Promise<boolean> => {
+    if (!user) return false;
+    const currentBalance = Number(user.balance || 0);
+    if (currentBalance < amount) {
+      return false;
+    }
+    const newBalance = Math.max(0, currentBalance - amount);
+    const updatedUser: UserProfile = {
+      ...user,
+      balance: newBalance,
+    };
+    setUser(updatedUser);
+    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updatedUser));
+    adminUserService.syncCurrentUser(updatedUser);
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        balance: newBalance,
+        updatedAt: new Date().toISOString(),
+      });
+
+      const txRef = collection(db, 'users', user.uid, 'transactions');
+      await addDoc(txRef, {
+        transactionId: `tx_deduct_${Date.now()}`,
+        userId: user.uid,
+        amount: -amount,
+        unit: 'bdt',
+        type: 'balance_deduct',
+        description: reason,
+        date: getTodayDateString(),
+        createdAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('deductMainBalance Firestore sync note:', err);
+    }
+
+    const newTx: CoinTransaction = {
+      id: `tx_deduct_${Date.now()}`,
+      amount: -amount,
+      unit: 'bdt',
+      type: 'balance_deduct',
+      description: reason,
+      date: getTodayDateString(),
+      createdAt: new Date().toISOString(),
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+    return true;
+  };
+
+  // 2. Add Main Cash Balance (টাকা / BDT) - Minimum 50 BDT requirement
+  const addMainBalance = async (amount: number, method: string, trxId?: string): Promise<boolean> => {
+    if (!user) return false;
+    if (amount < 50) {
+      throw new Error('মিনিমাম ৫০ টাকা এড মানি করতে পারবেন');
+    }
+    const currentBalance = Number(user.balance || 0);
+    const newBalance = currentBalance + amount;
+    const updatedUser: UserProfile = {
+      ...user,
+      balance: newBalance,
+    };
+    setUser(updatedUser);
+    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updatedUser));
+    adminUserService.syncCurrentUser(updatedUser);
+
+    const desc = `ব্যালেন্স এড মানি (+৳${amount} টাকা) [${method}${trxId ? `, TrxID: ${trxId}` : ''}]`;
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        balance: newBalance,
+        updatedAt: new Date().toISOString(),
+      });
+
+      const txRef = collection(db, 'users', user.uid, 'transactions');
+      await addDoc(txRef, {
+        transactionId: `tx_add_${Date.now()}`,
+        userId: user.uid,
+        amount,
+        unit: 'bdt',
+        type: 'add_money',
+        description: desc,
+        date: getTodayDateString(),
+        createdAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('addMainBalance Firestore sync note:', err);
+    }
+
+    const newTx: CoinTransaction = {
+      id: `tx_add_${Date.now()}`,
+      amount,
+      unit: 'bdt',
+      type: 'add_money',
+      description: desc,
+      date: getTodayDateString(),
+      createdAt: new Date().toISOString(),
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+    return true;
+  };
+
+  // 3. Convert Coin Balance into Main Balance (100 coins = 1 BDT)
+  const convertCoinsToMainBalance = async (
+    coinAmount: number
+  ): Promise<{ success: boolean; bdtAdded: number; message: string }> => {
+    if (!user) {
+      return { success: false, bdtAdded: 0, message: 'লগইন আবশ্যক' };
+    }
+    const currentCoins = Number(user.coins || 0);
+    if (coinAmount < 100) {
+      return { success: false, bdtAdded: 0, message: 'কনভার্ট করার জন্য ন্যূনতম ১০০ কয়েন প্রয়োজন' };
+    }
+    if (currentCoins < coinAmount) {
+      return { success: false, bdtAdded: 0, message: 'আপনার একাউন্টে পর্যাপ্ত কয়েন ব্যালেন্স নেই' };
+    }
+
+    const bdtAdded = Math.floor(coinAmount / 100);
+    const actualCoinsDeducted = bdtAdded * 100;
+    if (bdtAdded <= 0) {
+      return { success: false, bdtAdded: 0, message: 'ন্যূনতম ১০০ কয়েন কনভার্ট করতে হবে' };
+    }
+
+    const newCoins = currentCoins - actualCoinsDeducted;
+    const currentBalance = Number(user.balance || 0);
+    const newBalance = currentBalance + bdtAdded;
+
+    const updatedUser: UserProfile = {
+      ...user,
+      coins: newCoins,
+      balance: newBalance,
+    };
+    setUser(updatedUser);
+    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updatedUser));
+    adminUserService.syncCurrentUser(updatedUser);
+
+    const desc = `কয়েন কনভার্ট: ${actualCoinsDeducted} কয়েন ➔ +৳${bdtAdded} টাকা মূল ব্যালেন্স`;
+
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        coins: newCoins,
+        balance: newBalance,
+        updatedAt: new Date().toISOString(),
+      });
+
+      const txRef = collection(db, 'users', user.uid, 'transactions');
+      await addDoc(txRef, {
+        transactionId: `tx_conv_${Date.now()}`,
+        userId: user.uid,
+        amount: bdtAdded,
+        unit: 'bdt',
+        type: 'coin_conversion',
+        description: desc,
+        date: getTodayDateString(),
+        createdAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('convertCoinsToMainBalance Firestore sync note:', err);
+    }
+
+    const newTx: CoinTransaction = {
+      id: `tx_conv_${Date.now()}`,
+      amount: bdtAdded,
+      unit: 'bdt',
+      type: 'coin_conversion',
+      description: desc,
+      date: getTodayDateString(),
+      createdAt: new Date().toISOString(),
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+
+    return {
+      success: true,
+      bdtAdded,
+      message: `${actualCoinsDeducted} কয়েন সফলভাবে কনভার্ট করে আপনার মূল ব্যালেন্সে ৳${bdtAdded} টাকা যোগ হয়েছে!`,
+    };
   };
 
   const awardCoins = async (amount: number, reason: string): Promise<boolean> => {
@@ -442,6 +637,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithGoogle,
         loginOrRegisterWithPhone,
         logout,
+        deductMainBalance,
+        addMainBalance,
+        convertCoinsToMainBalance,
         awardCoins,
         recordDailySpin,
         canSpinToday,

@@ -208,8 +208,35 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
-        {/* Right Corner: Only Hamburger Menu (☰) — All options inside as requested */}
-        <div className="flex items-center gap-2">
+        {/* Right Corner: Quick Balance Pill + Hamburger Menu (☰) */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Quick Balance Pill if Logged In */}
+          {isLoggedIn && user ? (
+            <button
+              type="button"
+              onClick={onOpenWalletModal}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition cursor-pointer border border-slate-700 shadow-2xs text-xs font-bold"
+              title="মূল ব্যালেন্স ও কয়েন ওয়ালেট"
+            >
+              <span className="text-emerald-400 font-black">৳{(user.balance || 0).toFixed(0)}</span>
+              <span className="text-slate-500 font-normal">|</span>
+              <span className="text-amber-300 flex items-center gap-0.5 text-[11px]">
+                <Coins className="w-3 h-3 text-amber-400" />
+                <span>{user.coins || 0}</span>
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenAuthModal}
+              className="hidden xs:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer text-xs font-bold"
+              title="লগইন বা একাউন্ট তৈরি করুন"
+            >
+              <span>লগইন</span>
+              <span className="text-[10px] bg-rose-500/20 text-rose-700 px-1 rounded">+৫০</span>
+            </button>
+          )}
+
           {/* থ্রি লাইন মেনু (☰) */}
           <div className="relative" ref={menuRef}>
             <button
@@ -298,11 +325,38 @@ export const Header: React.FC<HeaderProps> = ({
                         {isLoggedIn ? 'আমার ওয়ালেট' : 'লগইন / একাউন্ট'}
                       </span>
                       <span className="text-[9px] text-slate-500 font-semibold">
-                        {isLoggedIn ? `${user?.coins || 0} কয়েন` : 'বোনাস নিন'}
+                        {isLoggedIn ? `৳${(user?.balance || 0).toFixed(0)} • ${user?.coins || 0}🪙` : 'বোনাস নিন'}
                       </span>
                     </div>
                   </button>
                 </div>
+
+                {/* Quick CV Profile Shortcut */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onNavigateTool?.('cv-maker');
+                  }}
+                  className="w-full mb-2 p-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 border border-emerald-200 text-left cursor-pointer flex items-center justify-between transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <FileText className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-emerald-950 block leading-tight">
+                        সিভি সেকশন ও প্রোফাইল
+                      </span>
+                      <span className="text-[9px] text-emerald-700 font-semibold">
+                        নিজের তথ্য সেভ ও অটো-ফিল
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">
+                    ওপেন ➔
+                  </span>
+                </button>
 
                 {/* Device Sector inside Menu */}
                 {onSelectDeviceSector && (

@@ -38,6 +38,7 @@ import {
   Building2,
   Video,
   Camera,
+  Home,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useAppUpdateSync } from './hooks/useAppUpdateSync';
@@ -84,12 +85,9 @@ import { BdOnlinePortal } from './components/BdOnlinePortal';
 import { ContentCreatorStudio } from './components/ContentCreatorStudio';
 import { EntrepreneurJourney } from './components/EntrepreneurJourney';
 import { AllFormFillup } from './components/all-form-fillup/AllFormFillup';
-import { GovOfficesHub } from './components/gov-offices/GovOfficesHub';
-import { JobPhotoSignatureResizer } from './components/job-resizer/JobPhotoSignatureResizer';
 
 export type ToolId =
   | 'job-photo-signature-resizer'
-  | 'all-gov-offices'
   | 'studymate-bd'
   | 'all-form-fillup'
   | 'entrepreneur-journey'
@@ -198,7 +196,6 @@ export default function App() {
       const toolParam = params.get('tool');
       const validToolIds = [
         'job-photo-signature-resizer',
-        'all-gov-offices',
         'studymate-bd',
         'all-form-fillup',
         'love-test',
@@ -258,64 +255,39 @@ export default function App() {
 
   // Complete Tools Registry with Sector Categorization
   const tools: ToolCardInfo[] = [
-    // MoSaFa Job Photo & Signature Resizer (চাকরির আবেদন ছবি ও স্বাক্ষর প্রস্তুতকারী)
+    // 0. MoSaFa BD Online Portal (বাংলাদেশ সার্ভিস ডিরেক্টরি, জব পোর্টাল, নির্বাচন অফিস ও টেলিটক সাইজার)
     {
-      id: 'job-photo-signature-resizer',
-      title: 'MoSaFa Job Photo & Signature Resizer',
-      badge: '🔥 সরকারি চাকরির ছবি ও স্বাক্ষর (৩০০×৩০০ / ৩০০×৮০)',
-      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+      id: 'bd-online-portal',
+      title: 'MoSaFa BD Online Portal (বাংলাদেশ ডিরেক্টরি)',
+      badge: '🏛️ সার্ভিস, জব পোর্টাল ও সরকারি সেবা',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
       category: 'calculator',
-      iconBg: 'from-rose-600 via-pink-600 to-indigo-600',
-      icon: <Camera className="w-6 h-6 text-white" />,
-      description:
-        'এক ক্লিকেই সরকারি চাকরির আবেদনের ছবি (৩০০×৩০০ px, ১০০ KB) ও স্বাক্ষর (৩০০×৮০ px, ৬০ KB) স্বয়ংক্রিয়ভাবে প্রস্তুত করুন। নো ক্রপ, নো ডিস্টরশন, সরাসরি JPG ডাউনলোড ও জিপ ফাইল সুবিধা।',
-      deviceTarget: 'both',
-      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
-      keywords: [
-        'job photo signature resizer',
-        'job photo resizer',
-        'signature resizer',
-        'teletalk photo resizer',
-        'teletalk signature resizer',
-        'চাকরির ছবি',
-        'স্বাক্ষর রিসাইজার',
-        'টেলিটক ছবি',
-        'ছবি ও স্বাক্ষর রিসাইজার',
-        '৩০০*৩০০',
-        '৩০০*৮০',
-        'চাকরির আবেদন ছবি',
-        'সরকারি চাকরির ছবি',
-        'চাকরির আবেদন ছবি ও স্বাক্ষর প্রস্তুতকারী',
-      ],
-    },
-    // 0. MoSaFa All Government Offices (সকল সরকারি অফিস)
-    {
-      id: 'all-gov-offices',
-      title: 'সকল সরকারি অফিস (MoSaFa Gov Offices)',
-      badge: '🏛️ নির্বাচন কমিশন ও সরকারি সেবা',
-      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      category: 'calculator',
-      iconBg: 'from-rose-600 via-pink-600 to-indigo-700',
+      iconBg: 'from-emerald-600 via-teal-600 to-indigo-700',
       icon: <Building2 className="w-6 h-6 text-white" />,
       description:
-        'বাংলাদেশের সকল সরকারি অফিসের তথ্য, সেবা, আবেদন প্রক্রিয়া, প্রয়োজনীয় কাগজপত্র ও ফি জানার স্মার্ট প্ল্যাটফর্ম। প্রথম ধাপে নির্বাচন কমিশন NID সংশোধন সহায়িকা, ফি ক্যালকুলেটর ও চেকলিস্ট সহ।',
+        'বাংলাদেশ সরকার ও বেসরকারি গুরুত্বপূর্ণ অনলাইন সেবা, চাকরির পোর্টাল, নির্বাচন কমিশন এনআইডি সহকারী এবং টেলিটক চাকরির ছবি ও স্বাক্ষর সাইজার এক ঠিকানায়!',
       deviceTarget: 'both',
       deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
       keywords: [
-        'সকল সরকারি অফিস',
-        'সরকারি অফিস',
-        'all gov offices',
-        'gov offices',
-        'নির্বাচন কমিশন',
-        'nid সংশোধন',
-        'জাতীয় পরিচয়পত্র সংশোধন',
-        'nid correction',
-        'nid fee',
-        'nid documents',
-        'services nidw',
+        'bd online portal',
+        'mosafa bd online portal',
+        'বাংলাদেশ সার্ভিস পোর্টাল',
+        'সরকারি সেবা',
+        'jobs portal',
+        'online jobs portal',
+        'চাকরি পোর্টাল',
+        'bdjobs',
+        'mygov',
+        'nid',
         'পাসপোর্ট',
-        'ভূমি অফিস',
-        'bdris',
+        'bsp',
+        'ড্রাইভিং লাইসেন্স',
+        'খতিয়ান',
+        'নামজারি',
+        'রেলওয়ে টিকিট',
+        'টেলিটক ছবি',
+        'চাকরির ছবি ও স্বাক্ষর',
+        'job photo resizer',
       ],
     },
     // 1. MoSaFa All Form Fillup
@@ -792,38 +764,6 @@ export default function App() {
         'হৃদয় রেখা',
       ],
     },
-    // 30. MoSaFa BD Online Portal (বাংলাদেশ সার্ভিস ডিরেক্টরি ও জব পোর্টাল)
-    {
-      id: 'bd-online-portal',
-      title: 'MoSaFa BD Online Portal (বাংলাদেশ ডিরেক্টরি)',
-      badge: '🏛️ সার্ভিস ও জব পোর্টাল',
-      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-      category: 'calculator',
-      iconBg: 'from-emerald-600 via-teal-600 to-indigo-700',
-      icon: <Building2 className="w-6 h-6 text-white" />,
-      description:
-        'বাংলাদেশ সরকার ও বেসরকারি গুরুত্বপূর্ণ অনলাইন সেবা এবং দেশের সকল জনপ্রিয় চাকরির ওয়েবসাইট এক ঠিকানায়! NID, পাসপোর্ট, ড্রাইভিং লাইসেন্স, খতিয়ান ও Bdjobs সহ ১৩টি ক্যাটাগরি।',
-      deviceTarget: 'both',
-      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
-      keywords: [
-        'bd online portal',
-        'mosafa bd online portal',
-        'বাংলাদেশ সার্ভিস পোর্টাল',
-        'সরকারি সেবা',
-        'jobs portal',
-        'online jobs portal',
-        'চাকরি পোর্টাল',
-        'bdjobs',
-        'mygov',
-        'nid',
-        'পাসপোর্ট',
-        'bsp',
-        'ড্রাইভিং লাইসেন্স',
-        'খতিয়ান',
-        'নামজারি',
-        'রেলওয়ে টিকিট',
-      ],
-    },
     // 31. MoSaFa Content Creator Studio
     {
       id: 'content-creator-studio',
@@ -931,113 +871,50 @@ export default function App() {
     return String(n).replace(/\d/g, (d) => bnDigits[Number(d)]);
   };
 
-  const wrapWithNavbar = (component: React.ReactNode) => (
-    <div className="flex flex-col min-h-screen relative text-slate-800">
-      {/* Universal Top Hub Navigation Bar for Shared Links & Quick Back (Desktop Only - Mobile stays clean without black bar) */}
-      <nav className="hidden sm:flex w-full bg-slate-900 text-white border-b border-slate-800 px-3 sm:px-4 py-2 sm:py-2.5 items-center justify-between text-xs sticky top-0 z-50 shadow-md">
-        {/* Desktop View: Back Button */}
-        <button
-          type="button"
-          onClick={() => navigateToTool(null)}
-          className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 text-white font-bold transition shadow-xs cursor-pointer active:scale-95"
-          title={`সকল ${toBanglaNum(tools.length)}টি টুলস দেখতে হোম পেজে যান`}
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>← সকল {toBanglaNum(tools.length)}টি টুলস (All Tools)</span>
-        </button>
-
-        {/* Desktop View: Center Brand */}
-        <div
-          onClick={handleNavSecretAdmin}
-          className="hidden md:flex items-center gap-2 text-slate-300 font-medium select-none cursor-default"
-        >
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>The MoSaFa Tools • সকল {toBanglaNum(tools.length)}টি অনলাইন টুলস এক ক্লিকে</span>
-        </div>
-
-        {/* Desktop View: Actions (Spin, Login, Update, Share) — Hidden on Mobile */}
-        <div className="hidden sm:flex items-center gap-2">
-          {/* দৈনিক লাকি স্পিন */}
+  const wrapWithNavbar = (component: React.ReactNode) => {
+    const currentTool = tools.find((t) => t.id === activeTool);
+    return (
+      <div className="flex flex-col min-h-screen relative text-slate-800">
+        {/* Universal Top Hub Navigation Bar — বামদিকে “পিছনে যান”, মাঝে শুধু “টুলের নাম”, ডানদিকে “হোমে ফিরে যান” */}
+        <nav className="w-full bg-slate-900 text-white border-b border-slate-800 px-2 sm:px-6 py-2 sm:py-2.5 items-center flex justify-between sticky top-0 z-50 shadow-md">
+          {/* Left: পিছনে যান */}
           <button
             type="button"
-            onClick={() => setIsSpinModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-600 hover:to-rose-700 text-white font-bold transition shadow-xs cursor-pointer active:scale-95 text-xs"
-            title="দৈনিক লাকি স্পিন"
+            onClick={() => {
+              if (window.history.state && window.history.state.tool) {
+                window.history.back();
+              } else {
+                navigateToTool(null);
+              }
+            }}
+            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-bold transition shadow-xs cursor-pointer text-xs sm:text-sm border border-slate-700 shrink-0"
+            title="পিছনে যান"
           >
-            <Sparkles className="w-3.5 h-3.5 text-yellow-200" />
-            <span className="hidden sm:inline">স্পিন</span>
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" />
+            <span className="hidden xs:inline">পিছনে যান</span>
           </button>
 
-          {/* কয়েন ব্যালেন্স বা লগইন */}
-          {isLoggedIn && user ? (
-            <button
-              type="button"
-              onClick={() => setIsWalletModalOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 text-amber-300 border border-amber-400/40 font-bold transition cursor-pointer active:scale-95 text-xs"
-              title="কয়েন ওয়ালেট"
-            >
-              <Coins className="w-3.5 h-3.5 text-amber-400" />
-              <span>{user.coins.toLocaleString('bn-BD')}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setAuthBonusPrompt(null);
-                setIsAuthModalOpen(true);
-              }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-rose-300 border border-slate-700 font-bold transition cursor-pointer active:scale-95 text-xs"
-              title="লগইন বা একাউন্ট তৈরি"
-            >
-              <span>লগইন</span>
-              <span className="text-[9px] bg-rose-500/20 text-rose-300 px-1 py-0.2 rounded">
-                +১৫০
-              </span>
-            </button>
-          )}
-
-          {/* লাইভ অটো-আপডেট স্ট্যাটাস বাটন */}
-          <button
-            type="button"
-            onClick={() => setIsLiveUpdateModalOpen(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 ${
-              updateSync.updateAvailable
-                ? 'bg-rose-500/20 border-rose-400 text-rose-300 animate-pulse'
-                : updateSync.isUpdateOn
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20'
-                : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
-            }`}
-            title="লাইভ অটো-আপডেট স্ট্যাটাস"
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                updateSync.updateAvailable
-                  ? 'bg-rose-400 animate-ping'
-                  : updateSync.isUpdateOn
-                  ? 'bg-emerald-400'
-                  : 'bg-slate-500'
-              }`}
-            />
-            <span className="hidden sm:inline">
-              {updateSync.isUpdateOn ? 'Update ON' : 'Update OFF'}
+          {/* Center: শুধু টুলের নাম (Tool Name Only) */}
+          <div className="flex-1 px-2 text-center truncate min-w-0">
+            <span className="text-xs sm:text-base font-black text-white truncate inline-block max-w-[170px] sm:max-w-md">
+              {currentTool?.title || 'অনলাইন টুল'}
             </span>
-            <span className="font-mono text-[10px] opacity-80">v{updateSync.currentVersion}</span>
-          </button>
+          </div>
 
+          {/* Right: হোমে ফিরে যান */}
           <button
             type="button"
-            onClick={() => setIsShareModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 font-bold transition cursor-pointer active:scale-95"
-            title={`সকল ${toBanglaNum(tools.length)}টি টুলসের মূল লিংক শেয়ার করুন`}
+            onClick={() => navigateToTool(null)}
+            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 active:scale-95 text-white font-bold transition shadow-md shadow-rose-950/20 cursor-pointer text-xs sm:text-sm shrink-0"
+            title="হোমে ফিরে যান"
           >
-            <Share2 className="w-3.5 h-3.5 text-rose-400" />
-            <span className="hidden md:inline">সকল টুলস শেয়ার</span>
+            <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+            <span className="hidden xs:inline">হোমে ফিরে যান</span>
           </button>
-        </div>
-      </nav>
+        </nav>
 
-      {/* The Selected Tool Content */}
-      <div className="flex-1 flex flex-col">{component}</div>
+        {/* The Selected Tool Content */}
+        <div className="flex-1 flex flex-col">{component}</div>
 
       {/* Daily Lucky Spin Modal */}
       <DailySpinModal
@@ -1071,6 +948,7 @@ export default function App() {
           setAuthBonusPrompt(null);
           setIsAuthModalOpen(true);
         }}
+        onOpenCvProfile={() => navigateToTool('cv-maker')}
       />
 
       {/* Share Modal */}
@@ -1131,7 +1009,8 @@ export default function App() {
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   // Render standalone view if tool is selected
   // Original 7 tools:
@@ -1215,17 +1094,10 @@ export default function App() {
   }
   if (activeTool === 'job-photo-signature-resizer') {
     return wrapWithNavbar(
-      <JobPhotoSignatureResizer
+      <BdOnlinePortal
         onBackToHub={() => navigateToTool(null)}
         onShowToast={showToast}
-      />
-    );
-  }
-  if (activeTool === 'all-gov-offices') {
-    return wrapWithNavbar(
-      <GovOfficesHub
-        onBackToHub={() => navigateToTool(null)}
-        onShowToast={showToast}
+        initialSubView="job-photo-resizer"
       />
     );
   }
@@ -1658,6 +1530,7 @@ export default function App() {
           setAuthBonusPrompt(null);
           setIsAuthModalOpen(true);
         }}
+        onOpenCvProfile={() => navigateToTool('cv-maker')}
       />
 
       {/* Floating Auto-Update Banner for Hub View */}
