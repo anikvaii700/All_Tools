@@ -5,6 +5,7 @@ interface WaterDropletButtonProps {
   label?: string;
   onOpenTool: () => void;
   toolTitle?: string;
+  toolSlug?: string | null;
   className?: string;
 }
 
@@ -65,13 +66,14 @@ export const WaterDropletButton: React.FC<WaterDropletButtonProps> = ({
   label = 'টুল শুরু করুন',
   onOpenTool,
   toolTitle,
+  toolSlug,
   className = '',
 }) => {
   const [isSplashing, setIsSplashing] = useState(false);
   const [splashDroplets, setSplashDroplets] = useState<SplashDroplet[]>([]);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
+    e.preventDefault();
     e.stopPropagation();
     if (isSplashing) return;
 
@@ -121,14 +123,15 @@ export const WaterDropletButton: React.FC<WaterDropletButtonProps> = ({
     }, 320);
   };
 
+  const href = toolSlug ? `/tools/${toolSlug}` : '#';
+
   return (
-    <button
-      ref={buttonRef}
-      type="button"
+    <a
+      href={href}
       onClick={handleClick}
       title={toolTitle ? `${toolTitle} শুরু করুন` : label}
       aria-label={label}
-      className={`group relative w-full select-none outline-none cursor-pointer overflow-visible transition-transform duration-200 active:scale-95 ${className}`}
+      className={`group relative w-full block select-none outline-none cursor-pointer overflow-visible transition-transform duration-200 active:scale-95 no-underline ${className}`}
     >
       {/* ============================================================== */}
       {/* FULL-BUTTON TRANSPARENT GLASS WATER DROPLET (সম্পূর্ণ বাটনটিই কাচ ও পানি) */}
@@ -227,6 +230,6 @@ export const WaterDropletButton: React.FC<WaterDropletButtonProps> = ({
           ))}
         </div>
       )}
-    </button>
+    </a>
   );
 };

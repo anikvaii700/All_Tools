@@ -10,7 +10,7 @@ import {
   Layers,
   Sparkles,
 } from 'lucide-react';
-import { getPublicBaseUrl, getPublicFullUrl } from '../utils/urlHelper';
+import { getPublicBaseUrl, getPublicFullUrl, getToolUrl } from '../utils/urlHelper';
 
 interface SharePortalModalProps {
   isOpen: boolean;
@@ -40,7 +40,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
 
   const publicPortalUrl = getPublicBaseUrl();
   const publicSingleToolUrl = activeToolId
-    ? getPublicFullUrl(`tool=${activeToolId}`)
+    ? getToolUrl(activeToolId)
     : publicPortalUrl;
 
   const handleCopy = async (type: 'all' | 'single', url: string, message: string) => {

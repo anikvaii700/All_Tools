@@ -24,3 +24,13 @@ export function getPublicFullUrl(queryString: string = ''): string {
   const cleanQuery = queryString.startsWith('?') ? queryString : `?${queryString}`;
   return `${base}${cleanQuery}`;
 }
+
+export function getToolPath(toolId: string): string {
+  return `/tools/${toolId}`;
+}
+
+export function getToolUrl(toolId: string): string {
+  const base = getPublicBaseUrl();
+  return `${base}/tools/${toolId}`;
+}
+

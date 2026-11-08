@@ -13,6 +13,8 @@ const __dirname = path.dirname(__filename);
 
 import { STUDYMATE_MASTER_SYSTEM_PROMPT } from './src/data/studymateMasterPrompt.ts';
 import { APP_VERSION_CONFIG } from './src/versionConfig.ts';
+import { TOOLS_SEO_REGISTRY, HOMEPAGE_SEO } from './src/data/seoToolsData.ts';
+import { injectSeoTagsIntoHtml } from './src/utils/seoHtmlRenderer.ts';
 
 const STUDYMATE_SYSTEM_INSTRUCTION = STUDYMATE_MASTER_SYSTEM_PROMPT;
 
@@ -1256,9 +1258,71 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
     }
   });
 
-  // Vite integration: Dev middleware or static dist
+  // Sitemap.xml route
+  app.get('/sitemap.xml', (_req, res) => {
+    const sitemapDist = path.resolve(__dirname, 'dist', 'sitemap.xml');
+    const sitemapPublic = path.resolve(__dirname, 'public', 'sitemap.xml');
+    const target = fs.existsSync(sitemapDist) ? sitemapDist : sitemapPublic;
+    if (fs.existsSync(target)) {
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.sendFile(target);
+    }
+    return res.status(404).send('Sitemap not found');
+  });
+
+  // Robots.txt route
+  app.get('/robots.txt', (_req, res) => {
+    const robotsDist = path.resolve(__dirname, 'dist', 'robots.txt');
+    const robotsPublic = path.resolve(__dirname, 'public', 'robots.txt');
+    const target = fs.existsSync(robotsDist) ? robotsDist : robotsPublic;
+    if (fs.existsSync(target)) {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.sendFile(target);
+    }
+    return res.status(404).send('Robots not found');
+  });
+
+  // Legacy URL compatibility redirect: /?tool=slug or /index.html?tool=slug -> /tools/slug (HTTP 301)
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && (req.path === '/' || req.path === '/index.html') && req.query.tool) {
+      const toolSlug = String(req.query.tool).toLowerCase().trim();
+      if (TOOLS_SEO_REGISTRY[toolSlug]) {
+        // Safe 301 permanent redirect to individual SEO-friendly tool URL
+        return res.redirect(301, `/tools/${toolSlug}`);
+      }
+    }
+    next();
+  });
+
+  // Vite integration: Dev middleware or static dist with full SEO injection
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.resolve(__dirname, 'dist')));
+
+    // Tool SEO route: /tools/:slug
+    app.get('/tools/:slug', (req, res) => {
+      const slug = req.params.slug.toLowerCase().trim();
+      const tool = TOOLS_SEO_REGISTRY[slug];
+      if (tool) {
+        // Check if pre-rendered file exists
+        const preRenderedPath = path.resolve(__dirname, 'dist', 'tools', slug, 'index.html');
+        if (fs.existsSync(preRenderedPath)) {
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.sendFile(preRenderedPath);
+        }
+        // Dynamic fallback injection from dist/index.html
+        const distIndex = path.resolve(__dirname, 'dist', 'index.html');
+        if (fs.existsSync(distIndex)) {
+          const rawHtml = fs.readFileSync(distIndex, 'utf-8');
+          const enrichedHtml = injectSeoTagsIntoHtml(rawHtml, tool);
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(enrichedHtml);
+        }
+      }
+      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+    });
+
     app.get('*', (_req, res) => {
       res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
@@ -1267,6 +1331,25 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
       server: { middlewareMode: true },
       appType: 'spa',
     });
+
+    // Tool SEO route in development
+    app.get('/tools/:slug', async (req, res, next) => {
+      try {
+        const slug = req.params.slug.toLowerCase().trim();
+        const tool = TOOLS_SEO_REGISTRY[slug];
+        if (tool) {
+          const rawIndex = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+          const viteTransformed = await vite.transformIndexHtml(req.originalUrl, rawIndex);
+          const enrichedHtml = injectSeoTagsIntoHtml(viteTransformed, tool);
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.status(200).send(enrichedHtml);
+        }
+        next();
+      } catch (e) {
+        next(e);
+      }
+    });
+
     app.use(vite.middlewares);
   }
 

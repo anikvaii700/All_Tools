@@ -59,6 +59,7 @@ import { WaterDropletButton } from './components/WaterDropletButton';
 import { useAuth } from './context/AuthContext';
 import { APP_VERSION_CONFIG } from './versionConfig';
 import { trackPageView, trackEvent } from './utils/analytics';
+import { getToolSeoData, HOMEPAGE_SEO, generateSchemaJsonLd } from './data/seoToolsData';
 
 // Existing Tools
 import { LoveTest } from './components/LoveTest';
@@ -149,9 +150,24 @@ export const VALID_TOOL_IDS: readonly ToolId[] = [
 export const getInitialToolFromUrl = (): ToolId => {
   if (typeof window === 'undefined') return null;
   try {
+    // 1. Path-based modern SEO URL: /tools/:slug
+    const pathname = window.location.pathname;
+    const pathMatch = pathname.match(/^\/tools\/([a-zA-Z0-9_-]+)\/?$/);
+    if (pathMatch && pathMatch[1]) {
+      const slug = pathMatch[1].toLowerCase();
+      if (VALID_TOOL_IDS.includes(slug as ToolId)) {
+        return slug as ToolId;
+      }
+    }
+
+    // 2. Query-based legacy URL fallback: ?tool=:slug
     const params = new URLSearchParams(window.location.search);
     const toolParam = params.get('tool');
     if (toolParam && VALID_TOOL_IDS.includes(toolParam as ToolId)) {
+      // Migrate browser URL to the modern SEO route cleanly without full reload
+      try {
+        window.history.replaceState({ tool: toolParam }, '', `/tools/${toolParam}`);
+      } catch {}
       return toolParam as ToolId;
     }
   } catch {
@@ -234,17 +250,11 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastIcon, setToastIcon] = useState<string>('📋');
 
-  // Read URL query parameters on popstate (browser back/forward navigation)
+  // Read URL on popstate (browser back/forward navigation)
   useEffect(() => {
     const handleLocationChange = () => {
       const tool = getInitialToolFromUrl();
       setActiveTool(tool);
-      if (!tool) {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('tool')) {
-          window.history.replaceState(null, '', window.location.pathname);
-        }
-      }
       window.scrollTo(0, 0);
     };
 
@@ -253,7 +263,7 @@ export default function App() {
   }, []);
 
   const navigateToTool = (tool: ToolId) => {
-    const newUrl = tool ? `?tool=${tool}` : window.location.pathname;
+    const newUrl = tool ? `/tools/${tool}` : '/';
     window.history.pushState({ tool }, '', newUrl);
     setActiveTool(tool);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -889,31 +899,73 @@ export default function App() {
   const lastTrackedPathRef = React.useRef<string | null>(null);
 
   useEffect(() => {
-    const title = currentActiveToolInfo
-      ? `${currentActiveToolInfo.title} | The MoSaFa Tools`
-      : 'The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল';
-    const path = activeTool ? `/?tool=${activeTool}` : '/';
+    const seo = getToolSeoData(activeTool);
+    const path = activeTool ? `/tools/${activeTool}` : '/';
 
-    document.title = title;
+    // 1. Dynamic Page Title
+    document.title = seo.title;
 
-    // Prevent duplicate page_view tracking if path hasn't changed
+    // 2. Dynamic Meta Description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', seo.description);
+
+    // 3. Dynamic Canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', seo.canonicalUrl);
+
+    // 4. OpenGraph and Twitter Metadata
+    const setMetaContent = (selector: string, attr: string, key: string, content: string) => {
+      let tag = document.querySelector(selector);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attr, key);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    setMetaContent('meta[property="og:title"]', 'property', 'og:title', seo.title);
+    setMetaContent('meta[property="og:description"]', 'property', 'og:description', seo.description);
+    setMetaContent('meta[property="og:url"]', 'property', 'og:url', seo.canonicalUrl);
+    setMetaContent('meta[name="twitter:title"]', 'name', 'twitter:title', seo.title);
+    setMetaContent('meta[name="twitter:description"]', 'name', 'twitter:description', seo.description);
+
+    // 5. Dynamic JSON-LD Structured Data
+    let jsonLdEl = document.querySelector('script[type="application/ld+json"]');
+    if (!jsonLdEl) {
+      jsonLdEl = document.createElement('script');
+      jsonLdEl.setAttribute('type', 'application/ld+json');
+      document.head.appendChild(jsonLdEl);
+    }
+    jsonLdEl.textContent = JSON.stringify(generateSchemaJsonLd(seo), null, 2);
+
+    // 6. Prevent duplicate page_view tracking if path hasn't changed
     if (lastTrackedPathRef.current === path) {
       return;
     }
     lastTrackedPathRef.current = path;
 
     // Send SPA Page View (exactly 1 on initial load, and exactly 1 on each subsequent navigation)
-    trackPageView(path, title);
+    trackPageView(path, seo.title);
 
     // If a tool is active, send select_tool event with tool ID, correct name, and full URL
     if (activeTool && currentActiveToolInfo) {
-      const fullToolUrl = `${window.location.origin}/?tool=${activeTool}`;
       trackEvent('select_tool', {
         tool_id: activeTool,
         tool_name: currentActiveToolInfo.title,
-        tool_title: currentActiveToolInfo.title,
-        tool_url: fullToolUrl,
-        page_location: fullToolUrl,
+        tool_title: seo.title,
+        tool_url: seo.canonicalUrl,
+        page_location: seo.canonicalUrl,
         page_path: path,
       });
     }
@@ -926,6 +978,7 @@ export default function App() {
 
   const wrapWithNavbar = (component: React.ReactNode) => {
     const currentTool = tools.find((t) => t.id === activeTool);
+    const currentSeo = getToolSeoData(activeTool);
     return (
       <div className="flex flex-col min-h-screen relative text-slate-800">
         {/* Universal Top Hub Navigation Bar — বামদিকে “পিছনে যান”, মাঝে শুধু “টুলের নাম”, ডানদিকে “হোমে ফিরে যান” */}
@@ -947,23 +1000,26 @@ export default function App() {
             <span className="hidden xs:inline">পিছনে যান</span>
           </button>
 
-          {/* Center: শুধু টুলের নাম (Tool Name Only) */}
+          {/* Center: শুধু টুলের নাম (Semantic H1 heading for Technical SEO) */}
           <div className="flex-1 px-2 text-center truncate min-w-0">
-            <span className="text-xs sm:text-base font-black text-white truncate inline-block max-w-[170px] sm:max-w-md">
-              {currentTool?.title || 'অনলাইন টুল'}
-            </span>
+            <h1 className="text-xs sm:text-base font-black text-white truncate inline-block max-w-[170px] sm:max-w-md m-0 leading-normal">
+              {currentSeo?.h1 || currentTool?.title || 'অনলাইন টুল'}
+            </h1>
           </div>
 
-          {/* Right: হোমে ফিরে যান */}
-          <button
-            type="button"
-            onClick={() => navigateToTool(null)}
-            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 active:scale-95 text-white font-bold transition shadow-md shadow-rose-950/20 cursor-pointer text-xs sm:text-sm shrink-0"
+          {/* Right: হোমে ফিরে যান - Crawlable semantic link */}
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              navigateToTool(null);
+            }}
+            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 active:scale-95 text-white font-bold transition shadow-md shadow-rose-950/20 cursor-pointer text-xs sm:text-sm shrink-0 no-underline"
             title="হোমে ফিরে যান"
           >
             <Home className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
             <span className="hidden xs:inline">হোমে ফিরে যান</span>
-          </button>
+          </a>
         </nav>
 
         {/* The Selected Tool Content */}
@@ -1422,7 +1478,16 @@ export default function App() {
                 </div>
 
                 <h3 className="text-lg font-bold text-slate-900 group-hover:text-rose-600 transition">
-                  {tool.title}
+                  <a
+                    href={`/tools/${tool.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToTool(tool.id);
+                    }}
+                    className="hover:underline focus:outline-none text-inherit no-underline block"
+                  >
+                    {tool.title}
+                  </a>
                 </h3>
                 {tool.deviceTag && (
                   <div
@@ -1444,6 +1509,7 @@ export default function App() {
                 <WaterDropletButton
                   label="টুল শুরু করুন"
                   toolTitle={tool.title}
+                  toolSlug={tool.id}
                   onOpenTool={() => navigateToTool(tool.id)}
                 />
               </div>
