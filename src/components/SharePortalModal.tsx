@@ -82,7 +82,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
   };
 
   const handleWhatsAppShare = (text: string, url: string) => {
-    const encoded = encodeURIComponent(`${text}\n\n👉 লিংক: ${url}`);
+    const encoded = encodeURIComponent(`${text}\n${url}`);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
   };
 
@@ -196,7 +196,7 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
               type="button"
               onClick={() =>
                 handleWhatsAppShare(
-                  `The MoSaFa Tools - সকল প্রয়োজনীয় বাংলা অনলাইন টুলস এক ক্লিকে (StudyMate BD, CV Maker, ভোটার স্থানান্তর, পোস্টার স্টুডিও সহ ${toBanglaNum(totalToolsCount)}টি কার্যকরী টুলস)`,
+                  'অনলাইন সেবার দারুন প্লাটফর্ম, আপনিও আপনার বন্ধু বান্ধবের মাঝে এখনি  শেয়ার করুন',
                   publicPortalUrl
                 )
               }
@@ -260,8 +260,8 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
             type="button"
             onClick={() =>
               handleNativeShare(
-                'The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল',
-                'সকল প্রয়োজনীয় বাংলা অনলাইন টুলস এক জায়গায় - The MoSaFa StudyMate BD, CV Maker, ভোটার স্থানান্তর ফরম সহ প্রয়োজনীয় সকল কার্যকরী টুলস।',
+                'MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল',
+                'অনলাইন সেবার দারুন প্লাটফর্ম, আপনিও আপনার বন্ধু বান্ধবের মাঝে এখনি  শেয়ার করুন',
                 publicPortalUrl
               )
             }

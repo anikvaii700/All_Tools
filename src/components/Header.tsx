@@ -238,6 +238,19 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
+          {/* Quick Header Share Button */}
+          {onOpenShare && (
+            <button
+              type="button"
+              onClick={onOpenShare}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 border border-slate-200 shadow-2xs hover:border-indigo-300 flex items-center justify-center transition cursor-pointer active:scale-95 shrink-0"
+              title="বন্ধুদের মাঝে সাইট শেয়ার করুন"
+              aria-label="Share site"
+            >
+              <Share2 className="w-4 h-4 text-indigo-600" />
+            </button>
+          )}
+
           {/* থ্রি লাইন মেনু (☰) */}
           <div className="relative" ref={menuRef}>
             <button
@@ -421,6 +434,35 @@ export const Header: React.FC<HeaderProps> = ({
                   />
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                 </div>
+
+                {/* ৩-লাইনের ভিতরে শেয়ার বাটন */}
+                {onOpenShare && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onOpenShare();
+                    }}
+                    className="w-full mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-sm flex items-center justify-between gap-2.5 transition cursor-pointer active:scale-98 text-left"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
+                        <Share2 className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold leading-tight block">
+                          বন্ধুদের মাঝে শেয়ার করুন 🚀
+                        </span>
+                        <span className="text-[10px] text-indigo-100 block">
+                          অনলাইন সেবার দারুণ প্ল্যাটফর্ম বন্ধুদের পাঠান
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-extrabold bg-white text-indigo-700 px-2.5 py-1 rounded-xl shadow-xs shrink-0">
+                      শেয়ার
+                    </span>
+                  </button>
+                )}
 
                 {/* সরাসরি অ্যাপ ইনস্টল অপশন (ত্রি লাইনের ভিতরে) */}
                 <button
