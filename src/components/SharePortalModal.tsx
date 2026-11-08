@@ -64,12 +64,13 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
   };
 
   const handleNativeShare = async (title: string, text: string, url: string) => {
+    const shareUrl = url.includes('?') ? url : `${url}?share=1`;
     if (navigator.share) {
       try {
         await navigator.share({
           title,
           text,
-          url,
+          url: shareUrl,
         });
         onShowToast('সফলভাবে শেয়ার সম্পন্ন হয়েছে! 🚀', '✅');
         return;
@@ -78,11 +79,12 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
       }
     }
     // Fallback to copy
-    handleCopy('all', url, 'লিংক কপি করা হয়েছে! 📋');
+    handleCopy('all', shareUrl, 'লিংক কপি করা হয়েছে! 📋');
   };
 
   const handleWhatsAppShare = (text: string, url: string) => {
-    const encoded = encodeURIComponent(`${text}\n${url}`);
+    const shareUrl = url.includes('?') ? url : `${url}?share=1`;
+    const encoded = encodeURIComponent(`${text}\n${shareUrl}`);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
   };
 
