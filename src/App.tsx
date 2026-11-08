@@ -39,6 +39,7 @@ import {
   Video,
   Camera,
   Home,
+  Briefcase,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useAppUpdateSync } from './hooks/useAppUpdateSync';
@@ -178,12 +179,81 @@ export const getInitialToolFromUrl = (): ToolId => {
 
 export type DeviceSector = 'all' | 'desktop' | 'mobile';
 
+export type ToolCategory =
+  | 'all'
+  | 'government'
+  | 'office'
+  | 'business'
+  | 'education'
+  | 'creative'
+  | 'lifestyle';
+
+export interface CategoryInfo {
+  id: ToolCategory;
+  name: string;
+  banglaName: string;
+  icon: string;
+  description: string;
+}
+
+export const TOOL_CATEGORIES: CategoryInfo[] = [
+  {
+    id: 'all',
+    name: 'All Tools',
+    banglaName: 'সকল টুলস',
+    icon: '🌐',
+    description: 'মোসাফার সকল ২৬টি ডিজিটাল টুলস',
+  },
+  {
+    id: 'government',
+    name: 'Government & Citizen Services',
+    banglaName: 'সরকারি সেবা ও ফরম',
+    icon: '🏛️',
+    description: 'বাংলাদেশ সরকারি ডিরেক্টরি, এনআইডি, ফরম ফিলআপ ও বিদ্যুৎ মিটার সেবা',
+  },
+  {
+    id: 'office',
+    name: 'Office & Career Builder',
+    banglaName: 'অফিস ও ক্যারিয়ার',
+    icon: '💼',
+    description: 'প্রফেশনাল সিভি, চাকরির ছবি ও স্বাক্ষর সাইজার, আবেদনপত্র ও পিডিএফ টুলকিট',
+  },
+  {
+    id: 'business',
+    name: 'Business, Finance & Entrepreneur',
+    banglaName: 'ব্যবসা ও হিসাব',
+    icon: '📊',
+    description: 'ক্যাশ মেমো ও ইনভয়েস, দৈনিক আয়-ব্যয় ট্র্যাকার, উদ্যোক্তা গাইড ও ইউনিকোড কনভার্টার',
+  },
+  {
+    id: 'education',
+    name: 'Education, Learning & Skills',
+    banglaName: 'শিক্ষা ও দক্ষতা',
+    icon: '🎓',
+    description: 'এআই টিউটর, লিপি টাইপিং স্পিড টেস্ট, বাংলা কুইজ ও ৬৪ জেলা ভ্রমণ মানচিত্র',
+  },
+  {
+    id: 'creative',
+    name: 'Creative & Social Studio',
+    banglaName: 'ক্রিয়েটিভ স্টুডিও',
+    icon: '🎨',
+    description: 'বাংলা ক্যাপশন হাব, এআই ফটো স্ট্যাটাস ও ফ্রেম, কনটেন্ট ক্রিয়েটর স্টুডিও ও গল্পের ঘর',
+  },
+  {
+    id: 'lifestyle',
+    name: 'Lifestyle, Travel & Entertainment',
+    banglaName: 'লাইফস্টাইল ও বিনোদন',
+    icon: '✨',
+    description: 'নিখুঁত বয়স ক্যালকুলেটর, প্রেম টেস্ট, লাকি হুইল, জীবন হিসাব ও এআই হস্তরেখা',
+  },
+];
+
 export interface ToolCardInfo {
   id: ToolId;
   title: string;
   badge: string;
   badgeColor: string;
-  category: 'entertainment' | 'typing' | 'calculator' | 'status';
+  category: ToolCategory;
   iconBg: string;
   icon: React.ReactNode;
   description: string;
@@ -195,7 +265,7 @@ export interface ToolCardInfo {
 export default function App() {
   const [activeTool, setActiveTool] = useState<ToolId>(getInitialToolFromUrl);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeCategory, setActiveCategory] = useState<ToolCategory>('all');
   const [deviceSector, setDeviceSector] = useState<DeviceSector>('all');
   const [isMobileInstallOpen, setIsMobileInstallOpen] = useState<boolean>(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
@@ -277,15 +347,17 @@ export default function App() {
     }, 2800);
   };
 
-  // Complete Tools Registry with Sector Categorization
+  // Complete 26 Tools Registry organized by 6 approved categories
   const tools: ToolCardInfo[] = [
-    // 0. MoSaFa BD Online Portal (বাংলাদেশ সার্ভিস ডিরেক্টরি, জব পোর্টাল, নির্বাচন অফিস ও টেলিটক সাইজার)
+    // =========================================================================
+    // 1. Government & Citizen Services (সরকারি সেবা ও ফরম - ৪টি টুল)
+    // =========================================================================
     {
       id: 'bd-online-portal',
       title: 'MoSaFa BD Online Portal (বাংলাদেশ ডিরেক্টরি)',
       badge: '🏛️ সার্ভিস, জব পোর্টাল ও সরকারি সেবা',
       badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-      category: 'calculator',
+      category: 'government',
       iconBg: 'from-emerald-600 via-teal-600 to-indigo-700',
       icon: <Building2 className="w-6 h-6 text-white" />,
       description:
@@ -314,13 +386,12 @@ export default function App() {
         'job photo resizer',
       ],
     },
-    // 1. MoSaFa All Form Fillup
     {
       id: 'all-form-fillup',
       title: 'MoSaFa All Form Fillup (সকল ফরম ফিলআপ ও রসিদ)',
       badge: '🔥 ফরম-২, ফরম-১৩, ভাড়ার রসিদ ও সকল ফরম',
       badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
-      category: 'calculator',
+      category: 'government',
       iconBg: 'from-rose-500 via-pink-600 to-indigo-600',
       icon: <FileText className="w-6 h-6 text-white" />,
       description:
@@ -358,192 +429,38 @@ export default function App() {
         'receipt',
       ],
     },
-    // 1. প্রেম টেস্ট
     {
-      id: 'love-test',
-      title: 'প্রেম টেস্ট (Love Test)',
-      badge: '🔥 ভাইরাল টেস্ট',
-      badgeColor: 'bg-rose-50 text-rose-600 border-rose-200',
-      category: 'entertainment',
-      iconBg: 'from-rose-500 to-pink-600',
-      icon: <Heart className="w-6 h-6 fill-white text-white" />,
+      id: 'voter-transfer-form',
+      title: 'ভোটার এলাকা স্থানান্তর ফরম-১৩ (Voter Transfer Form)',
+      badge: '🏛️ নির্বাচন কমিশন ফরম-১৩',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      category: 'government',
+      iconBg: 'from-emerald-600 via-teal-600 to-cyan-700',
+      icon: <FileText className="w-6 h-6 text-white" />,
       description:
-        'দুজনের বয়স, গায়ের রং, পারিবারিক সম্মতি, বাস্তব প্রশ্ন ও স্বভাব যাচাই করে সম্পর্কের গভীরতা ও ভবিষ্যৎ উদ্দেশ্য নির্ণয় করুন। সনদপত্র ডাউনলোড সুবিধা সহ!',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (টাচ কুইজ ও শেয়ার)',
-      keywords: ['প্রেম টেস্ট', 'love test', 'সম্পর্ক', 'ভালোবাসা', 'বিবাহ', 'বিচ্ছেদ', 'পরীক্ষা'],
-    },
-    // 2. লিপি টাইপিং টেস্ট
-    {
-      id: 'typing-test',
-      title: 'লিপি টাইপিং টেস্ট (Typing Speed)',
-      badge: '⚡ স্পিড টেস্ট',
-      badgeColor: 'bg-indigo-50 text-indigo-600 border-indigo-200',
-      category: 'typing',
-      iconBg: 'from-indigo-600 to-blue-600',
-      icon: <Keyboard className="w-6 h-6 text-white" />,
-      description:
-        '১ মিনিটে বাংলা টাইপিংয়ের গতি ও নির্ভুলতা পরীক্ষা করুন। লাইভ WPM, CPM ও সঠিকতার হিসাবসহ তাৎক্ষণিক ফলাফল ও অ্যানালিটিক্স।',
+        'বাংলাদেশ নির্বাচন কমিশনের ফরম-১৩ অনুযায়ী এক নির্বাচনী এলাকা থেকে অন্য এলাকায় ভোটার ঠিকানা ও এলাকা স্থানান্তর আবেদন ফরম সহজে তৈরি করুন। A4 সাইজে প্রিন্ট ও PDF ডাউনলোড!',
       deviceTarget: 'desktop',
-      deviceTag: '💻 শুধু কম্পিউটার / ল্যাপটপ (কীবোর্ড স্পিড)',
-      keywords: ['টাইপিং টেস্ট', 'typing speed test', 'বাংলা টাইপিং', 'wpm', 'cpm', 'লিপি টাইপিং'],
-    },
-    // 3. বয়স ক্যালকুলেটর
-    {
-      id: 'age-calc',
-      title: 'বয়স ক্যালকুলেটর (Age Calculator)',
-      badge: '📅 নিখুঁত হিসাব',
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      category: 'calculator',
-      iconBg: 'from-emerald-500 to-teal-600',
-      icon: <Calendar className="w-6 h-6 text-white" />,
-      description:
-        'জন্মতারিখ নির্বাচন করে এক ক্লিকে বের করুন আপনার বর্তমান বয়স — বছর, মাস, দিন, মোট সপ্তাহ, এবং আগামী জন্মদিনের কাউন্টডাউন।',
-      deviceTarget: 'both',
-      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
-      keywords: ['বয়স ক্যালকুলেটর', 'age calculator', 'জন্ম তারিখ', 'হিসাব', 'দিন', 'মাস', 'বছর'],
-    },
-    // 5. বাংলা স্ট্যাটাস ও ক্যাপশন হাব
-    {
-      id: 'bangla-status',
-      title: 'বাংলা স্ট্যাটাস ও ক্যাপশন হাব',
-      badge: '💬 ১০০০+ স্ট্যাটাস',
-      badgeColor: 'bg-violet-50 text-violet-700 border-violet-200',
-      category: 'status',
-      iconBg: 'from-violet-600 to-purple-600',
-      icon: <MessageSquareHeart className="w-6 h-6 text-white" />,
-      description:
-        'ভালোবাসা, কষ্ট, ইসলামিক, বন্ধুত্ব, এটিটিউড, মোটিভেশন ও ফানি সহ ১০টি ক্যাটাগরির ১০০০+ সেরা বাংলা ক্যাপশন কালেকশন ও ফটো কার্ড মেকার।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (১-ক্লিক কপি ও সোশ্যাল শেয়ার)',
-      keywords: ['বাংলা স্ট্যাটাস', 'ক্যাপশন', 'bangla status', 'quotes', 'caption', 'ভালোবাসা', 'কষ্ট'],
-    },
-    // 8. MoSaFa Poster Studio / AI Photo Status & Frame Studio
-    {
-      id: 'poster-studio',
-      title: 'MoSaFa AI Photo Status & Frame Studio',
-      badge: '🔥 AI ফটো স্ট্যাটাস ও ৩২+ ফ্রেম',
-      badgeColor: 'bg-rose-50 text-rose-600 border-rose-200',
-      category: 'status',
-      iconBg: 'from-rose-500 via-pink-600 to-amber-500',
-      icon: <Palette className="w-6 h-6 text-white" />,
-      description:
-        'আপনার ছবি, AI-এর লেখা, পছন্দের ফ্রেম—গোল্ডেন পার্চমেন্ট, ইসলামিক, মোটিভেশনাল, হোয়াইটবোর্ড ও ৩২টি প্রিমিয়াম ফ্রেমে তৈরি করুন নিজের স্টাইলের সোশ্যাল পোস্টার। ১-ক্লিক HD ডাউনলোড।',
-      deviceTarget: 'both',
-      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (ফরম-১৩ ও A4 প্রিন্ট)',
       keywords: [
-        'পোস্টার',
-        'poster studio',
-        'ai photo status',
-        'frame studio',
-        'ফটো স্ট্যাটাস',
-        'ফ্রেম স্টুডিও',
-        'ছবি দিয়ে স্ট্যাটাস',
-        'গোল্ডেন ফ্রেম',
-        'ইসলামিক ফ্রেম',
-        'হোয়াইটবোর্ড',
-        'মিম',
-        'কোটেশন',
-        'ছবি',
+        'voter transfer form',
+        'form 13',
+        'ফরম ১৩',
+        'ফরম-১৩',
+        'ভোটার স্থানান্তর ফরম',
+        'ভোটার এলাকা স্থানান্তর',
+        'ভোটার ঠিকানা পরিবর্তন',
+        'নির্বাচন কমিশন',
+        'nid স্থানান্তর',
+        'voter form 13',
+        'নির্বাচনী এলাকা পরিবর্তন',
       ],
     },
-    // 9. Random Picker Wheel (NEW)
-    {
-      id: 'random-picker',
-      title: 'Random Picker Wheel (সিদ্ধান্ত চাকা)',
-      badge: '🎡 লাকি হুইল',
-      badgeColor: 'bg-purple-50 text-purple-600 border-purple-200',
-      category: 'calculator',
-      iconBg: 'from-purple-600 to-pink-600',
-      icon: <RotateCw className="w-6 h-6 text-white" />,
-      description:
-        'খাবার পছন্দ, ভ্রমণ বা যেকোনো দ্বিধাদ্বন্দ্বে কাস্টমাইজড চাকা ঘুরিয়ে শতভাগ নিরপেক্ষ ও র‍্যান্ডম সিদ্ধান্ত নিন।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (টাচ স্ক্রিন চাকা স্পিন)',
-      keywords: ['random picker', 'wheel', 'চাকা', 'র‍্যান্ডম', 'সিদ্ধান্ত', 'হুইল', 'স্পিন'],
-    },
-    // 12. Bangla Riddles & Quiz Challenge (NEW)
-    {
-      id: 'bangla-quiz',
-      title: 'Bangla Riddles & Quiz (ধাঁধা ও কুইজ)',
-      badge: '🧩 বুদ্ধিদীপ্ত কুইজ',
-      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
-      category: 'entertainment',
-      iconBg: 'from-amber-500 to-orange-600',
-      icon: <Brain className="w-6 h-6 text-white" />,
-      description:
-        'মজার বাংলা ধাঁধা, সাধারণ জ্ঞান, সাহিত্য ও বিজ্ঞানের কুইজ চ্যালেঞ্জ। তাৎক্ষণিক ব্যাখ্যা ও স্কোর শেয়ার সুবিধা।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (স্মার্টফোন কুইজ ও ধাঁধা)',
-      keywords: ['ধাঁধা', 'quiz', 'কুইজ', 'সাধারণ জ্ঞান', 'আইকিউ', 'বাংলা কুইজ', 'সাহিত্য'],
-    },
-    // 13. Daily Hishab & To-Do List (NEW)
-    {
-      id: 'daily-hishab',
-      title: 'Daily Hishab & To-Do (হিসাব ও করণীয় ট্র্যাকার)',
-      badge: '💼 অল-ইন-ওয়ান লাইফ ম্যানেজার',
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      category: 'calculator',
-      iconBg: 'from-emerald-600 to-green-700',
-      icon: <Wallet className="w-6 h-6 text-white" />,
-      description:
-        'সাইটের ইউজার একাউন্টে আপনার দৈনন্দিন আয়-ব্যয়, সম্পূর্ণ To-Do List, প্রতিদিনের নোটস ও অভ্যাস ক্লাউড সিঙ্কসহ সংরক্ষণ করুন।',
-      deviceTarget: 'both',
-      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
-      keywords: ['daily hishab', 'to do list', 'টু ডু লিস্ট', 'টাস্ক ম্যানেজার', 'হিসাব', 'আয় ব্যয়', 'নোটস', 'বাজেট', 'ব্যালেন্স', 'খরচ'],
-    },
-    // 14. MoSaFa Life Receipt (NEW)
-    {
-      id: 'life-receipt',
-      title: 'MoSaFa Life Receipt (জীবন হিসাব রশিদ)',
-      badge: '🧾 সময় রিসিট',
-      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      category: 'calculator',
-      iconBg: 'from-slate-700 to-indigo-800',
-      icon: <Receipt className="w-6 h-6 text-white" />,
-      description:
-        'ঘুম, মোবাইল ব্যবহার, কাজ ও অবসরে জীবনের কত বছর পার করেছেন? তৈরি করুন ডিজিটাল মেমো ও রিসিট কার্ড।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (থার্মাল রিসিট ও কার্ড)',
-      keywords: ['life receipt', 'রশিদ', 'জীবন হিসাব', 'মেমো', 'সময় ব্যয়', 'বয়স হিসাব'],
-    },
-    // 16. MoSaFa Name Reveal (NEW)
-    {
-      id: 'name-reveal',
-      title: 'MoSaFa Name Reveal (নামের গোপন গল্প)',
-      badge: '🔮 নাম ও ব্যক্তিত্ব',
-      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
-      category: 'entertainment',
-      iconBg: 'from-blue-600 via-indigo-600 to-purple-600',
-      icon: <Sparkles className="w-6 h-6 text-white" />,
-      description:
-        'নিজের নামের অর্থ, উৎস, রাশি, ব্যক্তিত্ব ও ভবিষ্যৎ সম্ভাবনা জানুন ৪টি সহজ অধ্যায়ে। আকর্ষণীয় ফলাফল কার্ড তৈরি ও শেয়ার করুন।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (নামের গল্প ও স্ট্যাটাস)',
-      keywords: ['name reveal', 'নামের গোপন গল্প', 'নামের অর্থ', 'রাশি', 'নাম', 'ব্যক্তিত্ব', 'ভবিষ্যৎ'],
-    },
-    // 17. MoSaFa Golpo Ghor (NEW)
-    {
-      id: 'golpo-ghor',
-      title: 'গল্পের ঘর (MoSaFa Golpo Ghor)',
-      badge: '📚 ডিজিটাল পাঠাগার',
-      badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
-      category: 'entertainment',
-      iconBg: 'from-amber-600 via-rose-600 to-indigo-700',
-      icon: <BookOpen className="w-6 h-6 text-white" />,
-      description:
-        'বাংলা ডিজিটাল গল্পের লাইব্রেরি। রবীন্দ্রনাথ ও শরৎচন্দ্রের অমর ক্লাসিক সাহিত্য এবং নতুন মৌলিক থ্রিলার, রোমান্টিক ও রহস্য গল্প পড়ার আধুনিক পাঠকক্ষ।',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (পকেট ডিজিটাল পাঠকক্ষ)',
-      keywords: ['গল্পের ঘর', 'golpo ghor', 'বাংলা গল্প', 'রবীন্দ্রনাথ', 'শরৎচন্দ্র', 'উপন্যাস', 'ছোটগল্প', 'বই', 'লাইব্রেরি', 'story'],
-    },
-    // 19. MoSaFa Prepaid Meter Helper (NEW)
     {
       id: 'prepaid-meter',
       title: 'MoSaFa Prepaid Meter Helper (প্রিপেইড মিটার সহকারী)',
       badge: '⚡ মিটার কোড ও রিচার্জ',
       badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-      category: 'calculator',
+      category: 'government',
       iconBg: 'from-emerald-500 via-teal-600 to-cyan-700',
       icon: <Zap className="w-6 h-6 text-white" />,
       description:
@@ -564,36 +481,16 @@ export default function App() {
         'বিদ্যুৎ মিটার',
       ],
     },
-    // 20. MoSaFa My Bangladesh Map (বাংলাদেশ ভ্রমণ ম্যাপ)
-    {
-      id: 'bangladesh-map',
-      title: 'MoSaFa My Bangladesh Map (বাংলাদেশ ভ্রমণ ম্যাপ)',
-      badge: '🇧🇩 নতুন টুল',
-      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      category: 'calculator',
-      iconBg: 'from-emerald-600 via-teal-600 to-indigo-600',
-      icon: <Compass className="w-6 h-6 text-white" />,
-      description: 'বাংলাদেশের ৬৪টি জেলার সীমানাসহ ইন্টারেক্টিভ মানচিত্র। নিজের জেলা, ঘুরে দেখা জেলা ও ভ্রমণের ইচ্ছা নির্বাচন করে সোশ্যাল মিডিয়ার জন্য আকর্ষণীয় এইচডি পোস্টার কার্ড তৈরি ও ডাউনলোড করুন!',
-      deviceTarget: 'desktop',
-      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (৬৪ জেলা বড় ম্যাপ)',
-      keywords: [
-        'বাংলাদেশ ম্যাপ',
-        'bangladesh map',
-        'my bangladesh map',
-        '৬৪ জেলা',
-        'ভ্রমণ মানচিত্র',
-        'জেলা ম্যাপ',
-        'travel map',
-        'পোস্টার',
-      ],
-    },
-    // 22. The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার)
+
+    // =========================================================================
+    // 2. Office & Career Builder (অফিস ও ক্যারিয়ার - ৪টি টুল)
+    // =========================================================================
     {
       id: 'cv-maker',
       title: 'The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার)',
       badge: '📄 ১০০টি প্রফেশনাল টেমপ্লেট',
       badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
-      category: 'calculator',
+      category: 'office',
       iconBg: 'from-rose-500 via-pink-600 to-indigo-600',
       icon: <FileText className="w-6 h-6 text-white" />,
       description:
@@ -615,100 +512,39 @@ export default function App() {
         'চাকরির সিভি',
       ],
     },
-    // 23. The MoSaFa StudyMate BD 🎓 (AI পার্সোনাল টিউটর ও প্রশ্ন সমাধানকারী)
     {
-      id: 'studymate-bd',
-      title: 'The MoSaFa StudyMate BD 🎓 (AI পার্সোনাল টিউটর)',
-      badge: '🔥 নতুন AI টিউটর',
+      id: 'job-photo-signature-resizer',
+      title: 'চাকরির ছবি ও স্বাক্ষর সাইজার (Job Photo & Signature Resizer)',
+      badge: '📸 ৩০০×৩০০ ও ৩০০×৮০ টেলিটক সাইজার',
       badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      category: 'typing',
-      iconBg: 'from-indigo-600 via-purple-600 to-rose-600',
-      icon: <GraduationCap className="w-6 h-6 text-white" />,
+      category: 'office',
+      iconBg: 'from-blue-600 via-indigo-600 to-violet-700',
+      icon: <Camera className="w-6 h-6 text-white" />,
       description:
-        'বাংলাদেশের ৬ষ্ঠ-১২শ শ্রেণি, SSC, HSC, বিশ্ববিদ্যালয়/মেডিকেল ভর্তি ও BCS শিক্ষার্থীদের অল-ইন-ওয়ান AI প্রাইভেট টিউটর। ছবি তুলে বা লিখে যেকোনো অঙ্ক ও জটিল প্রশ্নের সহজ সমাধান, লাইভ MCQ কুইজ ও পড়ার রুটিন!',
+        'সরকারি ও টেলিটক চাকরির আবেদনের জন্য ৩০০×৩০০ পিক্সেল ছবি (১০০KB নিচে) এবং ৩০০×৮০ পিক্সেল স্বাক্ষর (৬০KB নিচে) নিখুঁতভাবে রিসাইজ ও কম্প্রেস করুন। ১-ক্লিক ক্রপ ও ডাউনলোড!',
       deviceTarget: 'both',
       deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
       keywords: [
-        'studymate',
-        'studymate bd',
-        'the mosafa studymate bd',
-        'ai tutor',
-        'ai প্রাইভেট টিউটর',
-        'অঙ্ক সমাধান',
-        'ssc',
-        'hsc',
-        'bcs',
-        'admission',
-        'কুইজ',
-        'রুটিন',
-        'পড়াশোনা',
-        'study mate',
-        'পড়াশুনা',
-        'শিক্ষক',
+        'job photo signature resizer',
+        'job photo resizer',
+        'signature resizer',
+        'teletalk photo resizer',
+        'টেলিটক ছবি সাইজ',
+        'চাকরির ছবি সাইজ',
+        '৩০০ গুণ ৩০০ ছবি',
+        '৩০০ গুণ ৮০ স্বাক্ষর',
+        'ছবি ও স্বাক্ষর সাইজার',
+        'photo resizer',
+        'teletalk jobs',
+        'ছবি রিসাইজ',
       ],
     },
-    // 24. MoSaFa Invoice Maker
-    {
-      id: 'invoice-maker',
-      title: 'MoSaFa Invoice Maker — ইনভয়েস ও রিসিট মেকার',
-      badge: '🧾 ব্যবসার হিসাব',
-      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-      category: 'calculator',
-      iconBg: 'from-emerald-600 via-teal-600 to-indigo-600',
-      icon: <Receipt className="w-6 h-6 text-white" />,
-      description:
-        'সহজেই তৈরি করুন প্রফেশনাল ইনভয়েস, মানি রিসিট ও ব্যবসার বিল। স্বয়ংক্রিয় হিসাব, PDF ডাউনলোড এবং প্রিন্ট সুবিধা।',
-      deviceTarget: 'desktop',
-      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (ক্যাশ মেমো ও প্রিন্ট)',
-      keywords: [
-        'invoice',
-        'invoice maker',
-        'mosafa invoice maker',
-        'বিল',
-        'ইনভয়েস',
-        'ক্যাশ মেমো',
-        'মানি রিসিট',
-        'receipt',
-        'টাকা রসিদ',
-        'ব্যবসার হিসাব',
-        'চালান',
-      ],
-    },
-    // 25. MoSaFa Bangla Text Converter (বাংলা লেখার সহকারী)
-    {
-      id: 'bangla-text-converter',
-      title: 'MoSaFa Bangla Text Converter',
-      badge: '✍️ বাংলা টেক্সট টুল',
-      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-      category: 'typing',
-      iconBg: 'from-emerald-600 via-teal-600 to-cyan-600',
-      icon: <Languages className="w-6 h-6 text-white" />,
-      description:
-        'বাংলা ও ইংরেজি সংখ্যা কনভার্ট করুন, বাংলা লেখা পরিষ্কার ও সাজান, Unicode ও সমর্থিত Bijoy টেক্সট কনভার্ট করুন এবং প্রয়োজনীয় লেখা সহজেই কপি বা ডাউনলোড করুন।',
-      deviceTarget: 'desktop',
-      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (বিজয়-ইউনিকোড ও ডিটিপি)',
-      keywords: [
-        'bangla text converter',
-        'বাংলা টেক্সট কনভার্টার',
-        'বাংলা লেখার সহকারী',
-        'unicode to bijoy',
-        'bijoy to unicode',
-        'ইউনিকোড টু বিজয়',
-        'বিজয় টু ইউনিকোড',
-        'text cleaner',
-        'text formatter',
-        'নাম্বার কনভার্টার',
-        'number converter',
-        'sutonnymj',
-      ],
-    },
-    // 26. MoSaFa Application Writer (দরখাস্ত ও অফিসিয়াল চিঠি)
     {
       id: 'application-writer',
       title: 'MoSaFa Application Writer',
       badge: '📝 অফিসিয়াল ডকুমেন্ট',
       badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
-      category: 'calculator',
+      category: 'office',
       iconBg: 'from-blue-600 via-indigo-600 to-violet-600',
       icon: <FileText className="w-6 h-6 text-white" />,
       description:
@@ -734,13 +570,12 @@ export default function App() {
         'official letter',
       ],
     },
-    // 28. MoSaFa PDF Toolkit (PDF টুলবক্স)
     {
       id: 'pdf-toolkit',
       title: 'MoSaFa PDF Toolkit (PDF টুলবক্স)',
       badge: '📄 PDF ইউটিলিটি',
       badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
-      category: 'calculator',
+      category: 'office',
       iconBg: 'from-rose-500 via-pink-600 to-indigo-600',
       icon: <Files className="w-6 h-6 text-white" />,
       description:
@@ -760,41 +595,242 @@ export default function App() {
         'পিডিএফ',
       ],
     },
-    // 29. MoSaFa Palmistry AI (এআই হস্তরেখা ও ভাগ্যরেখা)
+
+    // =========================================================================
+    // 3. Business, Finance & Entrepreneur (ব্যবসা ও হিসাব - ৪টি টুল)
+    // =========================================================================
     {
-      id: 'palmistry-ai',
-      title: 'MoSaFa Palmistry AI (হস্তরেখা বিশ্লেষণ)',
-      badge: '🖐️ এআই হস্তরেখা',
-      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
-      category: 'entertainment',
-      iconBg: 'from-amber-500 via-orange-600 to-rose-600',
-      icon: <Hand className="w-6 h-6 text-white" />,
+      id: 'invoice-maker',
+      title: 'MoSaFa Invoice Maker — ইনভয়েস ও রিসিট মেকার',
+      badge: '🧾 ব্যবসার হিসাব',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      category: 'business',
+      iconBg: 'from-emerald-600 via-teal-600 to-indigo-600',
+      icon: <Receipt className="w-6 h-6 text-white" />,
       description:
-        'আপনার হাতের রেখায় লুকানো গল্প! লাইভ ক্যামেরা বা ছবি আপলোড করে জেনে নিন হৃদয় রেখা, মস্তিষ্ক রেখা, জীবন রেখা ও ভাগ্য রেখার এআই বিশ্লেষণ ও ব্যক্তিত্বের উপাখ্যান।',
-      deviceTarget: 'both',
-      deviceTag: '📱💻 ক্যামেরা ও ছবি আপলোড',
+        'সহজেই তৈরি করুন প্রফেশনাল ইনভয়েস, মানি রিসিট ও ব্যবসার বিল। স্বয়ংক্রিয় হিসাব, PDF ডাউনলোড এবং প্রিন্ট সুবিধা।',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (ক্যাশ মেমো ও প্রিন্ট)',
       keywords: [
-        'palmistry',
-        'mosafa palmistry ai',
-        'palmistry ai',
-        'হস্তরেখা',
-        'হাতের রেখা',
-        'হস্তরেখা বিশ্লেষণ',
-        'palm reading',
-        'হাত দেখা',
-        'ভাগ্য',
-        'ভাগ্যরেখা',
-        'জীবন রেখা',
-        'হৃদয় রেখা',
+        'invoice',
+        'invoice maker',
+        'mosafa invoice maker',
+        'বিল',
+        'ইনভয়েস',
+        'ক্যাশ মেমো',
+        'মানি রিসিট',
+        'receipt',
+        'টাকা রসিদ',
+        'ব্যবসার হিসাব',
+        'চালান',
       ],
     },
-    // 31. MoSaFa Content Creator Studio
+    {
+      id: 'daily-hishab',
+      title: 'Daily Hishab & To-Do (হিসাব ও করণীয় ট্র্যাকার)',
+      badge: '💼 অল-ইন-ওয়ান লাইফ ম্যানেজার',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      category: 'business',
+      iconBg: 'from-emerald-600 to-green-700',
+      icon: <Wallet className="w-6 h-6 text-white" />,
+      description:
+        'সাইটের ইউজার একাউন্টে আপনার দৈনন্দিন আয়-ব্যয়, সম্পূর্ণ To-Do List, প্রতিদিনের নোটস ও অভ্যাস ক্লাউড সিঙ্কসহ সংরক্ষণ করুন।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: ['daily hishab', 'to do list', 'টু ডু লিস্ট', 'টাস্ক ম্যানেজার', 'হিসাব', 'আয় ব্যয়', 'নোটস', 'বাজেট', 'ব্যালেন্স', 'খরচ'],
+    },
+    {
+      id: 'entrepreneur-journey',
+      title: 'MoSaFa Entrepreneur Journey (উদ্যোক্তা গাইড)',
+      badge: '🚀 জিরো টু বিজনেস',
+      badgeColor: 'bg-amber-50 text-amber-900 border-amber-300',
+      category: 'business',
+      iconBg: 'from-amber-500 via-rose-600 to-indigo-700',
+      icon: <Compass className="w-6 h-6 text-white" />,
+      description:
+        'Zero to Entrepreneur — শূন্য থেকে নিজের ব্যবসা গড়ার পূর্ণাঙ্গ গাইড। জিরো ক্যাপিটাল ফাইন্ডার, আইডিয়া ভ্যালিডেটর, অফার বিল্ডার, বিজনেস প্ল্যান A4 প্রিন্ট, ফাইন্যান্স ল্যাব, কাস্টমার খাতা ও সরকারি গাইডবুক।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'entrepreneur journey',
+        'mosafa entrepreneur',
+        'উদ্যোক্তা',
+        'ব্যবসা',
+        'business plan',
+        'zero capital',
+        'বিনা পুঁজিতে ব্যবসা',
+        'ট্রেড লাইসেন্স',
+        'ফাইন্যান্স',
+        'কাস্টমার',
+        'crm',
+        'হিসাব',
+        'ব্যবসা শুরু',
+      ],
+    },
+    {
+      id: 'bangla-text-converter',
+      title: 'MoSaFa Bangla Text Converter',
+      badge: '✍️ বাংলা টেক্সট টুল',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      category: 'business',
+      iconBg: 'from-emerald-600 via-teal-600 to-cyan-600',
+      icon: <Languages className="w-6 h-6 text-white" />,
+      description:
+        'বাংলা ও ইংরেজি সংখ্যা কনভার্ট করুন, বাংলা লেখা পরিষ্কার ও সাজান, Unicode ও সমর্থিত Bijoy টেক্সট কনভার্ট করুন এবং প্রয়োজনীয় লেখা সহজেই কপি বা ডাউনলোড করুন।',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (বিজয়-ইউনিকোড ও ডিটিপি)',
+      keywords: [
+        'bangla text converter',
+        'বাংলা টেক্সট কনভার্টার',
+        'বাংলা লেখার সহকারী',
+        'unicode to bijoy',
+        'bijoy to unicode',
+        'ইউনিকোড টু বিজয়',
+        'বিজয় টু ইউনিকোড',
+        'text cleaner',
+        'text formatter',
+        'নাম্বার কনভার্টার',
+        'number converter',
+        'sutonnymj',
+      ],
+    },
+
+    // =========================================================================
+    // 4. Education, Learning & Skills (শিক্ষা ও দক্ষতা - ৪টি টুল)
+    // =========================================================================
+    {
+      id: 'studymate-bd',
+      title: 'The MoSaFa StudyMate BD 🎓 (AI পার্সোনাল টিউটর)',
+      badge: '🔥 নতুন AI টিউটর',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      category: 'education',
+      iconBg: 'from-indigo-600 via-purple-600 to-rose-600',
+      icon: <GraduationCap className="w-6 h-6 text-white" />,
+      description:
+        'বাংলাদেশের ৬ষ্ঠ-১২শ শ্রেণি, SSC, HSC, বিশ্ববিদ্যালয়/মেডিকেল ভর্তি ও BCS শিক্ষার্থীদের অল-ইন-ওয়ান AI প্রাইভেট টিউটর। ছবি তুলে বা লিখে যেকোনো অঙ্ক ও জটিল প্রশ্নের সহজ সমাধান, লাইভ MCQ কুইজ ও পড়ার রুটিন!',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'studymate',
+        'studymate bd',
+        'the mosafa studymate bd',
+        'ai tutor',
+        'ai প্রাইভেট টিউটর',
+        'অঙ্ক সমাধান',
+        'ssc',
+        'hsc',
+        'bcs',
+        'admission',
+        'কুইজ',
+        'রুটিন',
+        'পড়াশোনা',
+        'study mate',
+        'পড়াশুনা',
+        'শিক্ষক',
+      ],
+    },
+    {
+      id: 'typing-test',
+      title: 'লিপি টাইপিং টেস্ট (Typing Speed)',
+      badge: '⚡ স্পিড টেস্ট',
+      badgeColor: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+      category: 'education',
+      iconBg: 'from-indigo-600 to-blue-600',
+      icon: <Keyboard className="w-6 h-6 text-white" />,
+      description:
+        '১ মিনিটে বাংলা টাইপিংয়ের গতি ও নির্ভুলতা পরীক্ষা করুন। লাইভ WPM, CPM ও সঠিকতার হিসাবসহ তাৎক্ষণিক ফলাফল ও অ্যানালিটিক্স।',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 শুধু কম্পিউটার / ল্যাপটপ (কীবোর্ড স্পিড)',
+      keywords: ['টাইপিং টেস্ট', 'typing speed test', 'বাংলা টাইপিং', 'wpm', 'cpm', 'লিপি টাইপিং'],
+    },
+    {
+      id: 'bangla-quiz',
+      title: 'Bangla Riddles & Quiz (ধাঁধা ও কুইজ)',
+      badge: '🧩 বুদ্ধিদীপ্ত কুইজ',
+      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+      category: 'education',
+      iconBg: 'from-amber-500 to-orange-600',
+      icon: <Brain className="w-6 h-6 text-white" />,
+      description:
+        'মজার বাংলা ধাঁধা, সাধারণ জ্ঞান, সাহিত্য ও বিজ্ঞানের কুইজ চ্যালেঞ্জ। তাৎক্ষণিক ব্যাখ্যা ও স্কোর শেয়ার সুবিধা।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (স্মার্টফোন কুইজ ও ধাঁধা)',
+      keywords: ['ধাঁধা', 'quiz', 'কুইজ', 'সাধারণ জ্ঞান', 'আইকিউ', 'বাংলা কুইজ', 'সাহিত্য'],
+    },
+    {
+      id: 'bangladesh-map',
+      title: 'MoSaFa My Bangladesh Map (বাংলাদেশ ভ্রমণ ম্যাপ)',
+      badge: '🇧🇩 নতুন টুল',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      category: 'education',
+      iconBg: 'from-emerald-600 via-teal-600 to-indigo-600',
+      icon: <Compass className="w-6 h-6 text-white" />,
+      description: 'বাংলাদেশের ৬৪টি জেলার সীমানাসহ ইন্টারেক্টিভ মানচিত্র। নিজের জেলা, ঘুরে দেখা জেলা ও ভ্রমণের ইচ্ছা নির্বাচন করে সোশ্যাল মিডিয়ার জন্য আকর্ষণীয় এইচডি পোস্টার কার্ড তৈরি ও ডাউনলোড করুন!',
+      deviceTarget: 'desktop',
+      deviceTag: '💻 কম্পিউটার/ল্যাপটপে সেরা (৬৪ জেলা বড় ম্যাপ)',
+      keywords: [
+        'বাংলাদেশ ম্যাপ',
+        'bangladesh map',
+        'my bangladesh map',
+        '৬৪ জেলা',
+        'ভ্রমণ মানচিত্র',
+        'জেলা ম্যাপ',
+        'travel map',
+        'পোস্টার',
+      ],
+    },
+
+    // =========================================================================
+    // 5. Creative & Social Studio (ক্রিয়েটিভ স্টুডিও - ৪টি টুল)
+    // =========================================================================
+    {
+      id: 'bangla-status',
+      title: 'বাংলা স্ট্যাটাস ও ক্যাপশন হাব',
+      badge: '💬 ১০০০+ স্ট্যাটাস',
+      badgeColor: 'bg-violet-50 text-violet-700 border-violet-200',
+      category: 'creative',
+      iconBg: 'from-violet-600 to-purple-600',
+      icon: <MessageSquareHeart className="w-6 h-6 text-white" />,
+      description:
+        'ভালোবাসা, কষ্ট, ইসলামিক, বন্ধুত্ব, এটিটিউড, মোটিভেশন ও ফানি সহ ১০টি ক্যাটাগরির ১০০০+ সেরা বাংলা ক্যাপশন কালেকশন ও ফটো কার্ড মেকার।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (১-ক্লিক কপি ও সোশ্যাল শেয়ার)',
+      keywords: ['বাংলা স্ট্যাটাস', 'ক্যাপশন', 'bangla status', 'quotes', 'caption', 'ভালোবাসা', 'কষ্ট'],
+    },
+    {
+      id: 'poster-studio',
+      title: 'MoSaFa AI Photo Status & Frame Studio',
+      badge: '🔥 AI ফটো স্ট্যাটাস ও ৩২+ ফ্রেম',
+      badgeColor: 'bg-rose-50 text-rose-600 border-rose-200',
+      category: 'creative',
+      iconBg: 'from-rose-500 via-pink-600 to-amber-500',
+      icon: <Palette className="w-6 h-6 text-white" />,
+      description:
+        'আপনার ছবি, AI-এর লেখা, পছন্দের ফ্রেম—গোল্ডেন পার্চমেন্ট, ইসলামিক, মোটিভেশনাল, হোয়াইটবোর্ড ও ৩২টি প্রিমিয়াম ফ্রেমে তৈরি করুন নিজের স্টাইলের সোশ্যাল পোস্টার। ১-ক্লিক HD ডাউনলোড।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'পোস্টার',
+        'poster studio',
+        'ai photo status',
+        'frame studio',
+        'ফটো স্ট্যাটাস',
+        'ফ্রেম স্টুডিও',
+        'ছবি দিয়ে স্ট্যাটাস',
+        'গোল্ডেন ফ্রেম',
+        'ইসলামিক ফ্রেম',
+        'হোয়াইটবোর্ড',
+        'মিম',
+        'কোটেশন',
+        'ছবি',
+      ],
+    },
     {
       id: 'content-creator-studio',
       title: 'MoSaFa Content Creator Studio',
       badge: '🎥 অল-ইন-ওয়ান স্টুডিও',
       badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      category: 'typing',
+      category: 'creative',
       iconBg: 'from-indigo-600 via-purple-600 to-pink-600',
       icon: <Video className="w-6 h-6 text-white" />,
       description:
@@ -816,33 +852,119 @@ export default function App() {
         'facebook reels',
       ],
     },
-    // 32. MoSaFa Entrepreneur Journey
     {
-      id: 'entrepreneur-journey',
-      title: 'MoSaFa Entrepreneur Journey (উদ্যোক্তা গাইড)',
-      badge: '🚀 জিরো টু বিজনেস',
-      badgeColor: 'bg-amber-50 text-amber-900 border-amber-300',
-      category: 'calculator',
-      iconBg: 'from-amber-500 via-rose-600 to-indigo-700',
-      icon: <Compass className="w-6 h-6 text-white" />,
+      id: 'golpo-ghor',
+      title: 'গল্পের ঘর (MoSaFa Golpo Ghor)',
+      badge: '📚 ডিজিটাল পাঠাগার',
+      badgeColor: 'bg-amber-50 text-amber-800 border-amber-200',
+      category: 'creative',
+      iconBg: 'from-amber-600 via-rose-600 to-indigo-700',
+      icon: <BookOpen className="w-6 h-6 text-white" />,
       description:
-        'Zero to Entrepreneur — শূন্য থেকে নিজের ব্যবসা গড়ার পূর্ণাঙ্গ গাইড। জিরো ক্যাপিটাল ফাইন্ডার, আইডিয়া ভ্যালিডেটর, অফার বিল্ডার, বিজনেস প্ল্যান A4 প্রিন্ট, ফাইন্যান্স ল্যাব, কাস্টমার খাতা ও সরকারি গাইডবুক।',
+        'বাংলা ডিজিটাল গল্পের লাইব্রেরি। রবীন্দ্রনাথ ও শরৎচন্দ্রের অমর ক্লাসিক সাহিত্য এবং নতুন মৌলিক থ্রিলার, রোমান্টিক ও রহস্য গল্প পড়ার আধুনিক পাঠকক্ষ।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (পকেট ডিজিটাল পাঠকক্ষ)',
+      keywords: ['গল্পের ঘর', 'golpo ghor', 'বাংলা গল্প', 'রবীন্দ্রনাথ', 'শরৎচন্দ্র', 'উপন্যাস', 'ছোটগল্প', 'বই', 'লাইব্রেরি', 'story'],
+    },
+
+    // =========================================================================
+    // 6. Lifestyle, Travel & Entertainment (লাইফস্টাইল ও বিনোদন - ৬টি টুল)
+    // =========================================================================
+    {
+      id: 'age-calc',
+      title: 'বয়স ক্যালকুলেটর (Age Calculator)',
+      badge: '📅 নিখুঁত হিসাব',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      category: 'lifestyle',
+      iconBg: 'from-emerald-500 to-teal-600',
+      icon: <Calendar className="w-6 h-6 text-white" />,
+      description:
+        'জন্মতারিখ নির্বাচন করে এক ক্লিকে বের করুন আপনার বর্তমান বয়স — বছর, মাস, দিন, মোট সপ্তাহ, এবং আগামী জন্মদিনের কাউন্টডাউন।',
       deviceTarget: 'both',
       deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: ['বয়স ক্যালকুলেটর', 'age calculator', 'জন্ম তারিখ', 'হিসাব', 'দিন', 'মাস', 'বছর'],
+    },
+    {
+      id: 'love-test',
+      title: 'প্রেম টেস্ট (Love Test)',
+      badge: '🔥 ভাইরাল টেস্ট',
+      badgeColor: 'bg-rose-50 text-rose-600 border-rose-200',
+      category: 'lifestyle',
+      iconBg: 'from-rose-500 to-pink-600',
+      icon: <Heart className="w-6 h-6 fill-white text-white" />,
+      description:
+        'দুজনের বয়স, গায়ের রং, পারিবারিক সম্মতি, বাস্তব প্রশ্ন ও স্বভাব যাচাই করে সম্পর্কের গভীরতা ও ভবিষ্যৎ উদ্দেশ্য নির্ণয় করুন। সনদপত্র ডাউনলোড সুবিধা সহ!',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (টাচ কুইজ ও শেয়ার)',
+      keywords: ['প্রেম টেস্ট', 'love test', 'সম্পর্ক', 'ভালোবাসা', 'বিবাহ', 'বিচ্ছেদ', 'পরীক্ষা'],
+    },
+    {
+      id: 'random-picker',
+      title: 'Random Picker Wheel (সিদ্ধান্ত চাকা)',
+      badge: '🎡 লাকি হুইল',
+      badgeColor: 'bg-purple-50 text-purple-600 border-purple-200',
+      category: 'lifestyle',
+      iconBg: 'from-purple-600 to-pink-600',
+      icon: <RotateCw className="w-6 h-6 text-white" />,
+      description:
+        'খাবার পছন্দ, ভ্রমণ বা যেকোনো দ্বিধাদ্বন্দ্বে কাস্টমাইজড চাকা ঘুরিয়ে শতভাগ নিরপেক্ষ ও র‍্যান্ডম সিদ্ধান্ত নিন।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (টাচ স্ক্রিন চাকা স্পিন)',
+      keywords: ['random picker', 'wheel', 'চাকা', 'র‍্যান্ডম', 'সিদ্ধান্ত', 'হুইল', 'স্পিন'],
+    },
+    {
+      id: 'life-receipt',
+      title: 'MoSaFa Life Receipt (জীবন হিসাব রশিদ)',
+      badge: '🧾 সময় রিসিট',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      category: 'lifestyle',
+      iconBg: 'from-slate-700 to-indigo-800',
+      icon: <Receipt className="w-6 h-6 text-white" />,
+      description:
+        'ঘুম, মোবাইল ব্যবহার, কাজ ও অবসরে জীবনের কত বছর পার করেছেন? তৈরি করুন ডিজিটাল মেমো ও রিসিট কার্ড।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (থার্মাল রিসিট ও কার্ড)',
+      keywords: ['life receipt', 'রশিদ', 'জীবন হিসাব', 'মেমো', 'সময় ব্যয়', 'বয়স হিসাব'],
+    },
+    {
+      id: 'name-reveal',
+      title: 'MoSaFa Name Reveal (নামের গোপন গল্প)',
+      badge: '🔮 নাম ও ব্যক্তিত্ব',
+      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+      category: 'lifestyle',
+      iconBg: 'from-blue-600 via-indigo-600 to-purple-600',
+      icon: <Sparkles className="w-6 h-6 text-white" />,
+      description:
+        'নিজের নামের অর্থ, উৎস, রাশি, ব্যক্তিত্ব ও ভবিষ্যৎ সম্ভাবনা জানুন ৪টি সহজ অধ্যায়ে। আকর্ষণীয় ফলাফল কার্ড তৈরি ও শেয়ার করুন।',
+      deviceTarget: 'mobile',
+      deviceTag: '📱 মোবাইলে সেরা (নামের গল্প ও স্ট্যাটাস)',
+      keywords: ['name reveal', 'নামের গোপন গল্প', 'নামের অর্থ', 'রাশি', 'নাম', 'ব্যক্তিত্ব', 'ভবিষ্যৎ'],
+    },
+    {
+      id: 'palmistry-ai',
+      title: 'MoSaFa Palmistry AI (হস্তরেখা বিশ্লেষণ)',
+      badge: '🖐️ এআই হস্তরেখা',
+      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+      category: 'lifestyle',
+      iconBg: 'from-amber-500 via-orange-600 to-rose-600',
+      icon: <Hand className="w-6 h-6 text-white" />,
+      description:
+        'আপনার হাতের রেখায় লুকানো গল্প! লাইভ ক্যামেরা বা ছবি আপলোড করে জেনে নিন হৃদয় রেখা, মস্তিষ্ক রেখা, জীবন রেখা ও ভাগ্য রেখার এআই বিশ্লেষণ ও ব্যক্তিত্বের উপাখ্যান।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 ক্যামেরা ও ছবি আপলোড',
       keywords: [
-        'entrepreneur journey',
-        'mosafa entrepreneur',
-        'উদ্যোক্তা',
-        'ব্যবসা',
-        'business plan',
-        'zero capital',
-        'বিনা পুঁজিতে ব্যবসা',
-        'ট্রেড লাইসেন্স',
-        'ফাইন্যান্স',
-        'কাস্টমার',
-        'crm',
-        'হিসাব',
-        'ব্যবসা শুরু',
+        'palmistry',
+        'mosafa palmistry ai',
+        'palmistry ai',
+        'হস্তরেখা',
+        'হাতের রেখা',
+        'হস্তরেখা বিশ্লেষণ',
+        'palm reading',
+        'হাত দেখা',
+        'ভাগ্য',
+        'ভাগ্যরেখা',
+        'জীবন রেখা',
+        'হৃদয় রেখা',
       ],
     },
   ];
@@ -870,6 +992,13 @@ export default function App() {
   const handleShuffle = () => {
     setActiveToolsList(shuffleTools(tools));
     showToast('টুলসগুলোর জায়গা পরিবর্তন (Shuffle) করা হয়েছে! 🔀', '🎲');
+  };
+
+  // Master Reset Handler: clears search query, resets category to 'all', and resets device sector to 'all'
+  const handleResetAllFilters = () => {
+    setSearchQuery('');
+    setActiveCategory('all');
+    setDeviceSector('all');
   };
 
   // Filter tools by device sector, category, and search query from active tools list
@@ -1306,9 +1435,19 @@ export default function App() {
                 }
               }}
               placeholder="টুল খুঁজুন... যেমন: নাম, পোস্টার, কুইজ, হিসাব, প্রেম, বয়স"
-              className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white border border-slate-300 shadow-md shadow-slate-100 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
+              className="w-full pl-11 pr-10 py-3.5 rounded-2xl bg-white border border-slate-300 shadow-md shadow-slate-100 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
             />
             <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition cursor-pointer"
+                title="সার্চ লেখা মুছুন"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
       </section>
@@ -1318,6 +1457,80 @@ export default function App() {
         {/* Tools Notice & Announcement Banner (Editable from Secret Admin Panel) */}
         <ToolsNoticeBanner onOpenAdmin={() => setIsAdminModalOpen(true)} />
 
+        {/* 6 Category Filter Tabs Bar */}
+        <div className="mb-4 bg-white/95 backdrop-blur-sm p-2 sm:p-2.5 rounded-3xl border border-slate-200/90 shadow-xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1">
+            {TOOL_CATEGORIES.map((cat) => {
+              const isActive = activeCategory === cat.id;
+              const count = cat.id === 'all' ? tools.length : tools.filter((t) => t.category === cat.id).length;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    if (cat.id === 'all') {
+                      handleResetAllFilters();
+                    } else {
+                      setActiveCategory(cat.id);
+                    }
+                  }}
+                  aria-selected={isActive}
+                  role="tab"
+                  className={`group shrink-0 inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer active:scale-95 select-none ${
+                    isActive
+                      ? 'bg-slate-900 text-white shadow-md shadow-slate-900/25 ring-2 ring-slate-900/10'
+                      : 'bg-slate-50/90 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200/80'
+                  }`}
+                  title={`${cat.banglaName} (${cat.name}) — ${cat.description}`}
+                >
+                  <span className="text-sm sm:text-base">{cat.icon}</span>
+                  <span className="whitespace-nowrap">{cat.banglaName}</span>
+                  <span
+                    className={`text-[10px] sm:text-xs font-black px-1.5 py-0.5 rounded-full transition ${
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : 'bg-white text-slate-600 border border-slate-200 group-hover:bg-slate-200 group-hover:text-slate-900'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Active Category Contextual Banner */}
+        {activeCategory !== 'all' && (
+          <div className="mb-4 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-50/90 via-purple-50/90 to-indigo-50/90 border border-rose-200/80 text-slate-800 flex items-center justify-between gap-3 text-xs sm:text-sm shadow-2xs animate-in fade-in duration-200">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-2xl shrink-0">
+                {TOOL_CATEGORIES.find((c) => c.id === activeCategory)?.icon}
+              </span>
+              <div className="min-w-0">
+                <p className="font-extrabold text-slate-900 truncate">
+                  {TOOL_CATEGORIES.find((c) => c.id === activeCategory)?.banglaName}{' '}
+                  <span className="text-slate-500 font-normal hidden sm:inline">
+                    ({TOOL_CATEGORIES.find((c) => c.id === activeCategory)?.name})
+                  </span>
+                </p>
+                <p className="text-slate-600 text-[11px] sm:text-xs mt-0.5 truncate">
+                  {TOOL_CATEGORIES.find((c) => c.id === activeCategory)?.description}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleResetAllFilters}
+              className="text-rose-700 hover:text-rose-950 font-bold shrink-0 text-xs px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/90 border border-rose-200 shadow-2xs hover:bg-white transition cursor-pointer flex items-center gap-1"
+              title="সকল ফিল্টার রিসেট করে ২৬টি টুলস দেখুন"
+            >
+              <span>✕</span>
+              <span className="hidden sm:inline">সব ফিল্টার মুছুন</span>
+            </button>
+          </div>
+        )}
+
         {/* Sector Control Bar & Corner Switcher */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 bg-white/95 backdrop-blur-sm p-3.5 sm:p-4 rounded-3xl border border-slate-200/90 shadow-xs">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -1325,7 +1538,11 @@ export default function App() {
               {deviceSector === 'all' && (
                 <>
                   <Globe className="w-4 h-4 text-slate-700" />
-                  <span>সকল অনলাইন টুলস ({tools.length}টি)</span>
+                  <span>
+                    {activeCategory === 'all' && !searchQuery.trim()
+                      ? `সকল অনলাইন টুলস (${tools.length}টি)`
+                      : `প্রদর্শিত টুলস (${filteredTools.length}টি)`}
+                  </span>
                 </>
               )}
               {deviceSector === 'desktop' && (
@@ -1342,14 +1559,14 @@ export default function App() {
               )}
             </span>
 
-            {deviceSector !== 'all' && (
+            {(deviceSector !== 'all' || activeCategory !== 'all' || searchQuery.trim()) && (
               <button
                 type="button"
-                onClick={() => setDeviceSector('all')}
+                onClick={handleResetAllFilters}
                 className="inline-flex items-center gap-1 text-[11px] bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold px-2.5 py-0.5 rounded-full border border-rose-200 transition cursor-pointer"
-                title="সবগুলো টুলসে ফেরত যান"
+                title="সবগুলো ফিল্টার রিসেট করে ২৬টি টুলস দেখুন"
               >
-                <span>✕ সবগুলো দেখুন</span>
+                <span>✕ সব ফিল্টার মুছুন</span>
               </button>
             )}
 
@@ -1370,13 +1587,13 @@ export default function App() {
             <div className="inline-flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/90 shadow-2xs">
               <button
                 type="button"
-                onClick={() => setDeviceSector('all')}
+                onClick={handleResetAllFilters}
                 className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                   deviceSector === 'all'
                     ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title={`সকল ${toBanglaNum(tools.length)}টি টুলস একসাথে দেখুন`}
+                title={`সকল ${tools.length}টি টুলস একসাথে দেখুন`}
               >
                 <Globe className="w-3.5 h-3.5" />
                 <span>সবগুলো ({tools.length})</span>
@@ -1432,7 +1649,7 @@ export default function App() {
             </div>
             <button
               type="button"
-              onClick={() => setDeviceSector('all')}
+              onClick={handleResetAllFilters}
               className="text-indigo-700 hover:text-indigo-950 font-bold shrink-0 underline cursor-pointer"
             >
               সবগুলো দেখুন
@@ -1450,7 +1667,7 @@ export default function App() {
             </div>
             <button
               type="button"
-              onClick={() => setDeviceSector('all')}
+              onClick={handleResetAllFilters}
               className="text-rose-700 hover:text-rose-950 font-bold shrink-0 underline cursor-pointer"
             >
               সবগুলো দেখুন
@@ -1523,8 +1740,17 @@ export default function App() {
             <span className="text-4xl block mb-2">🔍</span>
             <h4 className="text-base font-bold text-slate-800">কোনো টুল পাওয়া যায়নি!</h4>
             <p className="text-xs text-slate-500 mt-1">
-              অন্য কোনো নাম দিয়ে সার্চ করুন (যেমন: পোস্টার, কুইজ, হিসাব, জার্নি, প্রেম, বয়স)
+              অন্য কোনো নাম দিয়ে সার্চ করুন অথবা ক্যাটাগরি ও ফিল্টার পরিবর্তন করুন
             </p>
+            {(activeCategory !== 'all' || deviceSector !== 'all' || searchQuery.trim()) && (
+              <button
+                type="button"
+                onClick={handleResetAllFilters}
+                className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 transition shadow-xs cursor-pointer active:scale-95"
+              >
+                <span>✕ সব ফিল্টার মুছুন ও সকল ২৬টি টুল দেখুন</span>
+              </button>
+            )}
           </div>
         )}
 
