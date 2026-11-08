@@ -1,3 +1,5 @@
+import { TOOLS_RICH_CONTENT } from './seoToolsContent.ts';
+
 export interface ToolSeoInfo {
   id: string;
   slug: string;
@@ -494,6 +496,23 @@ export function generateSchemaJsonLd(info: ToolSeoInfo): Record<string, any> {
         },
       ],
     });
+
+    // Add FAQPage schema for rich snippet accordions in Google search
+    const richContent = TOOLS_RICH_CONTENT[info.slug];
+    if (richContent && richContent.faqs && richContent.faqs.length > 0) {
+      baseSchema['@graph'].push({
+        '@type': 'FAQPage',
+        '@id': `${info.canonicalUrl}#faq`,
+        mainEntity: richContent.faqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.q,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.a,
+          },
+        })),
+      });
+    }
   }
 
   return baseSchema;

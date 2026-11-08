@@ -1298,31 +1298,57 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
 
   // Vite integration: Dev middleware or static dist with full SEO injection
   if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-
-    // Tool SEO route: /tools/:slug
-    app.get('/tools/:slug', (req, res) => {
-      const slug = req.params.slug.toLowerCase().trim();
+    // 1. Tool SEO routes FIRST (Runs BEFORE express.static so /tools/:slug returns 200 OK directly with NO trailing slash redirect)
+    const handleToolSeo = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      const slug = (req.params.slug || '').toLowerCase().trim();
       const tool = TOOLS_SEO_REGISTRY[slug];
-      if (tool) {
-        // Check if pre-rendered file exists
-        const preRenderedPath = path.resolve(__dirname, 'dist', 'tools', slug, 'index.html');
-        if (fs.existsSync(preRenderedPath)) {
-          res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          return res.sendFile(preRenderedPath);
-        }
-        // Dynamic fallback injection from dist/index.html
-        const distIndex = path.resolve(__dirname, 'dist', 'index.html');
-        if (fs.existsSync(distIndex)) {
-          const rawHtml = fs.readFileSync(distIndex, 'utf-8');
-          const enrichedHtml = injectSeoTagsIntoHtml(rawHtml, tool);
-          res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          return res.send(enrichedHtml);
-        }
+      if (!tool) {
+        return next();
       }
+
+      // Canonical enforcement: if request came with a trailing slash, redirect 301 to canonical /tools/:slug
+      if (req.path.endsWith('/') && req.path.length > 1) {
+        return res.redirect(301, `/tools/${slug}`);
+      }
+
+      // Check prerendered flat HTML file: dist/tools/<slug>.html
+      const flatPrerendered = path.resolve(__dirname, 'dist', 'tools', `${slug}.html`);
+      if (fs.existsSync(flatPrerendered)) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.sendFile(flatPrerendered);
+      }
+
+      // Check prerendered folder file: dist/tools/<slug>/index.html
+      const folderPrerendered = path.resolve(__dirname, 'dist', 'tools', slug, 'index.html');
+      if (fs.existsSync(folderPrerendered)) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.sendFile(folderPrerendered);
+      }
+
+      // Dynamic fallback injection from dist/index.html
+      const distIndex = path.resolve(__dirname, 'dist', 'index.html');
+      if (fs.existsSync(distIndex)) {
+        const rawHtml = fs.readFileSync(distIndex, 'utf-8');
+        const enrichedHtml = injectSeoTagsIntoHtml(rawHtml, tool);
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.send(enrichedHtml);
+      }
+
+      next();
+    };
+
+    app.get('/tools/:slug', handleToolSeo);
+    app.get('/tools/:slug/', handleToolSeo);
+
+    // 2. Serve static assets with redirect: false so Express never redirects directories with trailing slash
+    app.use(express.static(path.resolve(__dirname, 'dist'), { redirect: false, index: false }));
+
+    // 3. Root homepage
+    app.get('/', (_req, res) => {
       res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
 
+    // 4. Catch-all fallback
     app.get('*', (_req, res) => {
       res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
@@ -1332,19 +1358,25 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
       appType: 'spa',
     });
 
-    // Tool SEO route in development
-    app.get('/tools/:slug', async (req, res, next) => {
+    // Tool SEO route in development (BEFORE vite.middlewares)
+    app.get(['/tools/:slug', '/tools/:slug/'], async (req, res, next) => {
       try {
-        const slug = req.params.slug.toLowerCase().trim();
+        const slug = (req.params.slug || '').toLowerCase().trim();
         const tool = TOOLS_SEO_REGISTRY[slug];
-        if (tool) {
-          const rawIndex = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
-          const viteTransformed = await vite.transformIndexHtml(req.originalUrl, rawIndex);
-          const enrichedHtml = injectSeoTagsIntoHtml(viteTransformed, tool);
-          res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          return res.status(200).send(enrichedHtml);
+        if (!tool) {
+          return next();
         }
-        next();
+
+        // Canonical redirect if trailing slash
+        if (req.path.endsWith('/') && req.path.length > 1) {
+          return res.redirect(301, `/tools/${slug}`);
+        }
+
+        const rawIndex = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');
+        const viteTransformed = await vite.transformIndexHtml(req.originalUrl, rawIndex);
+        const enrichedHtml = injectSeoTagsIntoHtml(viteTransformed, tool);
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(200).send(enrichedHtml);
       } catch (e) {
         next(e);
       }
