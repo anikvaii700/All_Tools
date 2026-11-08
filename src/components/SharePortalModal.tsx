@@ -106,12 +106,12 @@ export const SharePortalModal: React.FC<SharePortalModalProps> = ({
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-white p-0.5 border border-slate-200 shadow-md shadow-rose-200/50 flex items-center justify-center overflow-hidden shrink-0">
-            <img src="/logo.png" alt="The MoSaFa Tools" className="w-full h-full object-contain" />
+          <div className="w-12 h-12 rounded-2xl bg-white p-0.5 border border-slate-200 shadow-md shadow-indigo-100/80 flex items-center justify-center overflow-hidden shrink-0 aspect-square">
+            <img src="/logo.png" alt="MoSaFa Tools Official Logo" className="w-full h-full object-contain aspect-square" />
           </div>
           <div>
             <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-              The MoSaFa Tools শেয়ার করুন
+              MoSaFa Tools শেয়ার করুন
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               সকল {toBanglaNum(totalToolsCount)}টি ফ্রি অনলাইন টুলস এক ক্লিকে বন্ধুদের পাঠান

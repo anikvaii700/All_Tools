@@ -182,27 +182,28 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={handleBrandClick}
             type="button"
-            className="flex items-center gap-2 sm:gap-3 group text-left cursor-pointer transition select-none active:scale-95"
-            title="The MoSaFa Tools"
+            className="flex items-center gap-2.5 sm:gap-3 group text-left cursor-pointer transition select-none active:scale-95"
+            title="MoSaFa Tools - অফিসিয়াল হোম"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white p-0.5 shadow-md shadow-rose-200/60 border border-slate-200/80 group-hover:scale-105 transition shrink-0 flex items-center justify-center overflow-hidden">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white p-0.5 shadow-md shadow-indigo-100/80 border border-slate-200/90 group-hover:scale-105 transition shrink-0 flex items-center justify-center overflow-hidden aspect-square">
               <img
                 src="/logo.png"
-                alt="The MoSaFa Tools"
-                className="w-full h-full object-contain"
+                alt="MoSaFa Tools Official Logo"
+                className="w-full h-full object-contain aspect-square select-none pointer-events-none"
+                loading="eager"
               />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 leading-tight">
-                  The MoSaFa
+                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                  MoSaFa
                 </span>
-                <span className="text-[10px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="text-[10px] bg-indigo-50 border border-indigo-200 text-indigo-700 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
                   Tools
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 font-medium hidden xs:block">
-                সকল প্রয়োজনীয় অনলাইন টুলস এক ক্লিকে
+                সকল প্রয়োজনীয় ডিজিটাল অনলাইন টুলস
               </p>
             </div>
           </button>
