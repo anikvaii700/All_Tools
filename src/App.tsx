@@ -55,6 +55,7 @@ import { DeveloperContactModal } from './components/DeveloperContactModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
 import { ToolsNoticeBanner } from './components/ToolsNoticeBanner';
 import { UserReviewsMarquee } from './components/UserReviewsMarquee';
+import { WaterDropletButton } from './components/WaterDropletButton';
 import { useAuth } from './context/AuthContext';
 import { APP_VERSION_CONFIG } from './versionConfig';
 import { trackPageView, trackEvent } from './utils/analytics';
@@ -1439,18 +1440,12 @@ export default function App() {
                 <p className="text-xs text-slate-600 mt-2 leading-relaxed">{tool.description}</p>
               </div>
 
-              <div className="pt-5 mt-4 border-t border-slate-100 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigateToTool(tool.id);
-                  }}
-                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-200 text-center flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
-                >
-                  <Zap className="w-4 h-4" />
-                  <span>টুল শুরু করুন 🚀</span>
-                </button>
+              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-center">
+                <WaterDropletButton
+                  label="টুল শুরু করুন"
+                  toolTitle={tool.title}
+                  onOpenTool={() => navigateToTool(tool.id)}
+                />
               </div>
             </div>
           ))}
