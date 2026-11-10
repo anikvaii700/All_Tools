@@ -8,6 +8,20 @@ import {
   addDoc,
 } from 'firebase/firestore';
 
+export const AUTHORIZED_ADMIN_PHONE = '01743224700';
+export const AUTHORIZED_ADMIN_SYNTHETIC_EMAIL = 'user_01743224700@phone.mosafabd.com';
+
+export function isCurrentAdminUser(): boolean {
+  if (!auth.currentUser) return false;
+  const currentEmail = auth.currentUser.email?.toLowerCase() || '';
+  const currentPhone = auth.currentUser.phoneNumber || '';
+  return (
+    currentEmail === AUTHORIZED_ADMIN_SYNTHETIC_EMAIL ||
+    currentPhone === '+8801743224700' ||
+    currentPhone === '01743224700'
+  );
+}
+
 export interface ManagedUser {
   uid: string;
   displayName: string;
@@ -76,20 +90,20 @@ const INITIAL_SEED_DEPOSITS: DepositRequest[] = [
 // Realistic Bangladeshi initial seed users
 const INITIAL_SEED_USERS: ManagedUser[] = [
   {
-    uid: 'user_01868775577_admin',
-    displayName: 'মুফাসসিরুল ইসলাম (অ্যাডমিন)',
-    email: 'mofassir4700@gmail.com',
-    phoneNumber: '01868775577',
+    uid: 'user_01743224700_admin',
+    displayName: 'প্রধান অ্যাডমিন (০১৭৪৩২২৪৭০০)',
+    email: null,
+    phoneNumber: '01743224700',
     photoURL: null,
     balance: 500, // 500 BDT মূল ব্যালেন্স
     coins: 2500, // 2500 কয়েন
     totalEarnedCoins: 3500,
     status: 'active',
-    authProvider: 'google',
+    authProvider: 'phone',
     lastSpinDate: new Date().toISOString().split('T')[0],
     createdAt: '2026-01-10T10:00:00.000Z',
     updatedAt: new Date().toISOString(),
-    notes: 'প্রধান অ্যাডমিন ও ডেভেলপার প্রোফাইল',
+    notes: 'একমাত্র অনুমোদিত প্রধান অ্যাডমিন একাউন্ট (01743224700)',
   },
   {
     uid: 'user_phone_01712345678',
@@ -349,12 +363,9 @@ class AdminUserService {
   public async syncFromFirestore(force: boolean = false) {
     if (this.isInitialized && !force) return;
 
-    // Security check: Only fetch if authenticated as admin
-    const currentEmail = auth.currentUser?.email || '';
-    const isAdminEmail = currentEmail === 'anikvaii700@gmail.com' || currentEmail === 'mofassir4700@gmail.com';
-    const isUnlocked = typeof window !== 'undefined' && localStorage.getItem('mosafa_admin_unlocked') === 'true';
-
-    if (!isAdminEmail && !isUnlocked && !force) {
+    // Security check: Only fetch if authenticated as admin (01743224700)
+    const isAuthorized = isCurrentAdminUser();
+    if (!isAuthorized && !force) {
       return;
     }
 

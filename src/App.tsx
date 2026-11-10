@@ -64,34 +64,35 @@ import { APP_VERSION_CONFIG } from './versionConfig';
 import { trackPageView, trackEvent } from './utils/analytics';
 import { getToolSeoData, HOMEPAGE_SEO, generateSchemaJsonLd } from './data/seoToolsData';
 
-// Existing Tools
-import { LoveTest } from './components/LoveTest';
-import { TypingTest } from './components/TypingTest';
-import { AgeCalculator } from './components/AgeCalculator';
-import { BanglaStatusHub } from './components/BanglaStatusHub';
+// Lazy-loaded 26 Tools for optimal bundle performance & lightning-fast initial page load
+const LoveTest = React.lazy(() => import('./components/LoveTest').then((m) => ({ default: m.LoveTest })));
+const TypingTest = React.lazy(() => import('./components/TypingTest').then((m) => ({ default: m.TypingTest })));
+const AgeCalculator = React.lazy(() => import('./components/AgeCalculator').then((m) => ({ default: m.AgeCalculator })));
+const BanglaStatusHub = React.lazy(() => import('./components/BanglaStatusHub').then((m) => ({ default: m.BanglaStatusHub })));
 
-import { PosterStudio } from './components/PosterStudio';
-import { RandomPickerWheel } from './components/RandomPickerWheel';
-import { BanglaQuiz } from './components/BanglaQuiz';
-import { DailyHishab } from './components/DailyHishab';
-import { LifeReceipt } from './components/LifeReceipt';
-import { NameReveal } from './components/NameReveal';
-import { GolpoGhor } from './components/GolpoGhor';
-import { PrepaidMeterHelper } from './components/PrepaidMeterHelper';
-import { BangladeshMap } from './components/BangladeshMap';
-import { VoterTransferForm } from './components/VoterTransferForm';
-import { CVMaker } from './components/CVMaker';
-import { StudyMateBD } from './components/StudyMateBD';
-import { InvoiceMaker } from './components/InvoiceMaker';
-import { BanglaTextConverter } from './components/bangla-converter/BanglaTextConverter';
-import { ApplicationWriter } from './components/application-writer/ApplicationWriter';
-import { PDFToolkit } from './components/pdf-toolkit/PDFToolkit';
-import { PalmistryAI } from './components/PalmistryAI';
-import { BdOnlinePortal } from './components/BdOnlinePortal';
-import { ContentCreatorStudio } from './components/ContentCreatorStudio';
-import { EntrepreneurJourney } from './components/EntrepreneurJourney';
-import { AllFormFillup } from './components/all-form-fillup/AllFormFillup';
-import { JobPhotoSignatureResizer } from './components/job-resizer/JobPhotoSignatureResizer';
+const PosterStudio = React.lazy(() => import('./components/PosterStudio').then((m) => ({ default: m.PosterStudio })));
+const RandomPickerWheel = React.lazy(() => import('./components/RandomPickerWheel').then((m) => ({ default: m.RandomPickerWheel })));
+const BanglaQuiz = React.lazy(() => import('./components/BanglaQuiz').then((m) => ({ default: m.BanglaQuiz })));
+const DailyHishab = React.lazy(() => import('./components/DailyHishab').then((m) => ({ default: m.DailyHishab })));
+const LifeReceipt = React.lazy(() => import('./components/LifeReceipt').then((m) => ({ default: m.LifeReceipt })));
+const NameReveal = React.lazy(() => import('./components/NameReveal').then((m) => ({ default: m.NameReveal })));
+const GolpoGhor = React.lazy(() => import('./components/GolpoGhor').then((m) => ({ default: m.GolpoGhor })));
+const PrepaidMeterHelper = React.lazy(() => import('./components/PrepaidMeterHelper').then((m) => ({ default: m.PrepaidMeterHelper })));
+const BangladeshMap = React.lazy(() => import('./components/BangladeshMap').then((m) => ({ default: m.BangladeshMap })));
+const VoterTransferForm = React.lazy(() => import('./components/VoterTransferForm').then((m) => ({ default: m.VoterTransferForm })));
+const CVMaker = React.lazy(() => import('./components/CVMaker').then((m) => ({ default: m.CVMaker })));
+const StudyMateBD = React.lazy(() => import('./components/StudyMateBD').then((m) => ({ default: m.StudyMateBD })));
+const InvoiceMaker = React.lazy(() => import('./components/InvoiceMaker').then((m) => ({ default: m.InvoiceMaker })));
+const BanglaTextConverter = React.lazy(() => import('./components/bangla-converter/BanglaTextConverter').then((m) => ({ default: m.BanglaTextConverter })));
+const ApplicationWriter = React.lazy(() => import('./components/application-writer/ApplicationWriter').then((m) => ({ default: m.ApplicationWriter })));
+const PDFToolkit = React.lazy(() => import('./components/pdf-toolkit/PDFToolkit').then((m) => ({ default: m.PDFToolkit })));
+const PalmistryAI = React.lazy(() => import('./components/PalmistryAI').then((m) => ({ default: m.PalmistryAI })));
+const BdOnlinePortal = React.lazy(() => import('./components/BdOnlinePortal').then((m) => ({ default: m.BdOnlinePortal })));
+const ContentCreatorStudio = React.lazy(() => import('./components/ContentCreatorStudio').then((m) => ({ default: m.ContentCreatorStudio })));
+const EntrepreneurJourney = React.lazy(() => import('./components/EntrepreneurJourney').then((m) => ({ default: m.EntrepreneurJourney })));
+const AllFormFillup = React.lazy(() => import('./components/all-form-fillup/AllFormFillup').then((m) => ({ default: m.AllFormFillup })));
+const JobPhotoSignatureResizer = React.lazy(() => import('./components/job-resizer/JobPhotoSignatureResizer').then((m) => ({ default: m.JobPhotoSignatureResizer })));
+const LegalPagesModal = React.lazy(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPagesModal })));
 
 export type ToolId =
   | 'job-photo-signature-resizer'
@@ -279,6 +280,8 @@ export default function App() {
   const [authBonusPrompt, setAuthBonusPrompt] = useState<number | null>(null);
   const [isDeveloperModalOpen, setIsDeveloperModalOpen] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
+  const [legalModalTab, setLegalModalTab] = useState<'about' | 'contact' | 'privacy' | 'terms'>('about');
 
   // Secret 5-click Easter Egg on "The MoSaFa Tools" brand text
   const navSecretClicksRef = React.useRef(0);
@@ -1146,6 +1149,16 @@ export default function App() {
     return String(n).replace(/\d/g, (d) => bnDigits[Number(d)]);
   };
 
+  const ToolLoadingFallback = () => (
+    <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-200">
+      <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-3 shadow-xs">
+        <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin" />
+      </div>
+      <p className="text-sm font-bold text-slate-800">টুল লোড হচ্ছে...</p>
+      <p className="text-xs text-slate-500 mt-1">অনুগ্রহ করে কয়েক সেকেন্ড অপেক্ষা করুন</p>
+    </div>
+  );
+
   const wrapWithNavbar = (component: React.ReactNode) => {
     const currentTool = tools.find((t) => t.id === activeTool);
     const currentSeo = getToolSeoData(activeTool);
@@ -1192,8 +1205,22 @@ export default function App() {
           </a>
         </nav>
 
-        {/* The Selected Tool Content */}
-        <div className="flex-1 flex flex-col">{component}</div>
+        {/* The Selected Tool Content (Lazy-loaded with Suspense fallback) */}
+        <div className="flex-1 flex flex-col">
+          <React.Suspense fallback={<ToolLoadingFallback />}>
+            {component}
+          </React.Suspense>
+        </div>
+
+        {/* Legal Pages Modal in Tool View */}
+        <React.Suspense fallback={null}>
+          <LegalPagesModal
+            isOpen={isLegalModalOpen}
+            initialTab={legalModalTab}
+            onClose={() => setIsLegalModalOpen(false)}
+            onOpenDeveloperModal={() => setIsDeveloperModalOpen(true)}
+          />
+        </React.Suspense>
 
       {/* Daily Lucky Spin Modal */}
       <DailySpinModal
@@ -1860,7 +1887,21 @@ export default function App() {
         onOpenDeveloperModal={() => {
           setIsDeveloperModalOpen(true);
         }}
+        onOpenLegalModal={(tab) => {
+          setLegalModalTab(tab);
+          setIsLegalModalOpen(true);
+        }}
       />
+
+      {/* Legal & Trust Pages Modal (About Us, Contact Us, Privacy Policy, Terms) */}
+      <React.Suspense fallback={null}>
+        <LegalPagesModal
+          isOpen={isLegalModalOpen}
+          initialTab={legalModalTab}
+          onClose={() => setIsLegalModalOpen(false)}
+          onOpenDeveloperModal={() => setIsDeveloperModalOpen(true)}
+        />
+      </React.Suspense>
 
       {/* Developer Contact & Inquiry Modal (Clean User View) */}
       <DeveloperContactModal

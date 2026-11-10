@@ -102,11 +102,13 @@ const LOCAL_STORAGE_USER_KEY = 'mosafa_user_session';
 const LOCAL_STORAGE_SPIN_KEY = 'mosafa_guest_spin_date';
 
 export function getTodayDateString(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  // Enforce Asia/Dhaka Bangladesh Standard Time (UTC+6)
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -546,16 +548,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // onAuthStateChanged will handle profile retrieval and session update
     } catch (err: any) {
       console.warn('Phone login error:', err?.code, err?.message);
-      if (err?.code === 'auth/user-not-found' || err?.code === 'auth/invalid-credential') {
-        throw new Error('এই মোবাইল নম্বরে কোনো অ্যাকাউন্ট পাওয়া যায়নি। দয়া করে প্রথমে রেজিস্ট্রেশন (Register) করুন।');
+      const code = err?.code;
+      // Requirement: If mobile number or password is wrong, show generic message and never reveal whether account exists
+      if (
+        code === 'auth/invalid-credential' ||
+        code === 'auth/user-not-found' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-email'
+      ) {
+        throw new Error('মোবাইল নম্বর অথবা পাসওয়ার্ড ভুল। অনুগ্রহ করে সঠিক তথ্য দিয়ে আবার চেষ্টা করুন।');
       }
-      if (err?.code === 'auth/wrong-password') {
-        throw new Error('পাসওয়ার্ড সঠিক নয়। দয়া করে সঠিক পাসওয়ার্ড দিন।');
+      if (code === 'auth/too-many-requests') {
+        throw new Error('অনেকবার ভুল চেষ্টা করা হয়েছে। নিরাপত্তার স্বার্থে কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।');
       }
-      if (err?.code === 'auth/too-many-requests') {
-        throw new Error('অনেকবার ভুল চেষ্টা করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।');
+      if (code === 'auth/network-request-failed') {
+        throw new Error('নেটওয়ার্ক সমস্যা। আপনার ইন্টারনেট সংযোগ পরীক্ষা করে পুনরায় চেষ্টা করুন।');
       }
-      throw err;
+      if (code === 'auth/user-disabled') {
+        throw new Error('অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।');
+      }
+      throw new Error('মোবাইল নম্বর অথবা পাসওয়ার্ড ভুল। অনুগ্রহ করে সঠিক তথ্য দিয়ে আবার চেষ্টা করুন।');
     } finally {
       setIsLoading(false);
     }

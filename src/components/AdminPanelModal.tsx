@@ -45,6 +45,12 @@ import { storySubmissionService, SubmittedStory } from '../services/storySubmiss
 import { adminUserService, ManagedUser, DepositRequest } from '../services/adminUserService';
 import { usePaymentMode } from '../hooks/usePaymentMode';
 import { PaymentMode } from '../services/paymentModeService';
+import { auth } from '../firebase';
+import { signOut } from 'firebase/auth';
+import { useAuth } from '../context/AuthContext';
+
+export const AUTHORIZED_ADMIN_PHONE = '01743224700';
+export const AUTHORIZED_ADMIN_SYNTHETIC_EMAIL = 'user_01743224700@phone.mosafabd.com';
 
 interface AdminPanelModalProps {
   isOpen: boolean;
@@ -58,12 +64,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   onShowToast,
 }) => {
   const { config, saveConfig, resetToDefault, isLoading } = useDeveloperContact();
+  const { loginWithPhone } = useAuth();
 
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [adminAuthError, setAdminAuthError] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [adminPin, setAdminPin] = useState('');
   const [activeTab, setActiveTab] = useState<'support' | 'notice' | 'profile' | 'stories' | 'users'>('support');
-  const [adminPinInput, setAdminPinInput] = useState('');
-  const [pinError, setPinError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Submitted stories management state
@@ -125,23 +132,95 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     };
   }, [isOpen]);
 
-  // Enforce password prompt on every single open and reset upon exit
+  // Verify administrator identity upon open or auth state change
+  const currentEmail = auth.currentUser?.email?.toLowerCase() || '';
+  const currentPhone = auth.currentUser?.phoneNumber || '';
+  const isCurrentUserAdmin = Boolean(
+    auth.currentUser &&
+      (currentEmail === AUTHORIZED_ADMIN_SYNTHETIC_EMAIL ||
+        currentPhone === '+8801743224700' ||
+        currentPhone === '01743224700')
+  );
+
   useEffect(() => {
-    setIsUnlocked(false);
-    setAdminPinInput('');
-    setPinError('');
-    setShowPassword(false);
-    setSaveSuccess(false);
-  }, [isOpen]);
+    if (isOpen) {
+      setAdminAuthError('');
+      if (isCurrentUserAdmin) {
+        (async () => {
+          try {
+            const token = await auth.currentUser?.getIdToken();
+            if (token) {
+              const res = await fetch('/api/admin/verify', {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (res.ok) {
+                setIsUnlocked(true);
+                adminUserService.syncFromFirestore(true);
+              } else {
+                const data = await res.json().catch(() => ({}));
+                setIsUnlocked(false);
+                setAdminAuthError(data.error || 'অ্যাক্সেস ডিনাইড (HTTP 403 Forbidden)');
+              }
+            } else {
+              setIsUnlocked(false);
+            }
+          } catch {
+            setIsUnlocked(true);
+            adminUserService.syncFromFirestore(true);
+          }
+        })();
+      } else {
+        setIsUnlocked(false);
+      }
+    }
+  }, [isOpen, isCurrentUserAdmin]);
+
+  const handleAdminPhoneLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminPin.trim()) {
+      setAdminAuthError('পাসওয়ার্ড লিখুন');
+      return;
+    }
+    try {
+      setIsAuthenticating(true);
+      setAdminAuthError('');
+      await loginWithPhone(AUTHORIZED_ADMIN_PHONE, adminPin);
+      const token = await auth.currentUser?.getIdToken();
+      if (token) {
+        const res = await fetch('/api/admin/verify', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          setIsUnlocked(true);
+          adminUserService.syncFromFirestore(true);
+          onShowToast?.('প্রধান অ্যাডমিন (01743224700) একাউন্ট সফলভাবে যাচাইকৃত 🔓', '🔑');
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setAdminAuthError(data.error || 'অননুমোদিত অ্যাডমিন টোকেন (HTTP 403)');
+        }
+      }
+    } catch (err: any) {
+      setAdminAuthError(err?.message || 'লগইন করতে সমস্যা হয়েছে।');
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleAdminSwitchAccount = async () => {
+    try {
+      await signOut(auth);
+      setIsUnlocked(false);
+      setAdminPin('');
+      setAdminAuthError('');
+      onShowToast?.('লগআউট সম্পন্ন হয়েছে। 01743224700 দিয়ে লগইন করুন।', 'ℹ️');
+    } catch (err: any) {
+      setAdminAuthError('লগআউট ত্রুটি: ' + (err?.message || 'সমস্যা'));
+    }
+  };
 
   const handleClose = () => {
     setIsUnlocked(false);
-    try {
-      localStorage.removeItem('mosafa_admin_unlocked');
-    } catch {}
-    setAdminPinInput('');
-    setPinError('');
-    setShowPassword(false);
+    setAdminAuthError('');
     onClose();
   };
 
@@ -294,28 +373,6 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setTimeout(() => setSaveSuccess(false), 3000);
   };
 
-  // Password Unlock Verification (Supports 224700 and 22470, with Bengali numerals)
-  const handlePinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const bnToEn: Record<string, string> = {
-      '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
-      '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9',
-    };
-    const cleanPin = adminPinInput.trim().replace(/[০-৯]/g, (d) => bnToEn[d] || d);
-
-    if (cleanPin === '224700' || cleanPin === '22470') {
-      setIsUnlocked(true);
-      try {
-        localStorage.setItem('mosafa_admin_unlocked', 'true');
-        adminUserService.syncFromFirestore(true);
-      } catch {}
-      setPinError('');
-      onShowToast?.('এডমিন প্যানেল সফলভাবে আনলক হয়েছে 🔓', '🔑');
-    } else {
-      setPinError('ভুল পাসওয়ার্ড! সঠিক পাসওয়ার্ড দিন।');
-    }
-  };
-
   return (
     <div
       className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-200"
@@ -338,7 +395,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   The MoSaFa এডমিন কন্ট্রোল প্যানেল
                 </h3>
                 <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full uppercase">
-                  গোপন এক্সেস 🔐
+                  সুরক্ষিত এক্সেস 🔐
                 </span>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
@@ -353,8 +410,6 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                 type="button"
                 onClick={() => {
                   setIsUnlocked(false);
-                  setAdminPinInput('');
-                  setPinError('');
                   onShowToast?.('এডমিন প্যানেল পুনরায় লক করা হয়েছে 🔒', '🔐');
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-bold transition cursor-pointer border border-slate-200"
@@ -378,56 +433,88 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         {/* Modal Body */}
         <div className="overflow-y-auto flex-1 p-4 sm:p-6 md:p-8">
           {!isUnlocked ? (
-            /* PIN Protection Form */
-            <form
-              onSubmit={handlePinSubmit}
-              className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8 text-center max-w-md mx-auto my-6 shadow-xs"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center mx-auto mb-3 shadow-md shadow-indigo-200">
-                <KeyRound className="w-7 h-7" />
+            /* Secure Firebase Admin Authentication Screen */
+            <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8 text-center max-w-md mx-auto my-6 shadow-xs">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
+                <ShieldCheck className="w-8 h-8" />
               </div>
-              <h4 className="font-extrabold text-base text-slate-900 mb-1">
-                এডমিন নিরাপত্তা যাচাই (পাসওয়ার্ড)
+              <h4 className="font-black text-lg text-slate-900 mb-1">
+                The MoSaFa এডমিন নিরাপত্তা যাচাই
               </h4>
-              <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-                অনাকাঙ্ক্ষিত পরিবর্তন এড়াতে যতবারই প্রবেশ করবেন ততবারই পাসওয়ার্ড দিতে হবে।
-                <br />
-                পাসওয়ার্ড ইঙ্গিত:{' '}
-                <span className="font-mono font-extrabold text-indigo-600 bg-indigo-50 px-3 py-0.5 rounded-md border border-indigo-200 tracking-widest text-sm">
-                  2****0
-                </span>
+              <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+                অননুমোদিত অ্যাক্সেস সম্পূর্ণ নিষিদ্ধ। শুধুমাত্র ভেরিফাইড অ্যাডমিনিস্ট্রেটর অ্যাকাউন্ট দিয়ে সাইন-ইন করে এই নিয়ন্ত্রণ প্যানেলে প্রবেশ করা যাবে।
               </p>
-              <div className="flex gap-2 max-w-xs mx-auto">
-                <div className="relative flex-1">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={adminPinInput}
-                    onChange={(e) => {
-                      setAdminPinInput(e.target.value);
-                      if (pinError) setPinError('');
-                    }}
-                    placeholder="পাসওয়ার্ড লিখুন"
-                    autoFocus
-                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-                  />
+
+              {auth.currentUser ? (
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-left">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">বর্তমান সাইন-ইন একাউন্ট</span>
+                    <p className="text-xs font-extrabold text-slate-800 break-all">{auth.currentUser.phoneNumber || auth.currentUser.email || 'অজ্ঞাত ইউজার'}</p>
+                    <span className="inline-block mt-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                      ⚠️ অ্যাডমিন অনুমতি নেই (শুধুমাত্র 01743224700 অনুমোদিত)
+                    </span>
+                  </div>
+
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                    title={showPassword ? 'লুকান' : 'দেখুন'}
+                    onClick={handleAdminSwitchAccount}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-bold text-xs cursor-pointer shadow-md active:scale-95 transition flex items-center justify-center gap-2"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <RotateCcw className="w-4 h-4" />
+                    <span>লগআউট করে 01743224700 দিয়ে লগইন করুন</span>
                   </button>
                 </div>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-600 hover:to-indigo-700 text-white font-bold text-xs cursor-pointer shadow-md active:scale-95 transition shrink-0"
-                >
-                  আনলক করুন
-                </button>
-              </div>
-              {pinError && <p className="text-xs text-rose-600 font-bold mt-3 animate-in fade-in">{pinError}</p>}
-            </form>
+              ) : (
+                <form onSubmit={handleAdminPhoneLogin} className="space-y-3 text-left">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      অনুমোদিত অ্যাডমিন মোবাইল নম্বর
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <input
+                        type="tel"
+                        value={AUTHORIZED_ADMIN_PHONE}
+                        readOnly
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm text-slate-700 font-bold cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      পাসওয়ার্ড / পিন
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <input
+                        type="password"
+                        value={adminPin}
+                        onChange={(e) => setAdminPin(e.target.value)}
+                        placeholder="পাসওয়ার্ড লিখুন"
+                        required
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-500 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isAuthenticating}
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-bold text-xs cursor-pointer shadow-md active:scale-95 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isAuthenticating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    <span>অ্যাডমিন হিসেবে সাইন-ইন করুন</span>
+                  </button>
+                </form>
+              )}
+
+              {adminAuthError && (
+                <div className="mt-4 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold animate-in fade-in">
+                  {adminAuthError}
+                </div>
+              )}
+            </div>
           ) : (
             /* Full Admin Controls */
             <div className="space-y-6">
@@ -1866,7 +1953,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                                       <h5 className="font-extrabold text-sm text-slate-900">
                                         {userItem.displayName}
                                       </h5>
-                                      {userItem.phoneNumber === '01868775577' && (
+                                      {userItem.phoneNumber === '01743224700' && (
                                         <span className="text-[10px] bg-rose-100 text-rose-800 font-extrabold px-2 py-0.5 rounded-full">
                                           অ্যাডমিন 👑
                                         </span>

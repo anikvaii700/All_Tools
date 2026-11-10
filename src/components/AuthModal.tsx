@@ -90,20 +90,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const msg = err?.message || '';
       const code = err?.code || '';
       if (
+        code === 'auth/invalid-credential' ||
         code === 'auth/user-not-found' ||
-        msg.includes('কোনো অ্যাকাউন্ট পাওয়া যায়নি') ||
-        (code === 'auth/invalid-credential' && phoneMode === 'login')
-      ) {
-        setErrorMessage('এই মোবাইল নম্বরে কোনো অ্যাকাউন্ট নেই। নিচে "নতুন অ্যাকাউন্ট তৈরি করুন" অপশন বেছে নিন।');
-      } else if (
         code === 'auth/wrong-password' ||
-        msg.includes('পাসওয়ার্ড সঠিক নয়')
+        code === 'auth/invalid-email' ||
+        msg.includes('পাসওয়ার্ড ভুল') ||
+        msg.includes('পাসওয়ার্ড সঠিক নয়') ||
+        msg.includes('মোবাইল নম্বর অথবা পাসওয়ার্ড') ||
+        msg.includes('কোনো অ্যাকাউন্ট পাওয়া যায়নি') ||
+        msg.includes('কোনো অ্যাকাউন্ট নেই')
       ) {
-        setErrorMessage('পাসওয়ার্ড সঠিক নয়। দয়া করে সঠিক পাসওয়ার্ড দিন।');
+        setErrorMessage('মোবাইল নম্বর অথবা পাসওয়ার্ড ভুল। অনুগ্রহ করে সঠিক তথ্য দিয়ে আবার চেষ্টা করুন।');
       } else if (code === 'auth/email-already-in-use' || msg.includes('ইতিমধ্যে একটি অ্যাকাউন্ট')) {
         setErrorMessage('এই নম্বরে ইতিমধ্যে অ্যাকাউন্ট রয়েছে। "লগইন করুন" অপশন বেছে নিন।');
+      } else if (code === 'auth/too-many-requests' || msg.includes('অনেকবার ভুল')) {
+        setErrorMessage('অনেকবার ভুল চেষ্টা করা হয়েছে। নিরাপত্তার স্বার্থে কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।');
+      } else if (code === 'auth/network-request-failed' || msg.includes('নেটওয়ার্ক')) {
+        setErrorMessage('ইন্টারনেট সংযোগে সমস্যা দেখা দিয়েছে। ইন্টারনেট চেক করে পুনরায় চেষ্টা করুন।');
+      } else if (code === 'auth/user-disabled') {
+        setErrorMessage('অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে। অনুগ্রহ করে সাপোর্টে যোগাযোগ করুন।');
       } else {
-        setErrorMessage(msg || 'অ্যাকাউন্টে প্রবেশ করতে সমস্যা হয়েছে।');
+        setErrorMessage(msg || 'মোবাইল নম্বর অথবা পাসওয়ার্ড ভুল। অনুগ্রহ করে সঠিক তথ্য দিয়ে আবার চেষ্টা করুন।');
       }
     } finally {
       setSubmitting(false);

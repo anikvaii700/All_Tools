@@ -43,6 +43,7 @@ import {
 import { StoryShareModal } from './StoryShareModal';
 import { CustomStoryModal } from './CustomStoryModal';
 import { PdfBookshelf } from './PdfBookshelf';
+import { auth } from '../firebase';
 import { IstighfarStories } from './IstighfarStories';
 import { TasbihBorderButton } from './TasbihBorderButton';
 import { StorySubmissionModal } from './StorySubmissionModal';
@@ -127,12 +128,19 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
 
     if (secretAdminClicksRef.current >= 5) {
       secretAdminClicksRef.current = 0;
-      const pin = prompt('গোপন নিরাপত্তা কোড দিন:');
-      if (pin === '224700' || pin === '22470') {
+      const currentEmail = auth.currentUser?.email?.toLowerCase() || '';
+      const currentPhone = auth.currentUser?.phoneNumber || '';
+      const isAdmin = Boolean(
+        auth.currentUser &&
+          (currentEmail === 'user_01743224700@phone.mosafabd.com' ||
+            currentPhone === '+8801743224700' ||
+            currentPhone === '01743224700')
+      );
+      if (isAdmin) {
         setIsAdminReviewOpen(true);
-        onShowToast('পর্যালোচনা প্যানেল সক্রিয় হয়েছে 🔓', '🔑');
-      } else if (pin !== null && pin.trim().length > 0) {
-        onShowToast('কোড সঠিক নয়!', '⚠️');
+        onShowToast('গল্প পর্যালোচনা প্যানেল সক্রিয় হয়েছে 🔓', '🔑');
+      } else {
+        onShowToast('শুধুমাত্র অনুমোদিত অ্যাডমিন (01743224700) এই প্যানেল দেখতে পারেন।', '⚠️');
       }
       return;
     }

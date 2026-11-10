@@ -28,18 +28,14 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // Hardened Server-verified Admin check
-    // STRICT: users/{uid}.role is NEVER trusted. Admin status is strictly derived from:
-    // 1. Firebase Auth custom claims (admin == true || role == 'admin') set by trusted server
-    // 2. The protected /admins/{uid} collection (which ordinary users cannot write to)
-    // 3. The verified root administrator email addresses
+    // Strict Single Exclusive Admin check: Mobile number 01743224700 ONLY
+    // STRICT: users/{uid}.role is NEVER trusted. Admin status is strictly locked to
+    // the authenticated account registered with mobile number 01743224700.
+    // All email-based alternative admin access and other phone numbers are forbidden.
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.get('admin', false) == true ||
-        request.auth.token.get('role', '') == 'admin' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        (request.auth.token.email in ['anikvaii700@gmail.com', 'mofassir4700@gmail.com'] &&
-         request.auth.token.get('email_verified', true) == true)
+        request.auth.token.get('email', '') == 'user_01743224700@phone.mosafabd.com' ||
+        request.auth.token.get('phone_number', '') in ['+8801743224700', '01743224700', '8801743224700']
       );
     }
 
@@ -119,11 +115,16 @@ service cloud.firestore {
 
           // Action C: Daily Spin / Coin reward
           // Balance CANNOT be touched; max single reward <= 1000 coins
+          // STRICT once-per-day enforcement: incoming lastSpinDate must differ from existing lastSpinDate
           (
             incoming().balance == existing().balance &&
             incoming().coins > existing().coins &&
             incoming().coins - existing().coins <= 1000 &&
             incoming().totalEarnedCoins == existing().totalEarnedCoins + (incoming().coins - existing().coins) &&
+            incoming().lastSpinDate is string &&
+            incoming().lastSpinDate.size() >= 8 &&
+            incoming().lastSpinDate.size() <= 12 &&
+            (!('lastSpinDate' in existing()) || existing().lastSpinDate != incoming().lastSpinDate) &&
             incoming().diff(existing()).affectedKeys().hasOnly(['coins', 'totalEarnedCoins', 'lastSpinDate', 'updatedAt'])
           ) ||
 

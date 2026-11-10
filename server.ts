@@ -4,6 +4,8 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
+import { initializeApp, getApps } from 'firebase-admin/app';
+import { getAuth, DecodedIdToken } from 'firebase-admin/auth';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -77,6 +79,117 @@ async function startServer() {
       version: APP_VERSION_CONFIG.version,
       isUpdateOn: APP_VERSION_CONFIG.isUpdateOn,
     });
+  });
+
+  // ----------------------------------------------------
+  // Exclusive Single Admin Authorization (01743224700)
+  // ----------------------------------------------------
+  const AUTHORIZED_ADMIN_PHONE = '01743224700';
+  const AUTHORIZED_ADMIN_SYNTHETIC_EMAIL = 'user_01743224700@phone.mosafabd.com';
+  const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'ai-studio-applet-webapp-2019a';
+
+  if (!getApps().length) {
+    try {
+      initializeApp({
+        projectId: FIREBASE_PROJECT_ID,
+      });
+    } catch (err) {
+      console.warn('Firebase Admin SDK initialization note:', err);
+    }
+  }
+
+  async function authenticateAdminRequest(req: express.Request): Promise<{ authorized: boolean; uid?: string; phone?: string; error?: string }> {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return { authorized: false, error: 'অননুমোদিত: টোকেন অনুপস্থিত (Missing Bearer Token)' };
+    }
+    const token = authHeader.split('Bearer ')[1].trim();
+    if (!token) {
+      return { authorized: false, error: 'অননুমোদিত: ফাঁকা টোকেন' };
+    }
+
+    let decodedToken: DecodedIdToken | null = null;
+    try {
+      decodedToken = await getAuth().verifyIdToken(token);
+    } catch {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+          const now = Math.floor(Date.now() / 1000);
+          if (payload.exp && payload.exp < now) {
+            return { authorized: false, error: 'টোকেনের মেয়াদ শেষ হয়ে গেছে (Token Expired)' };
+          }
+          if (
+            payload.aud !== FIREBASE_PROJECT_ID &&
+            payload.iss !== `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`
+          ) {
+            return { authorized: false, error: 'টোকেন প্রজেক্ট অসামঞ্জস্যপূর্ণ' };
+          }
+          decodedToken = payload as any;
+        }
+      } catch {
+        return { authorized: false, error: 'টোকেন যাচাইকরণ ব্যর্থ হয়েছে' };
+      }
+    }
+
+    if (!decodedToken) {
+      return { authorized: false, error: 'টোকেন যাচাই করা সম্ভব হয়নি' };
+    }
+
+    const email = (decodedToken.email || '').toLowerCase();
+    const phone = decodedToken.phone_number || '';
+    const digits = phone.replace(/[^0-9]/g, '');
+    const normalizedPhone =
+      digits.startsWith('880') && digits.length === 13
+        ? '0' + digits.slice(3)
+        : digits.startsWith('88') && digits.length === 13
+        ? digits.slice(2)
+        : digits;
+
+    const isMatch = email === AUTHORIZED_ADMIN_SYNTHETIC_EMAIL || normalizedPhone === AUTHORIZED_ADMIN_PHONE;
+
+    if (!isMatch) {
+      return {
+        authorized: false,
+        error: 'অ্যাক্সেস ডিনাইড: শুধুমাত্র অনুমোদিত অ্যাডমিন একাউন্ট (01743224700) এই অপারেশন করতে পারবে। (HTTP 403 Forbidden)',
+      };
+    }
+
+    return { authorized: true, uid: decodedToken.uid, phone: AUTHORIZED_ADMIN_PHONE };
+  }
+
+  // 1. Admin Verification Endpoint
+  app.get('/api/admin/verify', async (req, res) => {
+    const authResult = await authenticateAdminRequest(req);
+    if (!authResult.authorized) {
+      return res.status(403).json({
+        success: false,
+        authorized: false,
+        error: authResult.error || 'অ্যাক্সেস ডিনাইড (HTTP 403 Forbidden)',
+      });
+    }
+    res.json({
+      success: true,
+      authorized: true,
+      phone: AUTHORIZED_ADMIN_PHONE,
+      uid: authResult.uid,
+      message: 'এডমিন একাউন্ট সফলভাবে যাচাইকৃত 🔓',
+    });
+  });
+
+  // 2. Admin Privileged Operation Route Guardian
+  app.all('/api/admin/*', async (req, res, next) => {
+    if (req.path === '/api/admin/verify') return next();
+    const authResult = await authenticateAdminRequest(req);
+    if (!authResult.authorized) {
+      return res.status(403).json({
+        success: false,
+        authorized: false,
+        error: authResult.error || 'অ্যাক্সেস ডিনাইড: অননুমোদিত ইউজার (HTTP 403 Forbidden)',
+      });
+    }
+    next();
   });
 
   // Chat & Visual Question Solver API
@@ -1298,17 +1411,24 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
 
   // Vite integration: Dev middleware or static dist with full SEO injection
   if (process.env.NODE_ENV === 'production') {
-    // 1. Tool SEO routes FIRST (Runs BEFORE express.static so /tools/:slug returns 200 OK directly with NO trailing slash redirect)
+    // 1. Tool & Legal SEO routes FIRST (Runs BEFORE express.static so /tools/:slug returns 200 OK directly with NO trailing slash redirect)
     const handleToolSeo = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-      const slug = (req.params.slug || '').toLowerCase().trim();
+      const slug = (req.params.slug || req.params.legal || '').toLowerCase().trim();
       const tool = TOOLS_SEO_REGISTRY[slug];
       if (!tool) {
         return next();
       }
 
-      // Canonical enforcement: if request came with a trailing slash, redirect 301 to canonical /tools/:slug
+      // Canonical enforcement: if request came with a trailing slash, redirect 301 to canonical
       if (req.path.endsWith('/') && req.path.length > 1) {
-        return res.redirect(301, `/tools/${slug}`);
+        return res.redirect(301, tool.path);
+      }
+
+      // Check root flat HTML file: dist/<slug>.html (for /about, /contact, etc.)
+      const rootFlatPrerendered = path.resolve(__dirname, 'dist', `${slug}.html`);
+      if (fs.existsSync(rootFlatPrerendered)) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.sendFile(rootFlatPrerendered);
       }
 
       // Check prerendered flat HTML file: dist/tools/<slug>.html
@@ -1337,8 +1457,7 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
       next();
     };
 
-    app.get('/tools/:slug', handleToolSeo);
-    app.get('/tools/:slug/', handleToolSeo);
+    app.get(['/tools/:slug', '/tools/:slug/', '/:legal(about|contact|privacy|terms)'], handleToolSeo);
 
     // 2. Serve static assets with redirect: false so Express never redirects directories with trailing slash
     app.use(express.static(path.resolve(__dirname, 'dist'), { redirect: false, index: false }));
@@ -1358,10 +1477,10 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
       appType: 'spa',
     });
 
-    // Tool SEO route in development (BEFORE vite.middlewares)
-    app.get(['/tools/:slug', '/tools/:slug/'], async (req, res, next) => {
+    // Tool & Legal SEO route in development (BEFORE vite.middlewares)
+    app.get(['/tools/:slug', '/tools/:slug/', '/:legal(about|contact|privacy|terms)'], async (req, res, next) => {
       try {
-        const slug = (req.params.slug || '').toLowerCase().trim();
+        const slug = (req.params.slug || req.params.legal || '').toLowerCase().trim();
         const tool = TOOLS_SEO_REGISTRY[slug];
         if (!tool) {
           return next();
@@ -1369,7 +1488,7 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
 
         // Canonical redirect if trailing slash
         if (req.path.endsWith('/') && req.path.length > 1) {
-          return res.redirect(301, `/tools/${slug}`);
+          return res.redirect(301, tool.path);
         }
 
         const rawIndex = fs.readFileSync(path.resolve(__dirname, 'index.html'), 'utf-8');

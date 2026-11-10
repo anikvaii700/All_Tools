@@ -42,8 +42,18 @@ async function generateSeoPages() {
     // 2. Also write dist/tools/[slug].html (clean URL style)
     fs.writeFileSync(path.resolve(toolsDir, `${tool.slug}.html`), toolHtml, 'utf-8');
 
+    // 3. For legal and trust pages, also write at root level: dist/[slug].html and dist/[slug]/index.html
+    if (['about', 'contact', 'privacy', 'terms'].includes(tool.slug)) {
+      const rootLegalDir = path.resolve(distDir, tool.slug);
+      if (!fs.existsSync(rootLegalDir)) {
+        fs.mkdirSync(rootLegalDir, { recursive: true });
+      }
+      fs.writeFileSync(path.resolve(rootLegalDir, 'index.html'), toolHtml, 'utf-8');
+      fs.writeFileSync(path.resolve(distDir, `${tool.slug}.html`), toolHtml, 'utf-8');
+    }
+
     generatedCount++;
-    console.log(`  ✓ Generated: /tools/${tool.slug} -> "${tool.title}"`);
+    console.log(`  ✓ Generated: ${tool.path} -> "${tool.title}"`);
   }
 
   // Ensure sitemap.xml and robots.txt are in dist
