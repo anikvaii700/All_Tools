@@ -54,6 +54,11 @@
           "type": "string",
           "description": "Date of latest daily spin in YYYY-MM-DD"
         },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "user"],
+          "description": "User access role"
+        },
         "createdAt": {
           "type": "string",
           "description": "Account creation timestamp"
@@ -134,6 +139,19 @@
         "updatedAt": { "type": "string", "description": "ISO timestamp of last cloud sync" }
       },
       "required": ["userId", "updatedAt"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Authorized administrator document providing server-controlled admin privileges",
+      "type": "object",
+      "properties": {
+        "adminId": { "type": "string", "description": "Admin user UID" },
+        "email": { "type": "string", "description": "Admin email" },
+        "role": { "type": "string", "enum": ["admin"], "description": "Admin privilege role" },
+        "grantedBy": { "type": "string", "description": "UID of administrator who granted access" },
+        "createdAt": { "type": "string", "description": "Grant timestamp" }
+      },
+      "required": ["adminId", "role"]
     }
   },
   "firestore": {
@@ -152,6 +170,10 @@
     "/depositRequests/{requestId}": {
       "schema": "DepositRequest",
       "description": "bKash add money payment verification requests"
+    },
+    "/admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Protected server-controlled administrator registry"
     },
     "/settings/{settingId}": {
       "description": "Public system configurations (paymentMode, developerContact, notices)"

@@ -26,10 +26,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   initialBonusPrompt,
   onSuccess,
 }) => {
-  const { loginWithGoogle, loginOrRegisterWithPhone, isLoading } = useAuth();
+  const { loginWithGoogle, loginWithPhone, registerWithPhone, isLoading } = useAuth();
   const [authMethod, setAuthMethod] = useState<'google' | 'phone'>('google');
+  const [phoneMode, setPhoneMode] = useState<'login' | 'register'>(initialBonusPrompt ? 'register' : 'login');
 
-  // Phone registration state
+  // Phone state
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [name, setName] = useState('');
@@ -74,14 +75,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       setSubmitting(true);
-      await loginOrRegisterWithPhone(cleanPhone, pin, name.trim() || undefined);
-      setSuccessMessage('মোবাইল অ্যাকাউন্ট সফলভাবে সংরক্ষিত হয়েছে! 🎉');
+      if (phoneMode === 'register') {
+        await registerWithPhone(cleanPhone, pin, name.trim() || undefined);
+        setSuccessMessage('মোবাইল অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! স্বাগতম। 🎉');
+      } else {
+        await loginWithPhone(cleanPhone, pin);
+        setSuccessMessage('লগইন সফল হয়েছে! 🎉');
+      }
       setTimeout(() => {
         onClose();
         if (onSuccess) onSuccess();
       }, 1000);
     } catch (err: any) {
-      setErrorMessage(err?.message || 'অ্যাকাউন্টে প্রবেশ করতে সমস্যা হয়েছে।');
+      const msg = err?.message || '';
+      const code = err?.code || '';
+      if (
+        code === 'auth/user-not-found' ||
+        msg.includes('কোনো অ্যাকাউন্ট পাওয়া যায়নি') ||
+        (code === 'auth/invalid-credential' && phoneMode === 'login')
+      ) {
+        setErrorMessage('এই মোবাইল নম্বরে কোনো অ্যাকাউন্ট নেই। নিচে "নতুন অ্যাকাউন্ট তৈরি করুন" অপশন বেছে নিন।');
+      } else if (
+        code === 'auth/wrong-password' ||
+        msg.includes('পাসওয়ার্ড সঠিক নয়')
+      ) {
+        setErrorMessage('পাসওয়ার্ড সঠিক নয়। দয়া করে সঠিক পাসওয়ার্ড দিন।');
+      } else if (code === 'auth/email-already-in-use' || msg.includes('ইতিমধ্যে একটি অ্যাকাউন্ট')) {
+        setErrorMessage('এই নম্বরে ইতিমধ্যে অ্যাকাউন্ট রয়েছে। "লগইন করুন" অপশন বেছে নিন।');
+      } else {
+        setErrorMessage(msg || 'অ্যাকাউন্টে প্রবেশ করতে সমস্যা হয়েছে।');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -189,21 +212,55 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </button>
             ) : (
               <form onSubmit={handlePhoneSubmit} className="space-y-3 pt-1">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    আপনার নাম (ঐচ্ছিক)
-                  </label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="যেমন: অনিক আহমেদ"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-500 font-medium"
-                    />
-                  </div>
+                {/* Mode Selector */}
+                <div className="flex rounded-xl bg-slate-100 p-1 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhoneMode('login');
+                      setErrorMessage('');
+                    }}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                      phoneMode === 'login'
+                        ? 'bg-white text-rose-600 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    লগইন
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhoneMode('register');
+                      setErrorMessage('');
+                    }}
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                      phoneMode === 'register'
+                        ? 'bg-white text-rose-600 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    নতুন রেজিস্ট্রেশন
+                  </button>
                 </div>
+
+                {phoneMode === 'register' && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      আপনার নাম (ঐচ্ছিক)
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="যেমন: অনিক আহমেদ"
+                        className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-500 font-medium"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -224,7 +281,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    ৪ ডিজিটের সিকিউর পিন বা পাসওয়ার্ড <span className="text-rose-500">*</span>
+                    {phoneMode === 'register' ? 'সিকিউর পিন বা পাসওয়ার্ড' : 'পাসওয়ার্ড'} <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -232,10 +289,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       type="password"
                       value={pin}
                       onChange={(e) => setPin(e.target.value)}
-                      placeholder="যেমন: 1234"
-                      maxLength={8}
+                      placeholder="পাসওয়ার্ড লিখুন"
                       required
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-500 font-medium tracking-widest"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-rose-500 font-medium"
                     />
                   </div>
                 </div>
@@ -249,7 +305,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <>
-                      <span>অ্যাকাউন্টে প্রবেশ করুন</span>
+                      <span>{phoneMode === 'register' ? 'অ্যাকাউন্ট তৈরি করুন' : 'লগইন করুন'}</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

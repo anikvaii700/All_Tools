@@ -136,6 +136,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   const handleClose = () => {
     setIsUnlocked(false);
+    try {
+      localStorage.removeItem('mosafa_admin_unlocked');
+    } catch {}
     setAdminPinInput('');
     setPinError('');
     setShowPassword(false);
@@ -302,6 +305,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
     if (cleanPin === '224700' || cleanPin === '22470') {
       setIsUnlocked(true);
+      try {
+        localStorage.setItem('mosafa_admin_unlocked', 'true');
+        adminUserService.syncFromFirestore(true);
+      } catch {}
       setPinError('');
       onShowToast?.('এডমিন প্যানেল সফলভাবে আনলক হয়েছে 🔓', '🔑');
     } else {

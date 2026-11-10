@@ -198,7 +198,7 @@ export const DailySpinModal: React.FC<DailySpinModalProps> = ({
           </h2>
           <p className="text-xs text-slate-500 font-medium mt-1">
             {isLoggedIn
-              ? `স্বাগতম ${user?.displayName || ''}! প্রতিদিন ১ বার স্পিন করে ২০ থেকে ৩০০ পয়েন্ট পর্যন্ত জিতুন।`
+              ? `স্বাগতম ${user?.displayName || ''}! প্রতিদিন ১ বার স্পিন করে ২০ থেকে ১০০০ পয়েন্ট পর্যন্ত জিতুন।`
               : 'ভিজিটর স্পিন! ২০ থেকে ১০০০ পয়েন্ট জেতার সুযোগ!'}
           </p>
         </div>

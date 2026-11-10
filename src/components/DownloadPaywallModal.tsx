@@ -46,6 +46,8 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
     user,
     isLoggedIn,
     loginWithGoogle,
+    loginWithPhone,
+    registerWithPhone,
     loginOrRegisterWithPhone,
     deductMainBalance,
     addMainBalance,
@@ -128,9 +130,27 @@ export const DownloadPaywallModal: React.FC<DownloadPaywallModalProps> = ({
 
     setIsAuthLoading(true);
     try {
-      await loginOrRegisterWithPhone(cleanPhone, pinInput, nameInput.trim() || undefined);
+      if (nameInput.trim()) {
+        await registerWithPhone(cleanPhone, pinInput, nameInput.trim());
+      } else {
+        await loginWithPhone(cleanPhone, pinInput);
+      }
     } catch (err: any) {
-      setAuthError(err?.message || 'লগইন করতে সমস্যা হয়েছে।');
+      const msg = err?.message || '';
+      const code = err?.code || '';
+      if (
+        code === 'auth/user-not-found' ||
+        msg.includes('কোনো অ্যাকাউন্ট পাওয়া যায়নি') ||
+        code === 'auth/invalid-credential'
+      ) {
+        setAuthError('এই মোবাইল নম্বরে কোনো অ্যাকাউন্ট নেই। উপরে আপনার নাম লিখে নতুন অ্যাকাউন্ট তৈরি করুন।');
+      } else if (code === 'auth/wrong-password' || msg.includes('পাসওয়ার্ড সঠিক নয়')) {
+        setAuthError('পাসওয়ার্ড সঠিক নয়। দয়া করে সঠিক পাসওয়ার্ড দিন।');
+      } else if (code === 'auth/email-already-in-use' || msg.includes('ইতিমধ্যে একটি অ্যাকাউন্ট')) {
+        setAuthError('এই নম্বরে ইতিমধ্যে অ্যাকাউন্ট রয়েছে। নাম খালি রেখে লগইন করুন।');
+      } else {
+        setAuthError(msg || 'লগইন করতে সমস্যা হয়েছে।');
+      }
     } finally {
       setIsAuthLoading(false);
     }

@@ -1,4 +1,4 @@
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import {
   collection,
   doc,
@@ -169,7 +169,6 @@ class AdminUserService {
   constructor() {
     this.loadFromStorage();
     this.loadDepositRequests();
-    this.syncFromFirestore();
   }
 
   private loadDepositRequests() {
@@ -347,8 +346,18 @@ class AdminUserService {
     };
   }
 
-  public async syncFromFirestore() {
-    if (this.isInitialized) return;
+  public async syncFromFirestore(force: boolean = false) {
+    if (this.isInitialized && !force) return;
+
+    // Security check: Only fetch if authenticated as admin
+    const currentEmail = auth.currentUser?.email || '';
+    const isAdminEmail = currentEmail === 'anikvaii700@gmail.com' || currentEmail === 'mofassir4700@gmail.com';
+    const isUnlocked = typeof window !== 'undefined' && localStorage.getItem('mosafa_admin_unlocked') === 'true';
+
+    if (!isAdminEmail && !isUnlocked && !force) {
+      return;
+    }
+
     this.isInitialized = true;
     try {
       const snap = await getDocs(collection(db, 'users'));

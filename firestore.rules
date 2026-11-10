@@ -7,46 +7,200 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Common security helper functions
     function isSignedIn() {
       return request.auth != null;
-    }
-
-    function isValidId(id) {
-      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // User profile & Coin Wallet
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Hardened Server-verified Admin check
+    // STRICT: users/{uid}.role is NEVER trusted. Admin status is strictly derived from:
+    // 1. Firebase Auth custom claims (admin == true || role == 'admin') set by trusted server
+    // 2. The protected /admins/{uid} collection (which ordinary users cannot write to)
+    // 3. The verified root administrator email addresses
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.get('admin', false) == true ||
+        request.auth.token.get('role', '') == 'admin' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email in ['anikvaii700@gmail.com', 'mofassir4700@gmail.com'] &&
+         request.auth.token.get('email_verified', true) == true)
+      );
+    }
+
+    // User document schema validation
+    function isValidUser(data) {
+      return data.userId is string &&
+        data.userId.size() > 0 &&
+        data.userId.size() <= 128 &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 150)) &&
+        (!('email' in data) || data.email == null || (data.email is string && data.email.size() <= 200)) &&
+        (!('phoneNumber' in data) || data.phoneNumber == null || (data.phoneNumber is string && data.phoneNumber.size() <= 30)) &&
+        (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() <= 100000)) &&
+        data.balance is number && data.balance >= 0 &&
+        data.coins is number && data.coins >= 0 &&
+        data.totalEarnedCoins is number && data.totalEarnedCoins >= 0 &&
+        (!('status' in data) || data.status in ['active', 'suspended', 'banned']) &&
+        (!('role' in data) || data.role in ['admin', 'user']);
+    }
+
+    // ----------------------------------------------------
+    // User Profiles & Coin Wallets (/users/{userId})
+    // ----------------------------------------------------
     match /users/{userId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if false;
+      // 1. Read: User can only read their own profile, or Admin can read any profile
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+
+      // 2. Create: User can only create their own profile upon sign up, with strict starting limits
+      // Users CANNOT make themselves admin, set status != active, or start with balance > 0
+      allow create: if (
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUser(incoming()) &&
+        incoming().userId == userId &&
+        incoming().balance <= 0 &&
+        incoming().coins <= 50 &&
+        incoming().totalEarnedCoins <= 50 &&
+        (!('role' in incoming()) || incoming().role == 'user') &&
+        (!('status' in incoming()) || incoming().status == 'active') &&
+        (!('isAdmin' in incoming()) || incoming().isAdmin == false) &&
+        incoming().keys().hasOnly([
+          'userId', 'displayName', 'email', 'phoneNumber', 'photoURL',
+          'balance', 'coins', 'totalEarnedCoins', 'lastSpinDate',
+          'authProvider', 'status', 'role', 'notes', 'createdAt', 'updatedAt'
+        ])
+      ) || isAdmin();
+
+      // 3. Update: Strictly enforce action-based authorization
+      // Users CANNOT modify role, permissions, status, balance (outside permitted actions), or ban fields
+      allow update: if (
+        isOwner(userId) &&
+        isValidUser(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().get('role', 'user') == existing().get('role', 'user') &&
+        incoming().get('status', 'active') == existing().get('status', 'active') &&
+        incoming().get('banReason', '') == existing().get('banReason', '') &&
+        incoming().get('suspendedUntil', '') == existing().get('suspendedUntil', '') &&
+        (!('isAdmin' in incoming()) || incoming().get('isAdmin', false) == existing().get('isAdmin', false)) &&
+        (
+          // Action A: Balance deduction (payment for PDF download)
+          // User balance can ONLY decrease, coins remain unchanged
+          (
+            incoming().balance < existing().balance &&
+            incoming().coins == existing().coins &&
+            incoming().totalEarnedCoins == existing().totalEarnedCoins &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['balance', 'updatedAt'])
+          ) ||
+
+          // Action B: Convert coins to cash balance (100 coins = 1 BDT)
+          // User spends at least 100 coins to get exactly proportional BDT
+          (
+            existing().coins - incoming().coins >= 100 &&
+            incoming().balance == existing().balance + (existing().coins - incoming().coins) / 100 &&
+            incoming().totalEarnedCoins == existing().totalEarnedCoins &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['coins', 'balance', 'updatedAt'])
+          ) ||
+
+          // Action C: Daily Spin / Coin reward
+          // Balance CANNOT be touched; max single reward <= 1000 coins
+          (
+            incoming().balance == existing().balance &&
+            incoming().coins > existing().coins &&
+            incoming().coins - existing().coins <= 1000 &&
+            incoming().totalEarnedCoins == existing().totalEarnedCoins + (incoming().coins - existing().coins) &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['coins', 'totalEarnedCoins', 'lastSpinDate', 'updatedAt'])
+          ) ||
+
+          // Action D: Profile information update (name, phone, photoURL, authProvider)
+          // Balance, coins, role, status, and permissions MUST NOT be modified
+          (
+            incoming().balance == existing().balance &&
+            incoming().coins == existing().coins &&
+            incoming().totalEarnedCoins == existing().totalEarnedCoins &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'phoneNumber', 'email', 'authProvider', 'notes', 'updatedAt'])
+          )
+        )
+      ) || isAdmin();
+
+      // Delete: Strictly disallowed for regular users
+      allow delete: if isAdmin();
 
       // Subcollection: Coin Transactions ledger
       match /transactions/{transactionId} {
-        allow read, create: if true;
-        allow update, delete: if false;
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create: if (isOwner(userId) || isAdmin()) && isValidId(transactionId) && incoming().userId == userId;
+        allow update, delete: if false; // Immutable ledger
       }
 
       // Subcollection: Daily Manager, To-Do List, Notes & Habits
       match /dailyManager/{docId} {
-        allow read, write: if true;
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create, update: if (isOwner(userId) || isAdmin()) && isValidId(docId) && incoming().userId == userId;
+        allow delete: if isOwner(userId) || isAdmin();
       }
     }
 
-    // Public System Settings (Developer Contact & Photo)
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if true;
+    // ----------------------------------------------------
+    // Deposit Requests (/depositRequests/{requestId})
+    // ----------------------------------------------------
+    match /depositRequests/{requestId} {
+      // User can only view their own deposit requests; Admin can view all
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      // User can only submit for themselves with 'pending' status and minimum 50 BDT
+      allow create: if isSignedIn() &&
+        isValidId(requestId) &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'pending' &&
+        incoming().amount >= 50 &&
+        incoming().trxId is string &&
+        incoming().trxId.size() >= 4;
+
+      // ONLY Admin can approve or reject deposit requests
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Deposit / Add Money Verification Requests (bKash TrxID verification)
-    match /depositRequests/{requestId} {
-      allow read, create, update: if true;
-      allow delete: if false;
+    // ----------------------------------------------------
+    // Public System Settings (/settings/{settingId})
+    // ----------------------------------------------------
+    match /settings/{settingId} {
+      // Public read so all visitors can see developer contact, notices & payment mode
+      allow read: if true;
+      // ONLY Admin can write or modify settings
+      allow write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // Admin list collection (/admins/{adminId})
+    // ----------------------------------------------------
+    match /admins/{adminId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // Health / Connection Test (/test/{docId})
+    // ----------------------------------------------------
+    match /test/{docId} {
+      allow read: if true;
+      allow write: if false;
     }
   }
 }

@@ -58,6 +58,8 @@ interface AuthContextType {
   loginWithEmail: (email: string, password: string) => Promise<void>;
   registerWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  loginWithPhone: (phoneNumber: string, pin: string) => Promise<void>;
+  registerWithPhone: (phoneNumber: string, pin: string, name?: string) => Promise<void>;
   loginOrRegisterWithPhone: (phoneNumber: string, pin: string, name?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   deductMainBalance: (amount: number, reason: string) => Promise<boolean>;
@@ -67,6 +69,31 @@ interface AuthContextType {
   recordDailySpin: (coinsWon: number) => Promise<boolean>;
   canSpinToday: () => boolean;
   transactions: CoinTransaction[];
+}
+
+export function normalizePhoneNumber(phone: string): string {
+  const digits = phone.replace(/[^0-9]/g, '');
+  if (digits.startsWith('880') && digits.length === 13) {
+    return '0' + digits.slice(3);
+  }
+  if (digits.startsWith('88') && digits.length === 13) {
+    return digits.slice(2);
+  }
+  return digits;
+}
+
+export function phoneToSyntheticEmail(phone: string): string {
+  const normalized = normalizePhoneNumber(phone);
+  return `user_${normalized}@phone.mosafabd.com`;
+}
+
+export function pinToPassword(pin: string): string {
+  const p = pin.trim();
+  // Firebase Auth requires minimum 6 characters. If a user enters a 4 or 5 digit PIN, pad deterministically
+  if (p.length < 6) {
+    return `${p}#mosafa`;
+  }
+  return p;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -117,15 +144,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const snap = await getDoc(userRef);
           const isPasswordUser = fbUser.providerData?.some((p) => p.providerId === 'password');
-          const detectedProvider: 'google' | 'email' = isPasswordUser ? 'email' : 'google';
+          const isPhoneSynthetic = Boolean(fbUser.email && fbUser.email.endsWith('@phone.mosafabd.com'));
+          const detectedProvider: 'google' | 'phone' | 'email' = isPhoneSynthetic
+            ? 'phone'
+            : isPasswordUser
+            ? 'email'
+            : 'google';
+
+          const phoneFromEmail = isPhoneSynthetic
+            ? fbUser.email!.replace('user_', '').replace('@phone.mosafabd.com', '')
+            : null;
 
           if (snap.exists()) {
             const data = snap.data();
             const profile: UserProfile = {
               uid: fbUser.uid,
               displayName: data.displayName || fbUser.displayName || 'ব্যবহারকারী',
-              email: fbUser.email || data.email || null,
-              phoneNumber: fbUser.phoneNumber || data.phoneNumber || null,
+              email: isPhoneSynthetic ? null : fbUser.email || data.email || null,
+              phoneNumber: phoneFromEmail || fbUser.phoneNumber || data.phoneNumber || null,
               photoURL: fbUser.photoURL || data.photoURL || null,
               balance: typeof data.balance === 'number' ? data.balance : 0,
               coins: typeof data.coins === 'number' ? data.coins : 50,
@@ -140,17 +176,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
             adminUserService.syncCurrentUser(profile as any);
           } else {
-            // New user: give initial 50 points welcome bonus as requested
+            // New user: check if legacy phone data exists to preserve previous balance & coins
+            let initialBalance = 0;
+            let initialCoins = 50;
+            let initialTotalCoins = 50;
+            let initialLastSpin = '';
+            let initialName = fbUser.displayName || (phoneFromEmail ? `ইউজার ${phoneFromEmail.slice(-4)}` : 'ব্যবহারকারী');
+
+            if (phoneFromEmail) {
+              try {
+                const leg1 = await getDoc(doc(db, 'users', `phone_${phoneFromEmail}`));
+                const leg2 = await getDoc(doc(db, 'users', `user_phone_${phoneFromEmail}`));
+                const legSnap = leg1.exists() ? leg1 : leg2.exists() ? leg2 : null;
+                if (legSnap) {
+                  const lData = legSnap.data();
+                  if (typeof lData.balance === 'number') initialBalance = lData.balance;
+                  if (typeof lData.coins === 'number') initialCoins = lData.coins;
+                  if (typeof lData.totalEarnedCoins === 'number') initialTotalCoins = lData.totalEarnedCoins;
+                  if (lData.lastSpinDate) initialLastSpin = lData.lastSpinDate;
+                  if (lData.displayName) initialName = lData.displayName;
+                }
+              } catch (legErr) {
+                console.warn('Legacy data migration lookup note:', legErr);
+              }
+            }
+
             const newProfile: UserProfile = {
               uid: fbUser.uid,
-              displayName: fbUser.displayName || 'ব্যবহারকারী',
-              email: fbUser.email || null,
-              phoneNumber: fbUser.phoneNumber || null,
+              displayName: initialName,
+              email: isPhoneSynthetic ? null : fbUser.email || null,
+              phoneNumber: phoneFromEmail || fbUser.phoneNumber || null,
               photoURL: fbUser.photoURL || null,
-              balance: 0,
-              coins: 50,
-              totalEarnedCoins: 50,
-              lastSpinDate: null,
+              balance: initialBalance,
+              coins: initialCoins,
+              totalEarnedCoins: initialTotalCoins,
+              lastSpinDate: initialLastSpin || null,
               authProvider: detectedProvider,
               status: 'active',
             };
@@ -160,10 +220,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: newProfile.email || '',
               phoneNumber: newProfile.phoneNumber || '',
               photoURL: newProfile.photoURL || '',
-              balance: 0,
+              balance: newProfile.balance,
               coins: newProfile.coins,
               totalEarnedCoins: newProfile.totalEarnedCoins,
-              lastSpinDate: '',
+              lastSpinDate: initialLastSpin,
               authProvider: detectedProvider,
               status: 'active',
               createdAt: new Date().toISOString(),
@@ -238,19 +298,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
         return () => unsubDoc();
       } else {
-        // Not a Firebase user: check if phone user exists in local state
-        const saved = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (parsed && parsed.authProvider === 'phone') {
-              setUser(parsed);
-              setIsLoading(false);
-              return;
-            }
-          } catch {}
-        }
+        // Not authenticated in Firebase: clear any stale session
         setUser(null);
+        try {
+          localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+        } catch {}
         setIsLoading(false);
       }
     });
@@ -377,91 +429,150 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Mobile number registration/login
+  // Secure Mobile Registration using Firebase Authentication (synthetic email mapping)
+  const registerWithPhone = async (
+    phoneNumber: string,
+    pin: string,
+    name?: string
+  ): Promise<void> => {
+    setIsLoading(true);
+    const cleanPhone = normalizePhoneNumber(phoneNumber);
+    if (cleanPhone.length !== 11 || !cleanPhone.startsWith('01')) {
+      setIsLoading(false);
+      throw new Error('সঠিক ১১ ডিজিটের বাংলাদেশি মোবাইল নম্বর লিখুন (যেমন: 017xxxxxxxx)');
+    }
+    if (pin.trim().length < 4) {
+      setIsLoading(false);
+      throw new Error('পাসওয়ার্ড ন্যূনতম ৪ অক্ষরের বা ডিজিটের হতে হবে');
+    }
+
+    const syntheticEmail = phoneToSyntheticEmail(cleanPhone);
+    const firebasePassword = pinToPassword(pin);
+    const displayName = name?.trim() || `ইউজার ${cleanPhone.slice(-4)}`;
+
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, syntheticEmail, firebasePassword);
+
+      try {
+        await updateProfile(cred.user, { displayName });
+      } catch (e) {
+        console.warn('Could not update display name:', e);
+      }
+
+      // Check if there is an existing legacy document from the previous system (e.g. phone_017... or user_phone_017...)
+      let initialBalance = 0;
+      let initialCoins = 50;
+      let initialTotalCoins = 50;
+      let initialLastSpin = '';
+
+      try {
+        const leg1 = await getDoc(doc(db, 'users', `phone_${cleanPhone}`));
+        const leg2 = await getDoc(doc(db, 'users', `user_phone_${cleanPhone}`));
+        const legSnap = leg1.exists() ? leg1 : leg2.exists() ? leg2 : null;
+        if (legSnap) {
+          const lData = legSnap.data();
+          if (typeof lData.balance === 'number') initialBalance = lData.balance;
+          if (typeof lData.coins === 'number') initialCoins = lData.coins;
+          if (typeof lData.totalEarnedCoins === 'number') initialTotalCoins = lData.totalEarnedCoins;
+          if (lData.lastSpinDate) initialLastSpin = lData.lastSpinDate;
+        }
+      } catch (legacyErr) {
+        console.warn('Legacy migration check notice:', legacyErr);
+      }
+
+      const userRef = doc(db, 'users', cred.user.uid);
+      const newProfile: UserProfile = {
+        uid: cred.user.uid,
+        displayName,
+        email: null,
+        phoneNumber: cleanPhone,
+        photoURL: null,
+        balance: initialBalance,
+        coins: initialCoins,
+        totalEarnedCoins: initialTotalCoins,
+        lastSpinDate: initialLastSpin || null,
+        authProvider: 'phone',
+        status: 'active',
+      };
+
+      await setDoc(userRef, {
+        userId: cred.user.uid,
+        displayName,
+        email: '',
+        phoneNumber: cleanPhone,
+        photoURL: '',
+        balance: initialBalance,
+        coins: initialCoins,
+        totalEarnedCoins: initialTotalCoins,
+        lastSpinDate: initialLastSpin,
+        authProvider: 'phone',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
+      setUser(newProfile);
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newProfile));
+      adminUserService.syncCurrentUser(newProfile as any);
+    } catch (err: any) {
+      console.warn('Phone registration error:', err?.code, err?.message);
+      if (err?.code === 'auth/email-already-in-use') {
+        throw new Error('এই মোবাইল নম্বরে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে। দয়া করে লগইন করুন।');
+      }
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Secure Mobile Login using Firebase Authentication
+  const loginWithPhone = async (phoneNumber: string, pin: string): Promise<void> => {
+    setIsLoading(true);
+    const cleanPhone = normalizePhoneNumber(phoneNumber);
+    if (cleanPhone.length !== 11 || !cleanPhone.startsWith('01')) {
+      setIsLoading(false);
+      throw new Error('সঠিক ১১ ডিজিটের বাংলাদেশি মোবাইল নম্বর লিখুন (যেমন: 017xxxxxxxx)');
+    }
+    if (!pin) {
+      setIsLoading(false);
+      throw new Error('পাসওয়ার্ড লিখুন');
+    }
+
+    const syntheticEmail = phoneToSyntheticEmail(cleanPhone);
+    const firebasePassword = pinToPassword(pin);
+
+    try {
+      await signInWithEmailAndPassword(auth, syntheticEmail, firebasePassword);
+      // onAuthStateChanged will handle profile retrieval and session update
+    } catch (err: any) {
+      console.warn('Phone login error:', err?.code, err?.message);
+      if (err?.code === 'auth/user-not-found' || err?.code === 'auth/invalid-credential') {
+        throw new Error('এই মোবাইল নম্বরে কোনো অ্যাকাউন্ট পাওয়া যায়নি। দয়া করে প্রথমে রেজিস্ট্রেশন (Register) করুন।');
+      }
+      if (err?.code === 'auth/wrong-password') {
+        throw new Error('পাসওয়ার্ড সঠিক নয়। দয়া করে সঠিক পাসওয়ার্ড দিন।');
+      }
+      if (err?.code === 'auth/too-many-requests') {
+        throw new Error('অনেকবার ভুল চেষ্টা করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।');
+      }
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Backwards-compatible bridge (strict: will NOT auto-register or bypass authentication)
   const loginOrRegisterWithPhone = async (
     phoneNumber: string,
     pin: string,
     name?: string
   ): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      const cleanPhone = phoneNumber.replace(/[^0-9+]/g, '');
-      if (cleanPhone.length < 11 || pin.length < 4) {
-        throw new Error('মোবাইল নাম্বার ও ৪ ডিজিটের পিন সঠিক নয়');
-      }
-
-      const phoneUid = `phone_${cleanPhone.replace('+', '')}`;
-      const userRef = doc(db, 'users', phoneUid);
-
-      let currentBalance = 0;
-      let currentCoins = 50;
-      let totalCoins = 50;
-      let displayName = name || `ইউজার ${cleanPhone.slice(-4)}`;
-      let lastSpinDate: string | null = null;
-      let status: 'active' | 'suspended' | 'banned' = 'active';
-      let banReason: string | undefined = undefined;
-      let suspendedUntil: string | null = null;
-
-      try {
-        const snap = await getDoc(userRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          currentBalance = typeof data.balance === 'number' ? data.balance : 0;
-          currentCoins = data.coins ?? 50;
-          totalCoins = data.totalEarnedCoins ?? 50;
-          displayName = data.displayName || displayName;
-          lastSpinDate = data.lastSpinDate || null;
-          status = data.status || 'active';
-          banReason = data.banReason;
-          suspendedUntil = data.suspendedUntil || null;
-        } else {
-          // New phone user: 50 points signup bonus
-          await setDoc(userRef, {
-            userId: phoneUid,
-            displayName,
-            email: '',
-            phoneNumber: cleanPhone,
-            photoURL: '',
-            balance: 0,
-            coins: 50,
-            totalEarnedCoins: 50,
-            lastSpinDate: '',
-            status: 'active',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          });
-        }
-      } catch (e) {
-        // Fallback to local storage if firestore rules prevent unauthenticated direct write
-        console.warn('Phone profile local mode:', e);
-      }
-
-      const phoneProfile: UserProfile = {
-        uid: phoneUid,
-        displayName,
-        email: null,
-        phoneNumber: cleanPhone,
-        photoURL: null,
-        balance: currentBalance,
-        coins: currentCoins,
-        totalEarnedCoins: totalCoins,
-        lastSpinDate,
-        authProvider: 'phone',
-        status,
-        banReason,
-        suspendedUntil,
-      };
-
-      setUser(phoneProfile);
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(phoneProfile));
-      adminUserService.syncCurrentUser(phoneProfile);
+    if (name && name.trim()) {
+      await registerWithPhone(phoneNumber, pin, name);
       return true;
-    } catch (err) {
-      console.error('Phone login error:', err);
-      throw err;
-    } finally {
-      setIsLoading(false);
     }
+    await loginWithPhone(phoneNumber, pin);
+    return true;
   };
 
   const logout = async () => {
@@ -777,6 +888,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithEmail,
         registerWithEmail,
         resetPassword,
+        loginWithPhone,
+        registerWithPhone,
         loginOrRegisterWithPhone,
         logout,
         deductMainBalance,

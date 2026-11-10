@@ -36,6 +36,8 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
     loginWithGoogle,
     loginWithEmail,
     registerWithEmail,
+    loginWithPhone,
+    registerWithPhone,
     loginOrRegisterWithPhone,
     resetPassword,
     isLoading,
@@ -129,7 +131,7 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
     }
   };
 
-  // Login Submit (Supports Email or Phone Number)
+  // Login Submit (Supports Email or Phone Number - Strictly rejects unregistered accounts)
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
@@ -148,7 +150,7 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
       setSubmitting(true);
       // If user typed a phone number (e.g. 017...)
       if (/^[0-9+]{11,14}$/.test(id.replace(/\s+/g, ''))) {
-        await loginOrRegisterWithPhone(id, loginPassword);
+        await loginWithPhone(id, loginPassword);
       } else {
         await loginWithEmail(id, loginPassword);
       }
@@ -160,17 +162,31 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
       }, 700);
     } catch (err: any) {
       const code = err?.code || '';
-      if (code === 'auth/user-not-found' || code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
-        setErrorMessage('ইমেইল বা পাসওয়ার্ড সঠিক নয়। দয়া করে পরীক্ষা করুন।');
+      const msg = err?.message || '';
+      if (
+        code === 'auth/user-not-found' ||
+        msg.includes('কোনো অ্যাকাউন্ট পাওয়া যায়নি') ||
+        (code === 'auth/invalid-credential' && msg.includes('অ্যাকাউন্ট'))
+      ) {
+        setErrorMessage('এই মোবাইল বা ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি। অনুগ্রহ করে নিচে "Register" বাটনে ক্লিক করে অ্যাকাউন্ট তৈরি করুন।');
+      } else if (
+        code === 'auth/wrong-password' ||
+        msg.includes('পাসওয়ার্ড সঠিক নয়')
+      ) {
+        setErrorMessage('পাসওয়ার্ড সঠিক নয়। দয়া করে সঠিক পাসওয়ার্ড দিন।');
+      } else if (code === 'auth/invalid-credential') {
+        setErrorMessage('মোবাইল/ইমেইল অথবা পাসওয়ার্ড সঠিক নয়। দয়া করে যাচাই করুন অথবা রেজিস্টার করুন।');
+      } else if (code === 'auth/too-many-requests') {
+        setErrorMessage('অনেকবার ভুল চেষ্টা করা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।');
       } else {
-        setErrorMessage(err?.message || 'লগইনে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+        setErrorMessage(msg || 'লগইনে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
       }
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Register Submit
+  // Register Submit (Explicitly creates new account and awards bonus)
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearMessages();
@@ -188,7 +204,7 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
     try {
       setSubmitting(true);
       if (/^[0-9+]{11,14}$/.test(id.replace(/\s+/g, ''))) {
-        await loginOrRegisterWithPhone(id, regPassword, regName.trim() || undefined);
+        await registerWithPhone(id, regPassword, regName.trim() || undefined);
       } else {
         await registerWithEmail(id, regPassword, regName.trim() || undefined);
       }
@@ -200,10 +216,13 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
       }, 700);
     } catch (err: any) {
       const code = err?.code || '';
-      if (code === 'auth/email-already-in-use') {
-        setErrorMessage('এই ইমেইলে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে। লগইন করুন।');
+      const msg = err?.message || '';
+      if (code === 'auth/email-already-in-use' || msg.includes('ইতিমধ্যে একটি অ্যাকাউন্ট')) {
+        setErrorMessage('এই মোবাইল বা ইমেইলে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে। দয়া করে লগইন করুন।');
+      } else if (code === 'auth/weak-password') {
+        setErrorMessage('পাসওয়ার্ড দুর্বল। ন্যূনতম ৬ অক্ষরের পাসওয়ার্ড দিন।');
       } else {
-        setErrorMessage(err?.message || 'রেজিস্ট্রেশনে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+        setErrorMessage(msg || 'রেজিস্ট্রেশনে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
       }
     } finally {
       setSubmitting(false);
