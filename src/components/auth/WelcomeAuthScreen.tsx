@@ -267,7 +267,7 @@ export const WelcomeAuthScreen: React.FC<WelcomeAuthScreenProps> = ({
     <div
       className={`${
         isModal
-          ? 'fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200'
+          ? 'fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/40 backdrop-blur-[6px] animate-in fade-in duration-300'
           : 'min-h-screen w-full flex flex-col items-center justify-center p-3 sm:p-6 bg-[#EDF2F4] relative overflow-y-auto font-sans'
       }`}
     >

@@ -330,11 +330,27 @@ export default function App() {
     }
   }, [activeTool]);
 
+  // Delayed Welcome Login Popup (appears after 2.5s on Homepage for first-time unauthenticated visitors)
+  const [isDelayedAuthOpen, setIsDelayedAuthOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Only schedule if on Homepage, not logged in, and hasn't entered/skipped yet
+    if (!activeTool && !user && !hasGuestEntered) {
+      const timer = setTimeout(() => {
+        setIsDelayedAuthOpen(true);
+      }, 2500);
+      return () => clearTimeout(timer);
+    } else {
+      setIsDelayedAuthOpen(false);
+    }
+  }, [activeTool, user, hasGuestEntered]);
+
   const handleSkipAuth = () => {
     try {
       sessionStorage.setItem('mosafa_guest_entered', 'true');
     } catch {}
     setHasGuestEntered(true);
+    setIsDelayedAuthOpen(false);
   };
 
   // Toast notification state
@@ -1402,22 +1418,17 @@ export default function App() {
     );
   }
 
-  // Initial Welcome / Login / Register / Guest Screen for first-time or unauthenticated visitors
-  if (!activeTool && !user && !hasGuestEntered) {
-    return (
-      <WelcomeAuthScreen
-        onSkip={handleSkipAuth}
-        onSuccess={() => {
-          handleSkipAuth();
-          showToast('স্বাগতম! আপনার অ্যাকাউন্ট সফলভাবে চালু হয়েছে। 🎉', '👤');
-        }}
-      />
-    );
-  }
+  // Check if background homepage should be blurred due to delayed auth popup
+  const isDelayedPopupActive = isDelayedAuthOpen && !user && !hasGuestEntered && !activeTool;
 
   // Render Main Tools Hub View
   return (
-    <div className="flex flex-col min-h-screen relative text-slate-800">
+    <>
+      <div
+        className={`flex flex-col min-h-screen relative text-slate-800 transition-[filter] duration-300 ${
+          isDelayedPopupActive ? 'blur-[6px] pointer-events-none select-none' : ''
+        }`}
+      >
       <FloatingParticles />
 
       <Header
@@ -1987,5 +1998,18 @@ export default function App() {
         </div>
       )}
     </div>
+
+    {/* 2.5s Delayed Login / Welcome Popup on Homepage */}
+    {isDelayedPopupActive && (
+      <WelcomeAuthScreen
+        isModal={true}
+        onSkip={handleSkipAuth}
+        onSuccess={() => {
+          handleSkipAuth();
+          showToast('স্বাগতম! আপনার অ্যাকাউন্ট সফলভাবে চালু হয়েছে। 🎉', '👤');
+        }}
+      />
+    )}
+  </>
   );
 }
