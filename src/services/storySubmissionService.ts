@@ -144,13 +144,29 @@ class StorySubmissionService {
   }
 
   private notifyListeners() {
-    const list = this.getAllStories();
-    this.listeners.forEach((fn) => fn(list));
+    queueMicrotask(() => {
+      const list = this.getAllStories();
+      this.listeners.forEach((fn) => {
+        try {
+          fn(list);
+        } catch (e) {
+          console.error('Story listener callback error:', e);
+        }
+      });
+    });
   }
 
   private notifyNotificationListeners() {
-    const list = this.getNotifications();
-    this.notificationListeners.forEach((fn) => fn(list));
+    queueMicrotask(() => {
+      const list = this.getNotifications();
+      this.notificationListeners.forEach((fn) => {
+        try {
+          fn(list);
+        } catch (e) {
+          console.error('Notification listener callback error:', e);
+        }
+      });
+    });
   }
 
   public getAllStories(): SubmittedStory[] {
@@ -305,7 +321,13 @@ class StorySubmissionService {
 
   public subscribe(fn: (stories: SubmittedStory[]) => void): () => void {
     this.listeners.push(fn);
-    fn(this.getAllStories());
+    queueMicrotask(() => {
+      try {
+        fn(this.getAllStories());
+      } catch (e) {
+        console.error('Initial story subscriber callback error:', e);
+      }
+    });
     return () => {
       this.listeners = this.listeners.filter((l) => l !== fn);
     };
@@ -313,7 +335,13 @@ class StorySubmissionService {
 
   public subscribeNotifications(fn: (notifications: StoryNotification[]) => void): () => void {
     this.notificationListeners.push(fn);
-    fn(this.getNotifications());
+    queueMicrotask(() => {
+      try {
+        fn(this.getNotifications());
+      } catch (e) {
+        console.error('Initial notification subscriber callback error:', e);
+      }
+    });
     return () => {
       this.notificationListeners = this.notificationListeners.filter((l) => l !== fn);
     };

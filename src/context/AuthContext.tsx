@@ -2,8 +2,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   User as FirebaseUser,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
 } from 'firebase/auth';
 import {
   doc,
@@ -27,7 +33,7 @@ export interface UserProfile {
   coins: number; // কয়েন ব্যালেন্স
   totalEarnedCoins: number;
   lastSpinDate: string | null;
-  authProvider: 'google' | 'phone' | 'guest';
+  authProvider: 'google' | 'phone' | 'email' | 'guest';
   status?: 'active' | 'suspended' | 'banned';
   banReason?: string;
   suspendedUntil?: string | null;
@@ -49,6 +55,9 @@ interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
   loginWithGoogle: () => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  registerWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   loginOrRegisterWithPhone: (phoneNumber: string, pin: string, name?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   deductMainBalance: (amount: number, reason: string) => Promise<boolean>;
@@ -77,6 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [transactions, setTransactions] = useState<CoinTransaction[]>([]);
+  const [guestSpinDate, setGuestSpinDate] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(LOCAL_STORAGE_SPIN_KEY);
+    } catch {
+      return null;
+    }
+  });
 
   // Initialize from LocalStorage for immediate UI responsiveness
   useEffect(() => {
@@ -100,6 +116,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userRef = doc(db, 'users', fbUser.uid);
         try {
           const snap = await getDoc(userRef);
+          const isPasswordUser = fbUser.providerData?.some((p) => p.providerId === 'password');
+          const detectedProvider: 'google' | 'email' = isPasswordUser ? 'email' : 'google';
+
           if (snap.exists()) {
             const data = snap.data();
             const profile: UserProfile = {
@@ -112,16 +131,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               coins: typeof data.coins === 'number' ? data.coins : 50,
               totalEarnedCoins: typeof data.totalEarnedCoins === 'number' ? data.totalEarnedCoins : 50,
               lastSpinDate: data.lastSpinDate || null,
-              authProvider: 'google',
+              authProvider: data.authProvider || detectedProvider,
               status: data.status || 'active',
               banReason: data.banReason || undefined,
               suspendedUntil: data.suspendedUntil || null,
             };
             setUser(profile);
             localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
-            adminUserService.syncCurrentUser(profile);
+            adminUserService.syncCurrentUser(profile as any);
           } else {
-            // New Google user: give initial 50 points welcome bonus as requested
+            // New user: give initial 50 points welcome bonus as requested
             const newProfile: UserProfile = {
               uid: fbUser.uid,
               displayName: fbUser.displayName || 'ব্যবহারকারী',
@@ -132,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               coins: 50,
               totalEarnedCoins: 50,
               lastSpinDate: null,
-              authProvider: 'google',
+              authProvider: detectedProvider,
               status: 'active',
             };
             await setDoc(userRef, {
@@ -145,13 +164,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               coins: newProfile.coins,
               totalEarnedCoins: newProfile.totalEarnedCoins,
               lastSpinDate: '',
+              authProvider: detectedProvider,
               status: 'active',
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             });
             setUser(newProfile);
             localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newProfile));
-            adminUserService.syncCurrentUser(newProfile);
+            adminUserService.syncCurrentUser(newProfile as any);
           }
         } catch (err) {
           handleFirestoreError(err, OperationType.GET, `users/${fbUser.uid}`);
@@ -179,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           (docSnap) => {
             if (docSnap.exists()) {
               const d = docSnap.data();
+              let nextUpdatedUser: UserProfile | null = null;
               setUser((prev) => {
                 if (!prev) return null;
                 const updated: UserProfile = {
@@ -193,9 +214,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   suspendedUntil: d.suspendedUntil || prev.suspendedUntil,
                 };
                 localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated));
-                adminUserService.syncCurrentUser(updated);
+                nextUpdatedUser = updated;
                 return updated;
               });
+
+              if (nextUpdatedUser) {
+                const userToSync = nextUpdatedUser;
+                queueMicrotask(() => {
+                  try {
+                    adminUserService.syncCurrentUser(userToSync);
+                  } catch (e) {
+                    console.warn('Sync updated user notice:', e);
+                  }
+                });
+              }
             }
           },
           (error) => {
@@ -226,12 +258,119 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribeAuth();
   }, []);
 
+  // Handle Google redirect result if page was reloaded after redirect login
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((cred) => {
+        if (cred?.user) {
+          console.log('Google redirect sign-in success:', cred.user.email);
+        }
+      })
+      .catch((err) => {
+        if (err && err.code !== 'auth/null-user') {
+          console.warn('Google redirect notice:', err?.code, err?.message);
+        }
+      });
+  }, []);
+
   const loginWithGoogle = async () => {
     try {
       setIsLoading(true);
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
-      console.warn('Google sign-in info:', err?.message || err);
+      console.warn('Google sign-in info:', err?.code, err?.message || err);
+      if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/cancelled-popup-request') {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirErr) {
+          throw redirErr;
+        }
+      }
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithEmail = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (err: any) {
+      console.warn('Email login error:', err?.message || err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const registerWithEmail = async (email: string, password: string, displayName?: string) => {
+    try {
+      setIsLoading(true);
+      const cleanEmail = email.trim();
+      const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+      const cleanName = displayName?.trim() || cleanEmail.split('@')[0] || 'ব্যবহারকারী';
+
+      try {
+        await updateProfile(cred.user, { displayName: cleanName });
+      } catch (e) {
+        console.warn('Could not update display name:', e);
+      }
+
+      // Initialize user document with 50 coins welcome bonus
+      const userRef = doc(db, 'users', cred.user.uid);
+      const initialProfile: UserProfile = {
+        uid: cred.user.uid,
+        displayName: cleanName,
+        email: cleanEmail,
+        phoneNumber: null,
+        photoURL: null,
+        balance: 0,
+        coins: 50,
+        totalEarnedCoins: 50,
+        lastSpinDate: null,
+        authProvider: 'email',
+        status: 'active',
+      };
+
+      try {
+        await setDoc(userRef, {
+          userId: cred.user.uid,
+          displayName: cleanName,
+          email: cleanEmail,
+          phoneNumber: '',
+          photoURL: '',
+          balance: 0,
+          coins: 50,
+          totalEarnedCoins: 50,
+          lastSpinDate: '',
+          authProvider: 'email',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn('Register Firestore write note:', err);
+      }
+
+      setUser(initialProfile);
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(initialProfile));
+      adminUserService.syncCurrentUser(initialProfile as any);
+    } catch (err: any) {
+      console.warn('Email registration error:', err?.message || err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setIsLoading(true);
+      await sendPasswordResetEmail(auth, email.trim());
+    } catch (err: any) {
+      console.warn('Password reset error:', err?.message || err);
       throw err;
     } finally {
       setIsLoading(false);
@@ -574,8 +713,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const recordDailySpin = async (coinsWon: number): Promise<boolean> => {
     const today = getTodayDateString();
     if (!user) {
-      // Record guest spin in localStorage
+      // Record guest spin in localStorage and reactive state
       localStorage.setItem(LOCAL_STORAGE_SPIN_KEY, today);
+      setGuestSpinDate(today);
       return true;
     }
 
@@ -624,8 +764,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return user.lastSpinDate !== today;
     }
-    const guestLastSpin = localStorage.getItem(LOCAL_STORAGE_SPIN_KEY);
-    return guestLastSpin !== today;
+    return guestSpinDate !== today;
   };
 
   return (
@@ -635,6 +774,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoggedIn: Boolean(user),
         isLoading,
         loginWithGoogle,
+        loginWithEmail,
+        registerWithEmail,
+        resetPassword,
         loginOrRegisterWithPhone,
         logout,
         deductMainBalance,

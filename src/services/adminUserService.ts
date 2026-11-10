@@ -20,7 +20,7 @@ export interface ManagedUser {
   status: 'active' | 'suspended' | 'banned';
   banReason?: string;
   suspendedUntil?: string | null;
-  authProvider: 'google' | 'phone' | 'guest';
+  authProvider: 'google' | 'phone' | 'email' | 'guest';
   lastSpinDate?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -195,18 +195,26 @@ class AdminUserService {
   }
 
   private notifyDeposits() {
-    this.depositSubscribers.forEach((cb) => {
-      try {
-        cb([...this.depositRequests]);
-      } catch (e) {
-        console.error('Deposit subscriber callback error:', e);
-      }
+    queueMicrotask(() => {
+      this.depositSubscribers.forEach((cb) => {
+        try {
+          cb([...this.depositRequests]);
+        } catch (e) {
+          console.error('Deposit subscriber callback error:', e);
+        }
+      });
     });
   }
 
   public subscribeDeposits(callback: (reqs: DepositRequest[]) => void): () => void {
     this.depositSubscribers.push(callback);
-    callback([...this.depositRequests]);
+    queueMicrotask(() => {
+      try {
+        callback([...this.depositRequests]);
+      } catch (e) {
+        console.error('Initial deposit subscriber callback error:', e);
+      }
+    });
     return () => {
       this.depositSubscribers = this.depositSubscribers.filter((s) => s !== callback);
     };
@@ -314,18 +322,26 @@ class AdminUserService {
   }
 
   private notify() {
-    this.subscribers.forEach((cb) => {
-      try {
-        cb([...this.users]);
-      } catch (e) {
-        console.error('Subscriber callback error:', e);
-      }
+    queueMicrotask(() => {
+      this.subscribers.forEach((cb) => {
+        try {
+          cb([...this.users]);
+        } catch (e) {
+          console.error('Subscriber callback error:', e);
+        }
+      });
     });
   }
 
   public subscribe(callback: (users: ManagedUser[]) => void): () => void {
     this.subscribers.push(callback);
-    callback([...this.users]);
+    queueMicrotask(() => {
+      try {
+        callback([...this.users]);
+      } catch (e) {
+        console.error('Initial subscriber callback error:', e);
+      }
+    });
     return () => {
       this.subscribers = this.subscribers.filter((s) => s !== callback);
     };
@@ -421,7 +437,7 @@ class AdminUserService {
     coins?: number;
     totalEarnedCoins?: number;
     status?: 'active' | 'suspended' | 'banned';
-    authProvider?: 'google' | 'phone' | 'guest';
+    authProvider?: 'google' | 'phone' | 'email' | 'guest';
   }) {
     if (!user || !user.uid) return;
 

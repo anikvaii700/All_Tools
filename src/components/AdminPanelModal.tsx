@@ -108,6 +108,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   };
 
   useEffect(() => {
+    if (!isOpen) return;
     const unsubStories = storySubmissionService.subscribe((list) => {
       setSubmittedStories(list);
     });
@@ -122,7 +123,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       unsubUsers();
       unsubDeposits();
     };
-  }, []);
+  }, [isOpen]);
 
   // Enforce password prompt on every single open and reset upon exit
   useEffect(() => {

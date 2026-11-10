@@ -1354,7 +1354,7 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
     });
   } else {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: 'spa',
     });
 

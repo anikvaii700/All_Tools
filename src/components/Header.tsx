@@ -35,6 +35,9 @@ import {
   Building2,
   Video,
   Briefcase,
+  LogOut,
+  LogIn,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { BanglaLiveDateTimeWidget } from './BanglaLiveDateTimeWidget';
@@ -58,6 +61,7 @@ interface HeaderProps {
   onOpenWalletModal?: () => void;
   onOpenDeveloperContact?: () => void;
   onOpenAdminPanel?: () => void;
+  onShowToast?: (message: string, icon?: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -68,6 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenShare,
   onOpenDeveloperContact,
   onOpenAdminPanel,
+  onShowToast,
   deviceSector = 'all',
   onSelectDeviceSector,
   onOpenLiveUpdate,
@@ -81,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [menuSearch, setMenuSearch] = React.useState('');
   const menuRef = React.useRef<HTMLDivElement>(null);
-  const { user, isLoggedIn, canSpinToday } = useAuth();
+  const { user, isLoggedIn, canSpinToday, logout } = useAuth();
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -91,9 +96,16 @@ export const Header: React.FC<HeaderProps> = ({
     };
     if (isMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      // Lock background scroll on small screens
+      if (window.innerWidth < 640) {
+        document.body.style.overflow = 'hidden';
+      }
+    } else {
+      document.body.style.overflow = '';
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.body.style.overflow = '';
     };
   }, [isMenuOpen]);
 
@@ -230,11 +242,11 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenAuthModal}
-              className="hidden xs:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer text-xs font-bold"
+              className="hidden xs:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#003B4A]/10 hover:bg-[#003B4A]/15 text-[#003B4A] border border-[#003B4A]/25 transition cursor-pointer text-xs font-bold"
               title="লগইন বা একাউন্ট তৈরি করুন"
             >
               <span>লগইন</span>
-              <span className="text-[10px] bg-rose-500/20 text-rose-700 px-1 rounded">+৫০</span>
+              <span className="text-[10px] bg-[#00C8D7] text-[#003B4A] font-extrabold px-1.5 py-0.2 rounded-full">+৫০</span>
             </button>
           )}
 
@@ -274,103 +286,207 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* ☰ Dropdown Menu */}
+            {/* ☰ Full Drawer on Mobile / Dropdown on Desktop */}
             {isMenuOpen && (
-              <div className="absolute right-0 top-12 mt-2 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-200 p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col">
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 px-1">
-                  <span className="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>সকল টুলস ডিরেক্টরি</span>
-                    <span className="bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded-full text-[10px]">
-                      {toBanglaNum(allToolsList.length)}টি
-                    </span>
-                  </span>
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onNavigateHome();
-                    }}
-                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
-                  >
-                    <Home className="w-3 h-3" />
-                    <span>হোম পেজ</span>
-                  </button>
-                </div>
+              <>
+                {/* Mobile Backdrop Overlay */}
+                <div
+                  className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 sm:hidden animate-in fade-in duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                />
 
-                {/* Quick Spin & Account inside Menu */}
-                <div className="grid grid-cols-2 gap-1.5 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onOpenSpinModal?.();
-                    }}
-                    className="p-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 border border-amber-200 text-left cursor-pointer flex items-center gap-2"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
-                      <Gift className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-bold text-slate-900 block leading-tight">
-                        লাকি স্পিন
-                      </span>
-                      <span className="text-[9px] text-amber-700 font-semibold">
-                        {canSpinToday() ? '১০০-১০০০ কয়েন' : 'সম্পন্ন ✅'}
-                      </span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      if (isLoggedIn) {
-                        onOpenWalletModal?.();
-                      } else {
-                        onOpenAuthModal?.();
-                      }
-                    }}
-                    className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left cursor-pointer flex items-center gap-2"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-slate-800 text-white flex items-center justify-center shrink-0">
-                      <Wallet className="w-3.5 h-3.5 text-yellow-300" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-bold text-slate-900 block leading-tight">
-                        {isLoggedIn ? 'আমার ওয়ালেট' : 'লগইন / একাউন্ট'}
-                      </span>
-                      <span className="text-[9px] text-slate-500 font-semibold">
-                        {isLoggedIn ? `৳${(user?.balance || 0).toFixed(0)} • ${user?.coins || 0}🪙` : 'বোনাস নিন'}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Quick CV Profile Shortcut */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onNavigateTool?.('cv-maker');
-                  }}
-                  className="w-full mb-2 p-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 border border-emerald-200 text-left cursor-pointer flex items-center justify-between transition"
+                {/* Drawer Container: On mobile it is a sleek right drawer taking full screen height; on desktop a floating rounded dropdown */}
+                <div
+                  className="fixed inset-y-0 right-0 w-[92vw] max-w-[380px] bg-white shadow-2xl z-50 p-4 flex flex-col h-full overflow-hidden animate-in slide-in-from-right duration-200 sm:absolute sm:inset-auto sm:right-0 sm:top-12 sm:mt-2 sm:w-96 sm:h-auto sm:max-h-[85vh] sm:rounded-3xl sm:border sm:border-slate-200 sm:p-3.5 sm:animate-in sm:fade-in sm:zoom-in-95"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <FileText className="w-3.5 h-3.5" />
+                  {/* Top Bar with Brand & Close Button */}
+                  <div className="flex items-center justify-between pb-3 mb-2.5 border-b border-slate-100 px-0.5 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-white p-0.5 border border-slate-200 shadow-2xs flex items-center justify-center shrink-0">
+                        <img src="/logo.png" alt="MoSaFa" className="w-full h-full object-contain" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-black text-slate-900 block leading-tight">
+                          MoSaFa Tools ডিরেক্টরি
+                        </span>
+                        <span className="text-[10px] text-rose-600 font-bold">
+                          {toBanglaNum(allToolsList.length)}টি অনলাইন টুলস
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[11px] font-bold text-emerald-950 block leading-tight">
-                        সিভি সেকশন ও প্রোফাইল
-                      </span>
-                      <span className="text-[9px] text-emerald-700 font-semibold">
-                        নিজের তথ্য সেভ ও অটো-ফিল
-                      </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onNavigateHome();
+                        }}
+                        className="px-2 py-1 rounded-lg text-[11px] font-bold text-slate-700 hover:text-rose-600 hover:bg-slate-100 flex items-center gap-1 cursor-pointer transition"
+                        title="হোম পেজে যান"
+                      >
+                        <Home className="w-3.5 h-3.5 text-rose-500" />
+                        <span className="hidden xs:inline">হোম</span>
+                      </button>
+                      <button
+                        onClick={() => setIsMenuOpen(false)}
+                        className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center cursor-pointer transition"
+                        aria-label="মেনু বন্ধ করুন"
+                        title="বন্ধ করুন (✕)"
+                      >
+                        <X className="w-4 h-4 text-slate-700" />
+                      </button>
                     </div>
                   </div>
-                  <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">
-                    ওপেন ➔
-                  </span>
-                </button>
+
+                  {/* 👤 অ্যাকাউন্ট ও লগআউট সেকশন (User Account / Logout / Login) */}
+                  {isLoggedIn && user ? (
+                    <div className="mb-2.5 p-3 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-[#003B4A] text-white shadow-md border border-slate-700 shrink-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#00C8D7] to-cyan-400 text-slate-950 flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
+                            {user.displayName ? (
+                              user.displayName.trim().charAt(0).toUpperCase()
+                            ) : (
+                              <User className="w-4 h-4 text-slate-900" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-black truncate block leading-tight text-white">
+                                {user.displayName || 'ব্যবহারকারী'}
+                              </span>
+                              <span className="text-[9px] font-bold bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.2 rounded-full">
+                                Active
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-slate-300 truncate block font-mono">
+                              {user.email || user.phoneNumber || 'MoSaFa একাউন্ট'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Stats: মূল ব্যালেন্স & কয়েন */}
+                      <div className="grid grid-cols-2 gap-2 p-1.5 rounded-xl bg-white/10 backdrop-blur-xs mb-2.5 text-center text-xs">
+                        <div>
+                          <span className="text-[9px] text-slate-300 block font-medium">মূল ব্যালেন্স</span>
+                          <span className="font-extrabold text-emerald-300">৳{(user.balance || 0).toFixed(0)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-300 block font-medium">পয়েন্ট / কয়েন</span>
+                          <span className="font-extrabold text-amber-300 flex items-center justify-center gap-1">
+                            <Coins className="w-3 h-3 text-amber-400" />
+                            <span>{user.coins || 0}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* মাই একাউন্ট ও লগআউট বাটন */}
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            onOpenWalletModal?.();
+                          }}
+                          className="py-1.5 px-2 rounded-xl bg-[#00C8D7] hover:bg-cyan-400 text-slate-950 text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs active:scale-98"
+                        >
+                          <Wallet className="w-3.5 h-3.5 text-slate-950" />
+                          <span>মাই একাউন্ট</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setIsMenuOpen(false);
+                            try {
+                              await logout();
+                              onShowToast?.('সফলভাবে লগআউট হয়েছে 👋', '🚪');
+                            } catch {
+                              onShowToast?.('লগআউটে সমস্যা হয়েছে', '⚠️');
+                            }
+                          }}
+                          className="py-1.5 px-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 text-rose-200 text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-98"
+                        >
+                          <LogOut className="w-3.5 h-3.5 text-rose-300" />
+                          <span>লগআউট</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Guest Mode Banner */
+                    <div className="mb-2.5 p-2.5 rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-100 border border-indigo-100 flex items-center justify-between gap-2.5 shadow-2xs shrink-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-black text-slate-900 block leading-tight">
+                            গেস্ট অ্যাকাউন্ট
+                          </span>
+                          <span className="text-[10px] text-slate-500 truncate block">
+                            লগইন করলেই ৫০ কয়েন বোনাস
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onOpenAuthModal?.();
+                        }}
+                        className="py-1.5 px-3 bg-gradient-to-r from-[#003B4A] to-[#00C8D7] hover:brightness-110 text-white text-xs font-black rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center gap-1 active:scale-98"
+                      >
+                        <LogIn className="w-3.5 h-3.5" />
+                        <span>লগইন / সাইন-আপ</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* লাকি স্পিন ও সিভি কুইক শর্টকাট বাটন */}
+                  <div className="grid grid-cols-2 gap-1.5 mb-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        onOpenSpinModal?.();
+                      }}
+                      className="p-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 border border-amber-200 text-left cursor-pointer flex items-center gap-2"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
+                        <Gift className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="text-[11px] font-bold text-slate-900 block leading-tight">
+                          লাকি স্পিন
+                        </span>
+                        <span className="text-[9px] text-amber-700 font-semibold">
+                          {canSpinToday() ? '১০০-১০০০ কয়েন' : 'সম্পন্ন ✅'}
+                        </span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        onNavigateTool?.('cv-maker');
+                      }}
+                      className="p-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 border border-emerald-200 text-left cursor-pointer flex items-center gap-2"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <FileText className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="text-[11px] font-bold text-emerald-950 block leading-tight">
+                          সিভি প্রোফাইল
+                        </span>
+                        <span className="text-[9px] text-emerald-700 font-semibold">
+                          অটো-ফিল ডাটা
+                        </span>
+                      </div>
+                    </button>
+                  </div>
 
                 {/* Device Sector inside Menu */}
                 {onSelectDeviceSector && (
@@ -605,7 +721,8 @@ export const Header: React.FC<HeaderProps> = ({
                   </button>
                 </div>
               </div>
-            )}
+            </>
+          )}
           </div>
         </div>
       </div>

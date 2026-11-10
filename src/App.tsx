@@ -51,6 +51,8 @@ import { SharePortalModal } from './components/SharePortalModal';
 import { LiveUpdateModal } from './components/LiveUpdateModal';
 import { DailySpinModal } from './components/DailySpinModal';
 import { AuthModal } from './components/AuthModal';
+import { WelcomeAuthScreen } from './components/auth/WelcomeAuthScreen';
+import { FloatingSpinInvitation } from './components/FloatingSpinInvitation';
 import { WalletModal } from './components/WalletModal';
 import { DeveloperContactModal } from './components/DeveloperContactModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
@@ -300,21 +302,21 @@ export default function App() {
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const updateSync = useAppUpdateSync();
 
-  // Auto-open lucky spin wheel on app open if user hasn't seen it this session
-  useEffect(() => {
+  // Guest entry state: tracks if visitor skipped initial authentication screen
+  const [hasGuestEntered, setHasGuestEntered] = useState<boolean>(() => {
     try {
-      const hasAutoOpened = sessionStorage.getItem('mosafa_spin_auto_opened');
-      if (!hasAutoOpened && !activeTool) {
-        sessionStorage.setItem('mosafa_spin_auto_opened', 'true');
-        const timer = setTimeout(() => {
-          setIsSpinModalOpen(true);
-        }, 800);
-        return () => clearTimeout(timer);
-      }
+      return sessionStorage.getItem('mosafa_guest_entered') === 'true';
     } catch {
-      // SessionStorage fallback
+      return false;
     }
-  }, [activeTool]);
+  });
+
+  const handleSkipAuth = () => {
+    try {
+      sessionStorage.setItem('mosafa_guest_entered', 'true');
+    } catch {}
+    setHasGuestEntered(true);
+  };
 
   // Toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -1165,17 +1167,24 @@ export default function App() {
       />
 
       {/* User Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => {
-          setIsAuthModalOpen(false);
-          setAuthBonusPrompt(null);
-        }}
-        initialBonusPrompt={authBonusPrompt}
-        onSuccess={() => {
-          showToast('অ্যাকাউন্টে সফলভাবে প্রবেশ করেছেন! 🎉', '👤');
-        }}
-      />
+      {isAuthModalOpen && (
+        <WelcomeAuthScreen
+          isModal={true}
+          onClose={() => {
+            setIsAuthModalOpen(false);
+            setAuthBonusPrompt(null);
+          }}
+          onSkip={() => {
+            setIsAuthModalOpen(false);
+            setAuthBonusPrompt(null);
+          }}
+          onSuccess={() => {
+            setIsAuthModalOpen(false);
+            setAuthBonusPrompt(null);
+            showToast('অ্যাকাউন্টে সফলভাবে প্রবেশ করেছেন! 🎉', '👤');
+          }}
+        />
+      )}
 
       {/* User Coin Wallet Modal */}
       <WalletModal
@@ -1371,6 +1380,19 @@ export default function App() {
     );
   }
 
+  // Initial Welcome / Login / Register / Guest Screen for first-time or unauthenticated visitors
+  if (!activeTool && !user && !hasGuestEntered) {
+    return (
+      <WelcomeAuthScreen
+        onSkip={handleSkipAuth}
+        onSuccess={() => {
+          handleSkipAuth();
+          showToast('স্বাগতম! আপনার অ্যাকাউন্ট সফলভাবে চালু হয়েছে। 🎉', '👤');
+        }}
+      />
+    );
+  }
+
   // Render Main Tools Hub View
   return (
     <div className="flex flex-col min-h-screen relative text-slate-800">
@@ -1408,6 +1430,7 @@ export default function App() {
           setIsAdminModalOpen(true);
           showToast('কন্ট্রোল প্যানেল খোলা হয়েছে 🔓', '⚙️');
         }}
+        onShowToast={showToast}
       />
 
       {/* Hero Section — শুধু সার্চ অপশন ও টুলসের পাবলিক লিংক রাখা হয়েছে */}
@@ -1854,17 +1877,24 @@ export default function App() {
       />
 
       {/* User Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => {
-          setIsAuthModalOpen(false);
-          setAuthBonusPrompt(null);
-        }}
-        initialBonusPrompt={authBonusPrompt}
-        onSuccess={() => {
-          showToast('অ্যাকাউন্টে সফলভাবে প্রবেশ করেছেন! 🎉', '👤');
-        }}
-      />
+      {isAuthModalOpen && (
+        <WelcomeAuthScreen
+          isModal={true}
+          onClose={() => {
+            setIsAuthModalOpen(false);
+            setAuthBonusPrompt(null);
+          }}
+          onSkip={() => {
+            setIsAuthModalOpen(false);
+            setAuthBonusPrompt(null);
+          }}
+          onSuccess={() => {
+            setIsAuthModalOpen(false);
+            setAuthBonusPrompt(null);
+            showToast('অ্যাকাউন্টে সফলভাবে প্রবেশ করেছেন! 🎉', '👤');
+          }}
+        />
+      )}
 
       {/* User Coin Wallet Modal */}
       <WalletModal
@@ -1917,6 +1947,14 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Floating Lucky Spin Wheel Invitation Button: Only shown if not spun today */}
+      {canSpinToday() && (
+        <FloatingSpinInvitation
+          onOpenSpin={() => setIsSpinModalOpen(true)}
+          canSpin={true}
+        />
       )}
 
       {/* Toast Notification */}
