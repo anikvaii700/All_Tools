@@ -354,6 +354,10 @@ export default function App() {
   }, []);
 
   const navigateToTool = (tool: ToolId) => {
+    try {
+      sessionStorage.setItem('mosafa_guest_entered', 'true');
+    } catch {}
+    setHasGuestEntered(true);
     const newUrl = tool ? `/tools/${tool}` : '/';
     window.history.pushState({ tool }, '', newUrl);
     setActiveTool(tool);
