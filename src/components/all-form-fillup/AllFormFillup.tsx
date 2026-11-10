@@ -1172,6 +1172,7 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onShowToast={onShowToast}
+              backButtonLabel="সকল ফরম তালিকা"
             />
           </div>
         ) : selectedTemplate?.id === 'voter-form-1' ? (

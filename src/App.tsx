@@ -91,6 +91,7 @@ import { BdOnlinePortal } from './components/BdOnlinePortal';
 import { ContentCreatorStudio } from './components/ContentCreatorStudio';
 import { EntrepreneurJourney } from './components/EntrepreneurJourney';
 import { AllFormFillup } from './components/all-form-fillup/AllFormFillup';
+import { JobPhotoSignatureResizer } from './components/job-resizer/JobPhotoSignatureResizer';
 
 export type ToolId =
   | 'job-photo-signature-resizer'
@@ -302,14 +303,32 @@ export default function App() {
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const updateSync = useAppUpdateSync();
 
-  // Guest entry state: tracks if visitor skipped initial authentication screen
+  // Guest entry state: tracks if visitor skipped initial auth screen OR entered directly via a tool URL
   const [hasGuestEntered, setHasGuestEntered] = useState<boolean>(() => {
     try {
-      return sessionStorage.getItem('mosafa_guest_entered') === 'true';
+      if (sessionStorage.getItem('mosafa_guest_entered') === 'true') {
+        return true;
+      }
+      // If visitor opens any direct Tool URL (/tools/:slug or ?tool=:slug), activate guest access immediately
+      if (getInitialToolFromUrl() !== null) {
+        sessionStorage.setItem('mosafa_guest_entered', 'true');
+        return true;
+      }
+      return false;
     } catch {
       return false;
     }
   });
+
+  // Guarantee guest access is marked as active whenever any tool is loaded or active
+  useEffect(() => {
+    if (activeTool) {
+      try {
+        sessionStorage.setItem('mosafa_guest_entered', 'true');
+      } catch {}
+      setHasGuestEntered(true);
+    }
+  }, [activeTool]);
 
   const handleSkipAuth = () => {
     try {
@@ -1347,10 +1366,9 @@ export default function App() {
   }
   if (activeTool === 'job-photo-signature-resizer') {
     return wrapWithNavbar(
-      <BdOnlinePortal
+      <JobPhotoSignatureResizer
         onBackToHub={() => navigateToTool(null)}
         onShowToast={showToast}
-        initialSubView="job-photo-resizer"
       />
     );
   }
