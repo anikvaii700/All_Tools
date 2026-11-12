@@ -40,6 +40,7 @@ import {
   Camera,
   Home,
   Briefcase,
+  Layers,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useAppUpdateSync } from './hooks/useAppUpdateSync';
@@ -64,7 +65,7 @@ import { APP_VERSION_CONFIG } from './versionConfig';
 import { trackPageView, trackEvent } from './utils/analytics';
 import { getToolSeoData, HOMEPAGE_SEO, generateSchemaJsonLd } from './data/seoToolsData';
 
-// Lazy-loaded 26 Tools for optimal bundle performance & lightning-fast initial page load
+// Lazy-loaded 27 Tools for optimal bundle performance & lightning-fast initial page load
 const LoveTest = React.lazy(() => import('./components/LoveTest').then((m) => ({ default: m.LoveTest })));
 const TypingTest = React.lazy(() => import('./components/TypingTest').then((m) => ({ default: m.TypingTest })));
 const AgeCalculator = React.lazy(() => import('./components/AgeCalculator').then((m) => ({ default: m.AgeCalculator })));
@@ -92,9 +93,12 @@ const ContentCreatorStudio = React.lazy(() => import('./components/ContentCreato
 const EntrepreneurJourney = React.lazy(() => import('./components/EntrepreneurJourney').then((m) => ({ default: m.EntrepreneurJourney })));
 const AllFormFillup = React.lazy(() => import('./components/all-form-fillup/AllFormFillup').then((m) => ({ default: m.AllFormFillup })));
 const JobPhotoSignatureResizer = React.lazy(() => import('./components/job-resizer/JobPhotoSignatureResizer').then((m) => ({ default: m.JobPhotoSignatureResizer })));
+const UltraDigitalStudio = React.lazy(() => import('./components/ultra-studio/UltraDigitalStudio').then((m) => ({ default: m.UltraDigitalStudio })));
 const LegalPagesModal = React.lazy(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPagesModal })));
 
 export type ToolId =
+  | 'ultra-digital-studio'
+  | 'id-card-joiner'
   | 'job-photo-signature-resizer'
   | 'studymate-bd'
   | 'all-form-fillup'
@@ -124,6 +128,8 @@ export type ToolId =
   | null;
 
 export const VALID_TOOL_IDS: readonly ToolId[] = [
+  'ultra-digital-studio',
+  'id-card-joiner',
   'job-photo-signature-resizer',
   'studymate-bd',
   'all-form-fillup',
@@ -160,6 +166,9 @@ export const getInitialToolFromUrl = (): ToolId => {
     const pathMatch = pathname.match(/^\/tools\/([a-zA-Z0-9_-]+)\/?$/);
     if (pathMatch && pathMatch[1]) {
       const slug = pathMatch[1].toLowerCase();
+      if (slug === 'ai-id-card-maker' || slug === 'id-card-joiner') {
+        return 'ultra-digital-studio';
+      }
       if (VALID_TOOL_IDS.includes(slug as ToolId)) {
         return slug as ToolId;
       }
@@ -168,12 +177,21 @@ export const getInitialToolFromUrl = (): ToolId => {
     // 2. Query-based legacy URL fallback: ?tool=:slug
     const params = new URLSearchParams(window.location.search);
     const toolParam = params.get('tool');
-    if (toolParam && VALID_TOOL_IDS.includes(toolParam as ToolId)) {
-      // Migrate browser URL to the modern SEO route cleanly without full reload
-      try {
-        window.history.replaceState({ tool: toolParam }, '', `/tools/${toolParam}`);
-      } catch {}
-      return toolParam as ToolId;
+    if (toolParam) {
+      const lower = toolParam.toLowerCase();
+      if (lower === 'ai-id-card-maker' || lower === 'id-card-joiner') {
+        try {
+          window.history.replaceState({ tool: 'ultra-digital-studio' }, '', `/tools/ultra-digital-studio`);
+        } catch {}
+        return 'ultra-digital-studio';
+      }
+      if (VALID_TOOL_IDS.includes(toolParam as ToolId)) {
+        // Migrate browser URL to the modern SEO route cleanly without full reload
+        try {
+          window.history.replaceState({ tool: toolParam }, '', `/tools/${toolParam}`);
+        } catch {}
+        return toolParam as ToolId;
+      }
     }
   } catch {
     // fallback
@@ -527,8 +545,34 @@ export default function App() {
     },
 
     // =========================================================================
-    // 2. Office & Career Builder (অফিস ও ক্যারিয়ার - ৪টি টুল)
+    // 2. Office & Career Builder (অফিস ও ক্যারিয়ার)
     // =========================================================================
+    {
+      id: 'ultra-digital-studio',
+      title: 'Ultra Digital Studio (আল্ট্রা ডিজিটাল স্টুডিও)',
+      badge: '📸 অল-ইন-ওয়ান ডিজিটাল স্টুডিও',
+      badgeColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+      category: 'office',
+      iconBg: 'from-cyan-600 via-teal-600 to-indigo-700',
+      icon: <Layers className="w-6 h-6 text-white" />,
+      description:
+        'ডিজিটাল স্টুডিও ও ফটো ল্যাব — আইডি কার্ড জয়নার (সামনে ও পেছনে এক পেজে প্রিন্ট), পাসপোর্ট সাইজ ফটো ও একাধিক এআই ডিজিটাল স্টুডিও টুলস!',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
+      keywords: [
+        'ultra digital studio',
+        'আল্ট্রা ডিজিটাল স্টুডিও',
+        'ai id card maker',
+        'id card joiner',
+        'front and back to one page',
+        'nid card print',
+        'স্মার্ট কার্ড প্রিন্ট এক পেজে',
+        'আইডি কার্ড জয়নার',
+        'nid front and back a4',
+        'digital photo studio',
+        'card detector',
+      ],
+    },
     {
       id: 'cv-maker',
       title: 'The MoSaFa CV Maker (প্রফেশনাল CV ও রেজিউম বিল্ডার)',
@@ -1410,6 +1454,14 @@ export default function App() {
   }
   if (activeTool === 'entrepreneur-journey') {
     return wrapWithNavbar(<EntrepreneurJourney onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'ultra-digital-studio' || activeTool === 'id-card-joiner') {
+    return wrapWithNavbar(
+      <UltraDigitalStudio
+        onBackToHub={() => navigateToTool(null)}
+        onShowToast={showToast}
+      />
+    );
   }
   if (activeTool === 'job-photo-signature-resizer') {
     return wrapWithNavbar(

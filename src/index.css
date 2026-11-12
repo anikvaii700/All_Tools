@@ -273,6 +273,38 @@
     print-color-adjust: exact !important;
   }
 
+  /* Ultra Digital Studio ID Card Joiner Dedicated Print Sheet */
+  body.printing-idcard > *:not(#id-card-print-root) {
+    display: none !important;
+  }
+
+  body.printing-idcard #id-card-print-root,
+  #id-card-print-root {
+    display: block !important;
+    visibility: visible !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    z-index: 999999 !important;
+  }
+
+  body.printing-idcard #id-card-print-root img,
+  #id-card-print-root img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   #printable-business-plan * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
