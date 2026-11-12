@@ -49,6 +49,7 @@ import {
   triggerStudioMultiPagePrint,
 } from './photoArranger';
 import { StudioPrintModal } from './StudioPrintModal';
+import { SmartDocScannerStudio } from './SmartDocScannerStudio';
 
 interface MultiPhotoStudioEditorProps {
   initialPreset?: PhotoSizePreset;
@@ -72,6 +73,11 @@ export const MultiPhotoStudioEditor: React.FC<MultiPhotoStudioEditorProps> = ({
   onBackToDashboard,
   onShowToast,
 }) => {
+  // Studio Mode: Multi-Photo Sheet vs Smart Document Scanner
+  const [activeStudioTab, setActiveStudioTab] = useState<'photo-sheet' | 'doc-scanner'>(
+    initialPreset === 'a4-full' ? 'doc-scanner' : 'photo-sheet'
+  );
+
   // Photos list
   const [photos, setPhotos] = useState<StudioPhotoItem[]>([]);
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
@@ -359,8 +365,85 @@ export const MultiPhotoStudioEditor: React.FC<MultiPhotoStudioEditorProps> = ({
     setIsPrintModalOpen(true);
   };
 
+  // If user selected Smart Document Scanner & Auto A4 Maker mode
+  if (activeStudioTab === 'doc-scanner') {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+        <div className="bg-slate-100 border-b border-slate-200 px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveStudioTab('photo-sheet')}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Camera className="w-3.5 h-3.5 text-indigo-600" />
+              পাসপোর্ট, স্ট্যাম্প ও ফটো প্রিন্ট শিট
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveStudioTab('doc-scanner')}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white text-emerald-800 shadow-xs border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5 text-emerald-600" />
+              স্মার্ট ডকুমেন্ট স্ক্যানার ও অটো A4 মেকার
+              <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-1.5 py-0.5 rounded-full">
+                অ্যাক্টিভ
+              </span>
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onBackToDashboard}
+            className="text-xs text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
+          >
+            ← স্টুডিও ড্যাশবোর্ড
+          </button>
+        </div>
+        <SmartDocScannerStudio
+          onBackToDashboard={onBackToDashboard}
+          onShowToast={onShowToast}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24 text-slate-900">
+      {/* Studio Sub-Navigation Tabs */}
+      <div className="bg-slate-100 border-b border-slate-200 px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveStudioTab('photo-sheet')}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white text-indigo-700 shadow-xs border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Camera className="w-3.5 h-3.5 text-indigo-600" />
+            পাসপোর্ট, স্ট্যাম্প ও ফটো প্রিন্ট শিট
+            <span className="bg-indigo-100 text-indigo-800 text-[9px] font-black px-1.5 py-0.5 rounded-full">
+              অ্যাক্টিভ
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveStudioTab('doc-scanner')}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <FileText className="w-3.5 h-3.5 text-emerald-600" />
+            স্মার্ট ডকুমেন্ট স্ক্যানার ও অটো A4 মেকার
+            <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-1.5 py-0.5 rounded-full">
+              নতুন
+            </span>
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={onBackToDashboard}
+          className="text-xs text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
+        >
+          ← স্টুডিও ড্যাশবোর্ড
+        </button>
+      </div>
+
       {/* Hidden File Inputs */}
       <input
         ref={fileInputRef}

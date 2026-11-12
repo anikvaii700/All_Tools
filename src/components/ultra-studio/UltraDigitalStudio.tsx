@@ -21,6 +21,7 @@ import { StudioDashboard, StudioSection } from './StudioDashboard';
 import { MultiPhotoStudioEditor } from './MultiPhotoStudioEditor';
 import { TwoPersonStudioEditor } from './TwoPersonStudioEditor';
 import { StudioBackgroundEditor } from './StudioBackgroundEditor';
+import { SmartDocScannerStudio } from './SmartDocScannerStudio';
 import { PhotoSizePreset, StudioBgColor } from './photoStudioTypes';
 
 interface UltraDigitalStudioProps {
@@ -58,7 +59,15 @@ export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
         />
       )}
 
-      {/* 2. Multi-Photo Studio Editor (Passport, Stamp, Visa, 3R, 4R, Full A4, Custom) */}
+      {/* 2. Smart Document Scanner & Auto A4 Maker */}
+      {activeSection === 'doc-scanner' && (
+        <SmartDocScannerStudio
+          onBackToDashboard={handleReturnToDashboard}
+          onShowToast={onShowToast}
+        />
+      )}
+
+      {/* 3. Multi-Photo Studio Editor (Passport, Stamp, Visa, 3R, 4R, Full A4, Custom) */}
       {activeSection === 'multi-photo' && (
         <MultiPhotoStudioEditor
           initialPreset={initialPreset}

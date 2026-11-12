@@ -1,6 +1,6 @@
 {
   "name": "The MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল",
-  "description": "সকল প্রয়োজনীয় বাংলা অনলাইন টুলস এক জায়গায় - Ultra Digital Studio (AI ID Card Maker), MoSaFa All Form Fillup (বাসা ভাড়ার রসিদ ও ২৪টি ফরম মেকার), Entrepreneur Journey, Content Creator Studio সহ সকল ডিজিটাল টুলস।",
+  "description": "সকল প্রয়োজনীয় বাংলা অনলাইন টুলস এক জায়গায় - Ultra Digital Studio (Smart Document Scanner & Auto A4 Maker, AI ID Card Maker), MoSaFa All Form Fillup, Entrepreneur Journey, Content Creator Studio সহ সকল ডিজিটাল টুলস।",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

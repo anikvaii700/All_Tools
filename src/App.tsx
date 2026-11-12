@@ -556,11 +556,15 @@ export default function App() {
       iconBg: 'from-cyan-600 via-teal-600 to-indigo-700',
       icon: <Layers className="w-6 h-6 text-white" />,
       description:
-        'ডিজিটাল স্টুডিও ও ফটো ল্যাব — আইডি কার্ড জয়নার (সামনে ও পেছনে এক পেজে প্রিন্ট), পাসপোর্ট সাইজ ফটো ও একাধিক এআই ডিজিটাল স্টুডিও টুলস!',
+        'স্মার্ট ডকুমেন্ট স্ক্যানার ও অটো A4 মেকার (মোবাইল ছবি সোজা ও ছায়ামুক্ত প্রিন্ট), আইডি কার্ড জয়নার (উভয় পাশ এক পেজে), পাসপোর্ট ও স্ট্যাম্প ফটো প্রিন্ট স্টুডিও!',
       deviceTarget: 'both',
       deviceTag: '📱💻 কম্পিউটার ও মোবাইল ফ্রেন্ডলি',
       keywords: [
         'ultra digital studio',
+        'smart document scanner',
+        'document scanner a4',
+        'ডকুমেন্ট স্ক্যানার',
+        'অটো a4 মেকার',
         'আল্ট্রা ডিজিটাল স্টুডিও',
         'ai id card maker',
         'id card joiner',
@@ -568,9 +572,8 @@ export default function App() {
         'nid card print',
         'স্মার্ট কার্ড প্রিন্ট এক পেজে',
         'আইডি কার্ড জয়নার',
-        'nid front and back a4',
         'digital photo studio',
-        'card detector',
+        'camscanner online',
       ],
     },
     {

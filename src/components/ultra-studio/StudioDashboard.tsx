@@ -22,6 +22,7 @@ import { PhotoSizePreset } from './photoStudioTypes';
 export type StudioSection =
   | 'dashboard'
   | 'multi-photo'
+  | 'doc-scanner'
   | 'id-card'
   | 'two-person'
   | 'background-changer';
@@ -37,6 +38,23 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
 }) => {
   const tools = [
     {
+      id: 'doc-scanner',
+      title: 'স্মার্ট ডকুমেন্ট স্ক্যানার ও অটো A4 মেকার (Smart Document Scanner)',
+      englishTitle: 'Auto Edge Detection, Perspective Deskew, Shadow Clean & Multi-Page A4 PDF',
+      subtitle:
+        'মোবাইল দিয়ে তোলা আঁকাবাঁকা ও ছায়াযুক্ত দরখাস্ত, সনদপত্র, রসিদ বা দলিলের ছবি এক ক্লিকে সোজা, অটো ক্রপ, ছায়া দূর ও বহু-পৃষ্ঠা প্রিন্ট-রেডি A4 সাইজ ও PDF তৈরি।',
+      badge: '🔥 নতুন ফিচার: AI স্ক্যানার ও অটো A4',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
+      icon: <FileText className="w-7 h-7 text-emerald-600" />,
+      iconBg: 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200',
+      onClick: () => onSelectSection('doc-scanner'),
+      actionLabel: 'ডকুমেন্ট স্ক্যানার ও A4 শুরু করুন',
+      presets: [
+        { label: '📄 পেপার স্ক্যান ও A4', preset: 'a4-full' as PhotoSizePreset, targetSection: 'doc-scanner' as StudioSection },
+        { label: '📑 বহু-পৃষ্ঠা PDF মেকার', preset: 'custom' as PhotoSizePreset, targetSection: 'doc-scanner' as StudioSection },
+      ],
+    },
+    {
       id: 'multi-photo',
       title: 'ডিজিটাল ফটো ও প্রিন্ট স্টুডিও (Digital Photo & Print Studio)',
       englishTitle: 'Passport, Stamp, Visa, Full A4 & Custom Multi-Size Photos',
@@ -49,10 +67,10 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
       onClick: () => onSelectSection('multi-photo', 'passport-bd'),
       actionLabel: 'ফটো স্টুডিও শুরু করুন',
       presets: [
-        { label: 'পাসপোর্ট (৩৫×৪৫)', preset: 'passport-bd' as PhotoSizePreset },
-        { label: 'স্ট্যাম্প (২০×২৫)', preset: 'stamp' as PhotoSizePreset },
-        { label: 'ফুল A4 পেজ', preset: 'a4-full' as PhotoSizePreset },
-        { label: 'কাস্টম মাপ', preset: 'custom' as PhotoSizePreset },
+        { label: 'পাসপোর্ট (৩৫×৪৫)', preset: 'passport-bd' as PhotoSizePreset, targetSection: 'multi-photo' as StudioSection },
+        { label: 'স্ট্যাম্প (২০×২৫)', preset: 'stamp' as PhotoSizePreset, targetSection: 'multi-photo' as StudioSection },
+        { label: 'ফুল A4 পেজ', preset: 'a4-full' as PhotoSizePreset, targetSection: 'multi-photo' as StudioSection },
+        { label: 'কাস্টম মাপ', preset: 'custom' as PhotoSizePreset, targetSection: 'multi-photo' as StudioSection },
       ],
     },
     {
@@ -202,13 +220,13 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
                       দ্রুত সাইজ নির্বাচন:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {tool.presets.map((p) => (
+                      {tool.presets.map((p, pIdx) => (
                         <button
-                          key={p.preset}
+                          key={`${tool.id}-${p.preset}-${pIdx}`}
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSelectSection('multi-photo', p.preset);
+                            onSelectSection((p as any).targetSection || (tool.id as StudioSection), p.preset);
                           }}
                           className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[11px] font-bold border border-slate-200 hover:border-indigo-200 transition cursor-pointer"
                         >
