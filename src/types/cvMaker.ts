@@ -58,6 +58,12 @@ export interface PersonalDetails {
   github: string;
   nationality?: string;
   workAuth?: string;
+  fatherName?: string;
+  motherName?: string;
+  dateOfBirth?: string;
+  permanentAddress?: string;
+  signatureUrl?: string;
+  includePersonalDetailsBlock?: boolean;
 }
 
 export interface WorkExperience {
@@ -141,6 +147,7 @@ export interface CVData {
   certifications: CertificationItem[];
   references: ReferenceItem[];
   customSections?: CustomSection[];
+  aiExtraSections?: CustomSection[];
 }
 
 export interface PaymentTransaction {
@@ -161,4 +168,101 @@ export interface CVQualityIssue {
   field: string;
   messageBn: string;
   messageEn: string;
+}
+
+export interface CircularAnalysis {
+  organizationName: string;
+  jobTitle: string;
+  jobSummary: string;
+  responsibilities: string[];
+  educationalRequirements: string[];
+  experienceRequirements: string;
+  requiredSkills: string[];
+  ageRequirement: string;
+  deadline: string;
+  requiredDocuments: string[];
+  applicationInstructions: string;
+  otherRequirements: string[];
+  requiresPhoto?: boolean;
+  requiresSignature?: boolean;
+  suggestedCvLanguage: 'en' | 'bn';
+  suggestedCategory: CVCategory;
+  sourceFileName?: string;
+}
+
+export interface ApplicantInterviewProfile {
+  fullName: string;
+  fatherName: string;
+  motherName: string;
+  dateOfBirth: string;
+  phone: string;
+  email: string;
+  presentAddress: string;
+  permanentAddress: string;
+  city: string;
+  country: string;
+  nationality: string;
+  linkedin: string;
+  portfolio: string;
+  github: string;
+  photoUrl: string;
+  signatureUrl: string;
+  targetCompany: string;
+  targetJobTitle: string;
+  careerGoalNote: string;
+  strongestQualities: string;
+  hasWorkExperience: boolean | null;
+  education: EducationItem[];
+  experience: WorkExperience[];
+  skills: SkillItem[];
+  languages: LanguageItem[];
+  projects: ProjectItem[];
+  certifications: CertificationItem[];
+  trainings: string[];
+  awards: string[];
+  references: ReferenceItem[];
+  drivingLicense: string;
+  professionalMembership: string;
+  applyingAbroad: string;
+  noticePeriod: string;
+  expectedSalary: string;
+  currentlyEmployed: string;
+  preferredCvLanguage: 'en' | 'bn';
+}
+
+export interface InterviewMessage {
+  id: string;
+  role: 'ai' | 'user';
+  text: string;
+  stepKey?: string;
+  attachmentName?: string;
+  attachmentType?: 'circular' | 'certificate' | 'photo' | 'signature';
+  circularSummary?: CircularAnalysis;
+  quickReplies?: string[];
+  suggestedSkills?: string[];
+  timestamp: string;
+}
+
+export interface CVTailoringReport {
+  atsScoreEstimate: number;
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  tailoringNotesBn: string;
+  tailoringNotesEn: string;
+  recommendedCategory: CVCategory;
+  recommendedTemplateIds: string[];
+}
+
+export interface SavedJobCV {
+  id: string;
+  title: string;
+  targetCompany: string;
+  targetJobTitle: string;
+  templateId: string;
+  cvLanguage: 'en' | 'bn';
+  cvData: CVData;
+  circularSummary?: CircularAnalysis | null;
+  tailoringReport?: CVTailoringReport | null;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -17,6 +17,8 @@ import { STUDYMATE_MASTER_SYSTEM_PROMPT } from './src/data/studymateMasterPrompt
 import { APP_VERSION_CONFIG } from './src/versionConfig.ts';
 import { TOOLS_SEO_REGISTRY, HOMEPAGE_SEO } from './src/data/seoToolsData.ts';
 import { injectSeoTagsIntoHtml } from './src/utils/seoHtmlRenderer.ts';
+import { createShopRouter } from './server/shopStore.ts';
+import { createCvHelperRouter } from './server/cvHelperRoutes.ts';
 
 const STUDYMATE_SYSTEM_INSTRUCTION = STUDYMATE_MASTER_SYSTEM_PROMPT;
 
@@ -191,6 +193,16 @@ async function startServer() {
     }
     next();
   });
+
+  // ----------------------------------------------------
+  // My Digital Shop Management Multi-Tenant API (/api/shop/*)
+  // ----------------------------------------------------
+  app.use('/api/shop', createShopRouter(path.resolve(__dirname, '.data'), FIREBASE_PROJECT_ID));
+
+  // ----------------------------------------------------
+  // Job CV Making Helper AI & Private Library API (/api/cv-helper/*)
+  // ----------------------------------------------------
+  app.use('/api/cv-helper', createCvHelperRouter(path.resolve(__dirname, '.data'), FIREBASE_PROJECT_ID, ai));
 
   // Chat & Visual Question Solver API
   app.post('/api/studymate/chat', async (req, res) => {

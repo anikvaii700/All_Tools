@@ -309,6 +309,26 @@ export const TOOLS_SEO_REGISTRY: Record<string, ToolSeoInfo> = {
     applicationCategory: 'FinanceApplication',
     keywords: ['invoice maker', 'অনলাইন ইনভয়েস', 'মানি রিসিট তৈরি', 'ক্যাশ বিল মেমো', 'invoice pdf'],
   },
+  'my-digital-shop': {
+    id: 'my-digital-shop',
+    slug: 'my-digital-shop',
+    title: 'My Digital Shop Management – মাল্টি-ইউজার ডিজিটাল দোকান ম্যানেজমেন্ট',
+    h1: 'My Digital Shop Management – ১২ ধরনের দোকানের স্মার্ট ম্যানেজমেন্ট',
+    description:
+      'মোবাইল শপ, কম্পিউটার, ইলেকট্রনিক্স, গ্রোসারি, ফার্মেসি ও ফ্যাশনসহ ১২টি ক্যাটাগরির দোকানের জন্য স্বতন্ত্র অ্যাকাউন্ট, ভিজিটিং কার্ড স্টুডিও, স্টক, বাকি খাতা ও ক্যাশ মেমো সিস্টেম।',
+    path: '/tools/my-digital-shop',
+    canonicalUrl: 'https://tools.mosafabd.com/tools/my-digital-shop',
+    ogImage: DEFAULT_OG_IMAGE,
+    category: 'Business & Finance',
+    applicationCategory: 'BusinessApplication',
+    keywords: [
+      'my digital shop management',
+      'ডিজিটাল দোকান ম্যানেজমেন্ট',
+      'mobile shop management bangladesh',
+      'দোকানের বাকি খাতা ও স্টক',
+      'ভিজিটিং কার্ড ও ক্যাশ মেমো',
+    ],
+  },
   'bangla-text-converter': {
     id: 'bangla-text-converter',
     slug: 'bangla-text-converter',

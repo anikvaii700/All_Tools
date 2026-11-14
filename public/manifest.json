@@ -35,5 +35,13 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Digital Shop Management",
+      "short_name": "Digital Shop",
+      "url": "/tools/my-digital-shop",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

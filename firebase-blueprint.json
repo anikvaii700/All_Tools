@@ -152,6 +152,312 @@
         "createdAt": { "type": "string", "description": "Grant timestamp" }
       },
       "required": ["adminId", "role"]
+    },
+    "ShopProfile": {
+      "title": "ShopProfile",
+      "description": "Independent My Digital Shop Management tenant profile owned by an isolated shop Auth UID",
+      "type": "object",
+      "properties": {
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopCategory": {
+          "type": "string",
+          "enum": [
+            "mobile-shop",
+            "computer-laptop",
+            "electronics",
+            "general-store",
+            "grocery",
+            "clothing-fashion",
+            "cosmetics-beauty",
+            "pharmacy",
+            "stationery-book",
+            "gift-accessories",
+            "hardware-building",
+            "other-shop"
+          ]
+        },
+        "shopName": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "tagline": { "type": "string", "maxLength": 240 },
+        "subtitle": { "type": "string", "maxLength": 180 },
+        "ownerName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "phone": { "type": "string", "minLength": 5, "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 180 },
+        "website": { "type": "string", "maxLength": 200 },
+        "address": { "type": "string", "maxLength": 400 },
+        "tradeLicense": { "type": "string", "maxLength": 100 },
+        "binVatNumber": { "type": "string", "maxLength": 100 },
+        "bkashNumber": { "type": "string", "maxLength": 60 },
+        "nagadNumber": { "type": "string", "maxLength": 60 },
+        "rocketNumber": { "type": "string", "maxLength": 60 },
+        "bankName": { "type": "string", "maxLength": 120 },
+        "bankAccountName": { "type": "string", "maxLength": 120 },
+        "bankAccountNumber": { "type": "string", "maxLength": 80 },
+        "brandColor": { "type": "string", "maxLength": 24 },
+        "language": { "type": "string", "enum": ["bn", "en"] },
+        "defaultTemplate": { "type": "string", "maxLength": 60 },
+        "defaultInvoiceFooter": { "type": "string", "maxLength": 300 },
+        "religiousHeader": { "type": "string", "maxLength": 120 },
+        "signatureTitle": { "type": "string", "maxLength": 100 },
+        "authType": { "type": "string", "enum": ["phone", "email"] },
+        "loginIdentifier": { "type": "string", "maxLength": 180 },
+        "hasLogo": { "type": "boolean" },
+        "hasVisitingCard": { "type": "boolean" },
+        "visitingCardMode": { "type": "string", "enum": ["none", "uploaded", "created"] },
+        "visitingCardTemplate": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["shopId", "ownerUid", "shopCategory", "shopName", "ownerName", "phone", "createdAt", "updatedAt"]
+    },
+    "ShopAsset": {
+      "title": "ShopAsset",
+      "description": "Compressed branding media asset (logo, visiting card, or signature) isolated per shop",
+      "type": "object",
+      "properties": {
+        "assetId": { "type": "string", "enum": ["branding_logo", "branding_card", "branding_sig"] },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "assetType": { "type": "string", "enum": ["logo", "visiting_card", "signature"] },
+        "mimeType": { "type": "string", "maxLength": 60 },
+        "dataUrl": { "type": "string", "maxLength": 650000 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["assetId", "shopId", "ownerUid", "assetType", "dataUrl", "updatedAt"]
+    },
+    "ShopProduct": {
+      "title": "ShopProduct",
+      "description": "Shop inventory product with category-specific custom fields",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "sku": { "type": "string", "maxLength": 80 },
+        "category": { "type": "string", "maxLength": 100 },
+        "brand": { "type": "string", "maxLength": 100 },
+        "model": { "type": "string", "maxLength": 120 },
+        "unit": { "type": "string", "maxLength": 40 },
+        "purchasePrice": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "stock": { "type": "number" },
+        "minStockAlert": { "type": "number" },
+        "warranty": { "type": "string", "maxLength": 80 },
+        "expiryDate": { "type": "string", "maxLength": 30 },
+        "batchNumber": { "type": "string", "maxLength": 80 },
+        "customFields": { "type": "object" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "name", "sellingPrice", "stock", "createdAt", "updatedAt"]
+    },
+    "ShopInvoice": {
+      "title": "ShopInvoice",
+      "description": "Shop Cash Memo / Invoice persisted per shop",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "invoiceNumber": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "invoiceDate": { "type": "string", "maxLength": 30 },
+        "dueDate": { "type": "string", "maxLength": 30 },
+        "paymentStatus": { "type": "string", "enum": ["unpaid", "partial", "paid", "overdue"] },
+        "currency": { "type": "string", "maxLength": 24 },
+        "language": { "type": "string", "enum": ["bn", "en"] },
+        "template": { "type": "string", "maxLength": 60 },
+        "customer": { "type": "object" },
+        "items": { "type": "array" },
+        "invoiceDiscountType": { "type": "string", "enum": ["fixed", "percent"] },
+        "invoiceDiscountValue": { "type": "number" },
+        "shippingCharge": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "terms": { "type": "string", "maxLength": 1000 },
+        "signatureTitle": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "invoiceNumber", "items", "createdAt", "updatedAt"]
+    },
+    "ShopReceipt": {
+      "title": "ShopReceipt",
+      "description": "Shop Money Receipt persisted per shop",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "receiptNumber": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "receiptDate": { "type": "string", "maxLength": 30 },
+        "receivedFrom": { "type": "string", "maxLength": 160 },
+        "customerPhone": { "type": "string", "maxLength": 40 },
+        "amount": { "type": "number" },
+        "amountInWords": { "type": "string", "maxLength": 300 },
+        "paymentMethod": { "type": "string", "enum": ["cash", "bkash", "nagad", "rocket", "bank", "card", "other"] },
+        "paymentPurpose": { "type": "string", "maxLength": 300 },
+        "relatedInvoiceNumber": { "type": "string", "maxLength": 60 },
+        "receivedBy": { "type": "string", "maxLength": 120 },
+        "notes": { "type": "string", "maxLength": 600 },
+        "createdAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "receiptNumber", "amount", "createdAt"]
+    },
+    "ShopCustomer": {
+      "title": "ShopCustomer",
+      "description": "Shop customer contact & due ledger entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "companyName": { "type": "string", "maxLength": 160 },
+        "phone": { "type": "string", "maxLength": 40 },
+        "email": { "type": "string", "maxLength": 160 },
+        "address": { "type": "string", "maxLength": 350 },
+        "totalDue": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 400 },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "name", "createdAt"]
+    },
+    "ShopSupplier": {
+      "title": "ShopSupplier",
+      "description": "Shop vendor/supplier record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "company": { "type": "string", "maxLength": 160 },
+        "phone": { "type": "string", "maxLength": 40 },
+        "address": { "type": "string", "maxLength": 350 },
+        "totalPayable": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 400 },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "name", "createdAt", "updatedAt"]
+    },
+    "ShopExpense": {
+      "title": "ShopExpense",
+      "description": "Shop operating expense entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "category": { "type": "string", "maxLength": 80 },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "maxLength": 30 },
+        "paymentMethod": { "type": "string", "maxLength": 30 },
+        "note": { "type": "string", "maxLength": 400 },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "title", "amount", "date", "createdAt", "updatedAt"]
+    },
+    "ShopRepair": {
+      "title": "ShopRepair",
+      "description": "Device servicing and repair ticket for Mobile, Computer, and Electronics shops",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ticketNumber": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "customerName": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "customerPhone": { "type": "string", "maxLength": 40 },
+        "deviceName": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "serialOrImei": { "type": "string", "maxLength": 100 },
+        "issueDescription": { "type": "string", "maxLength": 500 },
+        "estimatedCost": { "type": "number" },
+        "advancePaid": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "ready", "delivered", "cancelled"] },
+        "receivedDate": { "type": "string", "maxLength": 30 },
+        "deliveryDate": { "type": "string", "maxLength": 30 },
+        "notes": { "type": "string", "maxLength": 400 },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "ticketNumber", "customerName", "deviceName", "status", "createdAt", "updatedAt"]
+    },
+    "ShopDocument": {
+      "title": "ShopDocument",
+      "description": "Saved warranty slips, notes, or custom shop documents",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "docType": { "type": "string", "maxLength": 60 },
+        "content": { "type": "string", "maxLength": 10000 },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "title", "createdAt", "updatedAt"]
+    },
+    "ShopDailySale": {
+      "title": "ShopDailySale",
+      "description": "Quick daily counter sale / daily sales register entry isolated per shop",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "shopId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "date": { "type": "string", "maxLength": 30 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "customerName": { "type": "string", "maxLength": 160 },
+        "paymentMethod": { "type": "string", "enum": ["cash", "bkash", "nagad", "rocket", "bank", "card", "due"] },
+        "totalAmount": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "dueAmount": { "type": "number" },
+        "costAmount": { "type": "number" },
+        "quantity": { "type": "number" },
+        "note": { "type": "string", "maxLength": 400 },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "shopId", "ownerUid", "date", "title", "paymentMethod", "totalAmount", "paidAmount", "dueAmount", "createdAt", "updatedAt"]
+    },
+    "UserCVProfile": {
+      "title": "UserCVProfile",
+      "description": "Reusable personal CV profile (info, education, work history, skills, photo, signature) isolated per user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "profile": { "type": "object" },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["userId", "profile", "updatedAt"]
+    },
+    "UserSavedCV": {
+      "title": "UserSavedCV",
+      "description": "Private job-tailored CV saved to a user's CV library",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "targetCompany": { "type": "string", "maxLength": 160 },
+        "targetJobTitle": { "type": "string", "maxLength": 160 },
+        "templateId": { "type": "string", "maxLength": 60 },
+        "cvLanguage": { "type": "string", "enum": ["en", "bn"] },
+        "cvData": { "type": "object" },
+        "circularSummary": { "type": "object" },
+        "tailoringReport": { "type": "object" },
+        "createdAt": { "type": "string", "maxLength": 60 },
+        "updatedAt": { "type": "string", "maxLength": 60 }
+      },
+      "required": ["id", "userId", "title", "templateId", "cvData", "createdAt", "updatedAt"]
     }
   },
   "firestore": {
@@ -167,6 +473,14 @@
       "schema": "UserDailyManager",
       "description": "User personal Daily Hishab, To-Do list, notes, and habits ledger"
     },
+    "/users/{userId}/cvProfile/{profileId}": {
+      "schema": "UserCVProfile",
+      "description": "User reusable Job CV Helper profile isolated per user"
+    },
+    "/users/{userId}/savedCvs/{cvId}": {
+      "schema": "UserSavedCV",
+      "description": "Private job-specific CVs saved in the user's CV library"
+    },
     "/depositRequests/{requestId}": {
       "schema": "DepositRequest",
       "description": "bKash add money payment verification requests"
@@ -177,6 +491,50 @@
     },
     "/settings/{settingId}": {
       "description": "Public system configurations (paymentMode, developerContact, notices)"
+    },
+    "/shops/{shopId}": {
+      "schema": "ShopProfile",
+      "description": "Isolated My Digital Shop Management profile per shop account"
+    },
+    "/shops/{shopId}/assets/{assetId}": {
+      "schema": "ShopAsset",
+      "description": "Shop logo, visiting card, and signature assets isolated per shop"
+    },
+    "/shops/{shopId}/products/{productId}": {
+      "schema": "ShopProduct",
+      "description": "Shop products and inventory items with category-specific fields"
+    },
+    "/shops/{shopId}/invoices/{invoiceId}": {
+      "schema": "ShopInvoice",
+      "description": "Shop Cash Memos and Invoices isolated per shop"
+    },
+    "/shops/{shopId}/receipts/{receiptId}": {
+      "schema": "ShopReceipt",
+      "description": "Shop Money Receipts isolated per shop"
+    },
+    "/shops/{shopId}/customers/{customerId}": {
+      "schema": "ShopCustomer",
+      "description": "Shop customers and due balances isolated per shop"
+    },
+    "/shops/{shopId}/suppliers/{supplierId}": {
+      "schema": "ShopSupplier",
+      "description": "Shop suppliers and payables isolated per shop"
+    },
+    "/shops/{shopId}/expenses/{expenseId}": {
+      "schema": "ShopExpense",
+      "description": "Shop expense records isolated per shop"
+    },
+    "/shops/{shopId}/repairs/{repairId}": {
+      "schema": "ShopRepair",
+      "description": "Shop repair and servicing records isolated per shop"
+    },
+    "/shops/{shopId}/documents/{docId}": {
+      "schema": "ShopDocument",
+      "description": "Shop custom documents and notes isolated per shop"
+    },
+    "/shops/{shopId}/dailySales/{saleId}": {
+      "schema": "ShopDailySale",
+      "description": "Shop daily counter sales register entries isolated per shop"
     }
   }
 }

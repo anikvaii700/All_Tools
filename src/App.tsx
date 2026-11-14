@@ -41,6 +41,7 @@ import {
   Home,
   Briefcase,
   Layers,
+  Store,
 } from 'lucide-react';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { useAppUpdateSync } from './hooks/useAppUpdateSync';
@@ -95,6 +96,7 @@ const AllFormFillup = React.lazy(() => import('./components/all-form-fillup/AllF
 const JobPhotoSignatureResizer = React.lazy(() => import('./components/job-resizer/JobPhotoSignatureResizer').then((m) => ({ default: m.JobPhotoSignatureResizer })));
 const UltraDigitalStudio = React.lazy(() => import('./components/ultra-studio/UltraDigitalStudio').then((m) => ({ default: m.UltraDigitalStudio })));
 const LegalPagesModal = React.lazy(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPagesModal })));
+const MyDigitalShopApp = React.lazy(() => import('./shop/MyDigitalShopApp').then((m) => ({ default: m.MyDigitalShopApp })));
 
 export type ToolId =
   | 'ultra-digital-studio'
@@ -125,6 +127,7 @@ export type ToolId =
   | 'palmistry-ai'
   | 'bd-online-portal'
   | 'content-creator-studio'
+  | 'my-digital-shop'
   | null;
 
 export const VALID_TOOL_IDS: readonly ToolId[] = [
@@ -156,6 +159,7 @@ export const VALID_TOOL_IDS: readonly ToolId[] = [
   'bd-online-portal',
   'content-creator-studio',
   'entrepreneur-journey',
+  'my-digital-shop',
 ];
 
 export const getInitialToolFromUrl = (): ToolId => {
@@ -688,8 +692,32 @@ export default function App() {
     },
 
     // =========================================================================
-    // 3. Business, Finance & Entrepreneur (ব্যবসা ও হিসাব - ৪টি টুল)
+    // 3. Business, Finance & Entrepreneur (ব্যবসা ও হিসাব - ৫টি টুল)
     // =========================================================================
+    {
+      id: 'my-digital-shop',
+      title: 'My Digital Shop Management — ডিজিটাল দোকান ম্যানেজমেন্ট',
+      badge: '🏪 মাল্টি-শপ পস ও অ্যাকাউন্ট',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      category: 'business',
+      iconBg: 'from-emerald-600 via-teal-600 to-slate-800',
+      icon: <Store className="w-6 h-6 text-white" />,
+      description:
+        'স্বতন্ত্র অ্যাকাউন্টসহ ১২ ধরনের দোকানের পূর্ণাঙ্গ ডিজিটাল ব্যবস্থাপনা — ৭ ধাপে রেজিস্ট্রেশন, লোগো ও ভিজিটিং কার্ড স্টুডিও, মোবাইল শপ ক্যাশ মেমো, স্টক, বাকি খাতা ও রিপোর্ট।',
+      deviceTarget: 'both',
+      deviceTag: '📱💻 মোবাইল ও কম্পিউটারে ব্যবহারযোগ্য (PWA)',
+      keywords: [
+        'my digital shop management',
+        'digital shop',
+        'দোকান ম্যানেজমেন্ট',
+        'mobile shop software',
+        'ক্যাশ মেমো',
+        'দোকানের হিসাব',
+        'ভিজিটিং কার্ড',
+        'inventory',
+        'pos bangladesh',
+      ],
+    },
     {
       id: 'invoice-maker',
       title: 'MoSaFa Invoice Maker — ইনভয়েস ও রিসিট মেকার',
@@ -1433,6 +1461,9 @@ export default function App() {
   }
   if (activeTool === 'cv-maker') {
     return wrapWithNavbar(<CVMaker onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+  }
+  if (activeTool === 'my-digital-shop') {
+    return wrapWithNavbar(<MyDigitalShopApp onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
   if (activeTool === 'invoice-maker') {
     return wrapWithNavbar(<InvoiceMaker onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);

@@ -38,6 +38,7 @@ import {
   LogOut,
   LogIn,
   X,
+  Store,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { BanglaLiveDateTimeWidget } from './BanglaLiveDateTimeWidget';
@@ -144,6 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'name-reveal', name: 'নামের গোপন রহস্য ও বিশ্লেষণ', icon: <Sparkles className="w-3.5 h-3.5 text-rose-500" />, category: 'বিনোদন ও কুইজ', badge: 'রহস্য' },
 
     // 5. হিসাব, ব্যবসা ও পরিবার
+    { id: 'my-digital-shop', name: 'My Digital Shop Management (ডিজিটাল দোকান ম্যানেজমেন্ট)', icon: <Store className="w-3.5 h-3.5 text-emerald-700" />, category: 'হিসাব ও পরিবার', badge: 'দোকান সিস্টেম' },
     { id: 'all-form-fillup', name: 'MoSaFa All Form Fillup (সকল ফরম ফিলআপ ও রসিদ)', icon: <FileText className="w-3.5 h-3.5 text-rose-600" />, category: 'হিসাব ও পরিবার', badge: 'ফরম মেকার' },
     { id: 'entrepreneur-journey', name: 'MoSaFa Entrepreneur Journey (উদ্যোক্তা প্ল্যাটফর্ম)', icon: <Briefcase className="w-3.5 h-3.5 text-rose-600" />, category: 'হিসাব ও পরিবার', badge: 'উদ্যোক্তা' },
     { id: 'invoice-maker', name: 'MoSaFa Invoice Maker (ইনভয়েস ও মানি রিসিট)', icon: <Receipt className="w-3.5 h-3.5 text-emerald-600" />, category: 'হিসাব ও পরিবার', badge: 'ইনভয়েস' },

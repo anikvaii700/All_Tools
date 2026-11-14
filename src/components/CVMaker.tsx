@@ -27,12 +27,16 @@ import {
   Edit3,
   UserCheck,
   User,
+  FolderOpen,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { CVData, CVTemplate, PaymentTransaction, CVQualityIssue } from '../types/cvMaker';
 import { CV_CATEGORIES, CV_TEMPLATES } from '../data/cvTemplates';
 import { SAMPLE_CV_DATA, INITIAL_EMPTY_CV_DATA } from '../data/sampleCVData';
 import { CVRenderer } from './cv/CVRenderer';
 import { CVMasterProfileModal, MASTER_PROFILE_STORAGE_KEY } from './cv/CVMasterProfileModal';
+import { JobCVHelperWorkspace } from './cv/JobCVHelperWorkspace';
+import { exportCvToDocx } from '../utils/cvDocxExport';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { DownloadPaywallModal } from './DownloadPaywallModal';
@@ -44,7 +48,8 @@ interface CVMakerProps {
 
 export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) => {
   // Active Navigation Tab
-  const [activeTab, setActiveTab] = useState<'editor' | 'templates' | 'preview' | 'quality' | 'payments'>('templates');
+  const [activeTab, setActiveTab] = useState<'editor' | 'templates' | 'preview' | 'quality' | 'payments' | 'job-helper'>('templates');
+  const [helperInitialView, setHelperInitialView] = useState<'hub' | 'interview' | 'result' | 'saved' | 'profile'>('hub');
 
   // Selected Template
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('tmpl-01');
@@ -563,6 +568,22 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     executeWithPaywall(performDownloadPDF);
   };
 
+  const performDownloadDOCX = async () => {
+    try {
+      await exportCvToDocx(cvData, 'en', currentTemplate.primaryColor);
+      onShowToast('Word (.docx) ফাইল সফলভাবে ডাউনলোড হয়েছে!', '📄');
+    } catch (err) {
+      console.error('DOCX export error:', err);
+      onShowToast('DOCX তৈরি করতে সমস্যা হয়েছে।', '⚠️');
+    }
+  };
+
+  const handleDownloadDOCX = () => {
+    executeWithPaywall(() => {
+      void performDownloadDOCX();
+    });
+  };
+
   return (
     <div className="relative">
       {/* Screen-only UI Container (Hidden completely when printing) */}
@@ -643,6 +664,16 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
 
             <button
               type="button"
+              onClick={handleDownloadDOCX}
+              className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Word (.docx) হিসেবে ডাউনলোড করুন"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>DOCX</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handleDownloadPDF}
               disabled={isDownloadingPdf}
               className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-200 disabled:opacity-50"
@@ -666,6 +697,23 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
             <Palette className="w-4 h-4" />
             <span>১০০টি টেমপ্লেট গ্যালারি</span>
             <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded-full font-bold">১০০টি ফ্রি</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setHelperInitialView('hub');
+              setActiveTab('job-helper');
+            }}
+            className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
+              activeTab === 'job-helper'
+                ? 'bg-indigo-600 text-white border border-indigo-600 shadow-sm'
+                : 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Job CV Making Helper</span>
+            <span className="text-[10px] bg-rose-500 text-white px-1.5 py-0.2 rounded-full font-extrabold">AI</span>
           </button>
 
           <button
@@ -750,6 +798,58 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
               </div>
             </div>
           </div>
+
+          {/* Dedicated Independent Feature Section: Job CV Making Helper */}
+          <section className="mb-8 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-7 text-white shadow-xl border border-indigo-400/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/25 border border-indigo-300/30 text-[11px] font-bold text-indigo-200">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>AI-Powered Career Consultant</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight">Job CV Making Helper</h2>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                আপনার পছন্দের চাকরির জন্য AI দিয়ে তৈরি করুন প্রফেশনাল ও চাকরিভিত্তিক CV।
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setHelperInitialView('saved');
+                  setActiveTab('job-helper');
+                }}
+                className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
+              >
+                <FolderOpen className="w-4 h-4" />
+                <span>আমার তৈরি CV</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setHelperInitialView('profile');
+                  setActiveTab('job-helper');
+                }}
+                className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
+              >
+                <User className="w-4 h-4" />
+                <span>আমার প্রোফাইল</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setHelperInitialView('interview');
+                  setActiveTab('job-helper');
+                }}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-indigo-500 hover:from-rose-600 hover:to-indigo-600 text-white text-xs sm:text-sm font-black flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>AI দিয়ে CV তৈরি করুন</span>
+              </button>
+            </div>
+          </section>
 
           {/* Search & Category Filter Controls */}
           <div className="space-y-4 mb-8">
@@ -1629,6 +1729,16 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
 
               <button
                 type="button"
+                onClick={handleDownloadDOCX}
+                className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                title="Word (.docx) ফাইল হিসেবে ডাউনলোড করুন"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>DOCX ডাউনলোড</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleDownloadPDF}
                 disabled={isDownloadingPdf}
                 className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-200 disabled:opacity-50"
@@ -1795,6 +1905,36 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
               </div>
             )}
           </div>
+        </main>
+      )}
+
+      {/* ================= TAB 6: JOB CV MAKING HELPER ================= */}
+      {activeTab === 'job-helper' && (
+        <main className="max-w-7xl mx-auto px-4 py-6">
+          <JobCVHelperWorkspace
+            initialView={helperInitialView}
+            onApplyToMainEditor={(nextData, tmplId, targetTab) => {
+              setCvData(nextData);
+              setSelectedTemplateId(tmplId);
+              setActiveTab(targetTab || 'editor');
+              onShowToast('CV তথ্য মূল এডিটরে লোড হয়েছে!', '✏️');
+            }}
+            onTriggerPdfDownload={(nextData, tmplId) => {
+              setCvData(nextData);
+              setSelectedTemplateId(tmplId);
+              setTimeout(() => {
+                handleDownloadPDF();
+              }, 160);
+            }}
+            onTriggerPrint={(nextData, tmplId) => {
+              setCvData(nextData);
+              setSelectedTemplateId(tmplId);
+              setTimeout(() => {
+                handlePrintCV();
+              }, 160);
+            }}
+            onShowToast={onShowToast}
+          />
         </main>
       )}
 

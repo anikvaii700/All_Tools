@@ -155,6 +155,59 @@ service cloud.firestore {
         allow create, update: if (isOwner(userId) || isAdmin()) && isValidId(docId) && incoming().userId == userId;
         allow delete: if isOwner(userId) || isAdmin();
       }
+
+      // Subcollection: Private Job CV Helper Reusable Profile
+      match /cvProfile/{profileId} {
+        allow get, list: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) &&
+          isValidId(profileId) &&
+          incoming().userId == userId &&
+          incoming().profile is map &&
+          incoming().updatedAt is string && incoming().updatedAt.size() <= 60 &&
+          incoming().keys().hasAll(['userId', 'profile', 'updatedAt']) &&
+          incoming().keys().hasOnly(['userId', 'profile', 'updatedAt']);
+        allow update: if isOwner(userId) &&
+          isValidId(profileId) &&
+          incoming().userId == existing().userId &&
+          incoming().profile is map &&
+          incoming().updatedAt is string && incoming().updatedAt.size() <= 60 &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['profile', 'updatedAt']);
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
+      // Subcollection: Private Saved Job-Specific CVs
+      match /savedCvs/{cvId} {
+        allow get: if isValidId(cvId) && (isOwner(userId) || isAdmin());
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isOwner(userId) &&
+          isValidId(cvId) &&
+          incoming().id == cvId &&
+          incoming().userId == userId &&
+          incoming().title is string && incoming().title.size() >= 1 && incoming().title.size() <= 200 &&
+          incoming().templateId is string && incoming().templateId.size() <= 60 &&
+          incoming().cvData is map &&
+          incoming().createdAt is string && incoming().createdAt.size() <= 60 &&
+          incoming().updatedAt is string && incoming().updatedAt.size() <= 60 &&
+          incoming().keys().hasAll(['id', 'userId', 'title', 'templateId', 'cvData', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly([
+            'id', 'userId', 'title', 'targetCompany', 'targetJobTitle',
+            'templateId', 'cvLanguage', 'cvData', 'circularSummary',
+            'tailoringReport', 'createdAt', 'updatedAt'
+          ]);
+        allow update: if isOwner(userId) &&
+          isValidId(cvId) &&
+          incoming().id == existing().id &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().title is string && incoming().title.size() >= 1 && incoming().title.size() <= 200 &&
+          incoming().templateId is string && incoming().templateId.size() <= 60 &&
+          incoming().cvData is map &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'targetCompany', 'targetJobTitle', 'templateId', 'cvLanguage',
+            'cvData', 'circularSummary', 'tailoringReport', 'updatedAt'
+          ]);
+        allow delete: if isValidId(cvId) && (isOwner(userId) || isAdmin());
+      }
     }
 
     // ----------------------------------------------------
@@ -202,6 +255,520 @@ service cloud.firestore {
     match /test/{docId} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // ====================================================
+    // MY DIGITAL SHOP MANAGEMENT (Multi-Tenant Isolation)
+    // ====================================================
+
+    function isShopTenantOwner(shopId) {
+      return isOwner(shopId) &&
+        exists(/databases/$(database)/documents/shops/$(shopId)) &&
+        get(/databases/$(database)/documents/shops/$(shopId)).data.ownerUid == request.auth.uid;
+    }
+
+    function isValidShopCategory(cat) {
+      return cat in [
+        'mobile-shop',
+        'computer-laptop',
+        'electronics',
+        'general-store',
+        'grocery',
+        'clothing-fashion',
+        'cosmetics-beauty',
+        'pharmacy',
+        'stationery-book',
+        'gift-accessories',
+        'hardware-building',
+        'other-shop'
+      ];
+    }
+
+    function isValidShop(data, shopId) {
+      return data.shopId is string && data.shopId == shopId && isValidId(data.shopId) &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.shopCategory is string && isValidShopCategory(data.shopCategory) &&
+        data.shopName is string && data.shopName.size() >= 1 && data.shopName.size() <= 160 &&
+        data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 120 &&
+        data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 30 &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60 &&
+        (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 240)) &&
+        (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 180)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 180)) &&
+        (!('website' in data) || (data.website is string && data.website.size() <= 200)) &&
+        (!('address' in data) || (data.address is string && data.address.size() <= 400)) &&
+        (!('tradeLicense' in data) || (data.tradeLicense is string && data.tradeLicense.size() <= 100)) &&
+        (!('binVatNumber' in data) || (data.binVatNumber is string && data.binVatNumber.size() <= 100)) &&
+        (!('bkashNumber' in data) || (data.bkashNumber is string && data.bkashNumber.size() <= 60)) &&
+        (!('nagadNumber' in data) || (data.nagadNumber is string && data.nagadNumber.size() <= 60)) &&
+        (!('rocketNumber' in data) || (data.rocketNumber is string && data.rocketNumber.size() <= 60)) &&
+        (!('bankName' in data) || (data.bankName is string && data.bankName.size() <= 120)) &&
+        (!('bankAccountName' in data) || (data.bankAccountName is string && data.bankAccountName.size() <= 120)) &&
+        (!('bankAccountNumber' in data) || (data.bankAccountNumber is string && data.bankAccountNumber.size() <= 80)) &&
+        (!('brandColor' in data) || (data.brandColor is string && data.brandColor.size() <= 24)) &&
+        (!('language' in data) || data.language in ['bn', 'en']) &&
+        (!('defaultTemplate' in data) || (data.defaultTemplate is string && data.defaultTemplate.size() <= 60)) &&
+        (!('defaultInvoiceFooter' in data) || (data.defaultInvoiceFooter is string && data.defaultInvoiceFooter.size() <= 300)) &&
+        (!('religiousHeader' in data) || (data.religiousHeader is string && data.religiousHeader.size() <= 120)) &&
+        (!('signatureTitle' in data) || (data.signatureTitle is string && data.signatureTitle.size() <= 100)) &&
+        (!('authType' in data) || data.authType in ['phone', 'email']) &&
+        (!('loginIdentifier' in data) || (data.loginIdentifier is string && data.loginIdentifier.size() <= 180)) &&
+        (!('hasLogo' in data) || data.hasLogo is bool) &&
+        (!('hasVisitingCard' in data) || data.hasVisitingCard is bool) &&
+        (!('visitingCardMode' in data) || data.visitingCardMode in ['none', 'uploaded', 'created']) &&
+        (!('visitingCardTemplate' in data) || (data.visitingCardTemplate is string && data.visitingCardTemplate.size() <= 50));
+    }
+
+    function isValidShopAsset(data, shopId, assetId) {
+      return data.assetId is string && data.assetId == assetId &&
+        data.assetId in ['branding_logo', 'branding_card', 'branding_sig'] &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.assetType is string && data.assetType in ['logo', 'visiting_card', 'signature'] &&
+        data.mimeType is string && data.mimeType.size() <= 60 &&
+        data.dataUrl is string && data.dataUrl.size() <= 650000 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60;
+    }
+
+    function isValidShopProduct(data, shopId, productId) {
+      return data.id is string && data.id == productId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 180 &&
+        data.sellingPrice is number && data.sellingPrice >= 0 &&
+        data.stock is number && data.stock >= 0 &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60 &&
+        (!('sku' in data) || (data.sku is string && data.sku.size() <= 80)) &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+        (!('brand' in data) || (data.brand is string && data.brand.size() <= 100)) &&
+        (!('model' in data) || (data.model is string && data.model.size() <= 120)) &&
+        (!('unit' in data) || (data.unit is string && data.unit.size() <= 40)) &&
+        (!('purchasePrice' in data) || (data.purchasePrice is number && data.purchasePrice >= 0)) &&
+        (!('minStockAlert' in data) || (data.minStockAlert is number && data.minStockAlert >= 0)) &&
+        (!('warranty' in data) || (data.warranty is string && data.warranty.size() <= 80)) &&
+        (!('expiryDate' in data) || (data.expiryDate is string && data.expiryDate.size() <= 30)) &&
+        (!('batchNumber' in data) || (data.batchNumber is string && data.batchNumber.size() <= 80)) &&
+        (!('customFields' in data) || data.customFields is map) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+        (!('isActive' in data) || data.isActive is bool);
+    }
+
+    function isValidShopInvoice(data, shopId, invoiceId) {
+      return data.id is string && data.id == invoiceId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.invoiceNumber is string && data.invoiceNumber.size() >= 1 && data.invoiceNumber.size() <= 60 &&
+        data.invoiceDate is string && data.invoiceDate.size() <= 30 &&
+        data.dueDate is string && data.dueDate.size() <= 30 &&
+        data.paymentStatus is string && data.paymentStatus in ['unpaid', 'partial', 'paid', 'overdue'] &&
+        data.currency is string && data.currency.size() <= 24 &&
+        data.language is string && data.language in ['bn', 'en'] &&
+        data.template is string && data.template.size() <= 60 &&
+        data.customer is map &&
+        data.items is list && data.items.size() >= 1 && data.items.size() <= 100 && data.items[0] is map &&
+        data.invoiceDiscountType is string && data.invoiceDiscountType in ['fixed', 'percent'] &&
+        data.invoiceDiscountValue is number && data.invoiceDiscountValue >= 0 &&
+        data.shippingCharge is number && data.shippingCharge >= 0 &&
+        data.paidAmount is number && data.paidAmount >= 0 &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60 &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+        (!('terms' in data) || (data.terms is string && data.terms.size() <= 1000)) &&
+        (!('signatureTitle' in data) || (data.signatureTitle is string && data.signatureTitle.size() <= 120)) &&
+        (!('signatureImage' in data) || data.signatureImage == null || (data.signatureImage is string && data.signatureImage.size() <= 200000)) &&
+        (!('customerSignatureTitle' in data) || (data.customerSignatureTitle is string && data.customerSignatureTitle.size() <= 120)) &&
+        (!('customInWords' in data) || (data.customInWords is string && data.customInWords.size() <= 300)) &&
+        (!('memoTypeTitle' in data) || (data.memoTypeTitle is string && data.memoTypeTitle.size() <= 80));
+    }
+
+    function isValidShopReceipt(data, shopId, receiptId) {
+      return data.id is string && data.id == receiptId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.receiptNumber is string && data.receiptNumber.size() >= 1 && data.receiptNumber.size() <= 60 &&
+        data.receiptDate is string && data.receiptDate.size() <= 30 &&
+        data.receivedFrom is string && data.receivedFrom.size() <= 160 &&
+        data.amount is number && data.amount >= 0 &&
+        data.paymentMethod is string && data.paymentMethod in ['cash', 'bkash', 'nagad', 'rocket', 'bank', 'card', 'other'] &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        (!('customerPhone' in data) || (data.customerPhone is string && data.customerPhone.size() <= 40)) &&
+        (!('amountInWords' in data) || (data.amountInWords is string && data.amountInWords.size() <= 300)) &&
+        (!('paymentPurpose' in data) || (data.paymentPurpose is string && data.paymentPurpose.size() <= 300)) &&
+        (!('relatedInvoiceNumber' in data) || (data.relatedInvoiceNumber is string && data.relatedInvoiceNumber.size() <= 60)) &&
+        (!('receivedBy' in data) || (data.receivedBy is string && data.receivedBy.size() <= 120)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 600));
+    }
+
+    function isValidShopCustomer(data, shopId, customerId) {
+      return data.id is string && data.id == customerId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 160 &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 160)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 40)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 160)) &&
+        (!('address' in data) || (data.address is string && data.address.size() <= 350)) &&
+        (!('customerId' in data) || (data.customerId is string && data.customerId.size() <= 60)) &&
+        (!('totalDue' in data) || (data.totalDue is number && data.totalDue >= 0)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 400)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60));
+    }
+
+    function isValidShopSupplier(data, shopId, supplierId) {
+      return data.id is string && data.id == supplierId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 160 &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60 &&
+        (!('company' in data) || (data.company is string && data.company.size() <= 160)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 40)) &&
+        (!('address' in data) || (data.address is string && data.address.size() <= 350)) &&
+        (!('totalPayable' in data) || (data.totalPayable is number && data.totalPayable >= 0)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 400));
+    }
+
+    function isValidShopExpense(data, shopId, expenseId) {
+      return data.id is string && data.id == expenseId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+        data.amount is number && data.amount >= 0 &&
+        data.date is string && data.date.size() >= 8 && data.date.size() <= 30 &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60 &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 80)) &&
+        (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() <= 30)) &&
+        (!('note' in data) || (data.note is string && data.note.size() <= 400));
+    }
+
+    function isValidShopRepair(data, shopId, repairId) {
+      return data.id is string && data.id == repairId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.ticketNumber is string && data.ticketNumber.size() >= 1 && data.ticketNumber.size() <= 50 &&
+        data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 140 &&
+        data.deviceName is string && data.deviceName.size() >= 1 && data.deviceName.size() <= 160 &&
+        data.status is string && data.status in ['pending', 'in_progress', 'ready', 'delivered', 'cancelled'] &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60 &&
+        (!('customerPhone' in data) || (data.customerPhone is string && data.customerPhone.size() <= 40)) &&
+        (!('serialOrImei' in data) || (data.serialOrImei is string && data.serialOrImei.size() <= 100)) &&
+        (!('issueDescription' in data) || (data.issueDescription is string && data.issueDescription.size() <= 500)) &&
+        (!('estimatedCost' in data) || (data.estimatedCost is number && data.estimatedCost >= 0)) &&
+        (!('advancePaid' in data) || (data.advancePaid is number && data.advancePaid >= 0)) &&
+        (!('receivedDate' in data) || (data.receivedDate is string && data.receivedDate.size() <= 30)) &&
+        (!('deliveryDate' in data) || (data.deliveryDate is string && data.deliveryDate.size() <= 30)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 400));
+    }
+
+    function isValidShopDocument(data, shopId, docId) {
+      return data.id is string && data.id == docId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 180 &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60 &&
+        (!('docType' in data) || (data.docType is string && data.docType.size() <= 60)) &&
+        (!('content' in data) || (data.content is string && data.content.size() <= 10000));
+    }
+
+    function isValidShopDailySale(data, shopId, saleId) {
+      return data.id is string && data.id == saleId && isValidId(data.id) &&
+        data.shopId is string && data.shopId == shopId &&
+        data.ownerUid is string && data.ownerUid == request.auth.uid &&
+        data.date is string && data.date.size() >= 8 && data.date.size() <= 30 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 180 &&
+        data.paymentMethod is string && data.paymentMethod in ['cash', 'bkash', 'nagad', 'rocket', 'bank', 'card', 'due'] &&
+        data.totalAmount is number && data.totalAmount >= 0 &&
+        data.paidAmount is number && data.paidAmount >= 0 &&
+        data.dueAmount is number && data.dueAmount >= 0 &&
+        data.createdAt is string && data.createdAt.size() >= 8 && data.createdAt.size() <= 60 &&
+        data.updatedAt is string && data.updatedAt.size() >= 8 && data.updatedAt.size() <= 60 &&
+        (!('customerName' in data) || (data.customerName is string && data.customerName.size() <= 160)) &&
+        (!('costAmount' in data) || (data.costAmount is number && data.costAmount >= 0)) &&
+        (!('quantity' in data) || (data.quantity is number && data.quantity >= 0)) &&
+        (!('note' in data) || (data.note is string && data.note.size() <= 400));
+    }
+
+    match /shops/{shopId} {
+      allow get: if isOwner(shopId) && isValidId(shopId);
+      allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+
+      allow create: if isOwner(shopId) &&
+        isValidId(shopId) &&
+        isValidShop(incoming(), shopId) &&
+        incoming().keys().hasAll(['shopId', 'ownerUid', 'shopCategory', 'shopName', 'ownerName', 'phone', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly([
+          'shopId', 'ownerUid', 'shopCategory', 'shopName', 'tagline', 'subtitle',
+          'ownerName', 'phone', 'email', 'website', 'address',
+          'tradeLicense', 'binVatNumber', 'bkashNumber', 'nagadNumber', 'rocketNumber',
+          'bankName', 'bankAccountName', 'bankAccountNumber', 'brandColor', 'language',
+          'defaultTemplate', 'defaultInvoiceFooter', 'religiousHeader', 'signatureTitle',
+          'authType', 'loginIdentifier', 'hasLogo', 'hasVisitingCard', 'visitingCardMode',
+          'visitingCardTemplate', 'createdAt', 'updatedAt'
+        ]);
+
+      allow update: if isOwner(shopId) &&
+        isValidId(shopId) &&
+        isValidShop(incoming(), shopId) &&
+        incoming().shopId == existing().shopId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'shopCategory', 'shopName', 'tagline', 'subtitle', 'ownerName', 'phone',
+          'email', 'website', 'address', 'tradeLicense', 'binVatNumber',
+          'bkashNumber', 'nagadNumber', 'rocketNumber', 'bankName', 'bankAccountName',
+          'bankAccountNumber', 'brandColor', 'language', 'defaultTemplate',
+          'defaultInvoiceFooter', 'religiousHeader', 'signatureTitle',
+          'hasLogo', 'hasVisitingCard', 'visitingCardMode', 'visitingCardTemplate',
+          'updatedAt'
+        ]);
+
+      allow delete: if false;
+
+      match /assets/{assetId} {
+        allow get: if isValidId(assetId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(assetId) && isShopTenantOwner(shopId) &&
+          isValidShopAsset(incoming(), shopId, assetId) &&
+          incoming().keys().hasAll(['assetId', 'shopId', 'ownerUid', 'assetType', 'mimeType', 'dataUrl', 'updatedAt']) &&
+          incoming().keys().hasOnly(['assetId', 'shopId', 'ownerUid', 'assetType', 'mimeType', 'dataUrl', 'updatedAt']);
+        allow update: if isValidId(assetId) && isShopTenantOwner(shopId) &&
+          isValidShopAsset(incoming(), shopId, assetId) &&
+          incoming().assetId == existing().assetId &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['assetType', 'mimeType', 'dataUrl', 'updatedAt']);
+        allow delete: if isValidId(assetId) && isShopTenantOwner(shopId);
+      }
+
+      match /products/{productId} {
+        allow get: if isValidId(productId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(productId) && isShopTenantOwner(shopId) &&
+          isValidShopProduct(incoming(), shopId, productId) &&
+          incoming().keys().hasAll(['id', 'shopId', 'ownerUid', 'name', 'sellingPrice', 'stock', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly([
+            'id', 'shopId', 'ownerUid', 'name', 'sku', 'category', 'brand', 'model',
+            'unit', 'purchasePrice', 'sellingPrice', 'stock', 'minStockAlert',
+            'warranty', 'expiryDate', 'batchNumber', 'customFields', 'notes',
+            'isActive', 'createdAt', 'updatedAt'
+          ]);
+        allow update: if isValidId(productId) && isShopTenantOwner(shopId) &&
+          isValidShopProduct(incoming(), shopId, productId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'sku', 'category', 'brand', 'model', 'unit', 'purchasePrice',
+            'sellingPrice', 'stock', 'minStockAlert', 'warranty', 'expiryDate',
+            'batchNumber', 'customFields', 'notes', 'isActive', 'updatedAt'
+          ]);
+        allow delete: if isValidId(productId) && isShopTenantOwner(shopId);
+      }
+
+      match /invoices/{invoiceId} {
+        allow get: if isValidId(invoiceId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(invoiceId) && isShopTenantOwner(shopId) &&
+          isValidShopInvoice(incoming(), shopId, invoiceId) &&
+          incoming().keys().hasAll([
+            'id', 'shopId', 'ownerUid', 'invoiceNumber', 'invoiceDate', 'dueDate',
+            'paymentStatus', 'currency', 'language', 'template', 'customer', 'items',
+            'invoiceDiscountType', 'invoiceDiscountValue', 'shippingCharge', 'paidAmount',
+            'createdAt', 'updatedAt'
+          ]) &&
+          incoming().keys().hasOnly([
+            'id', 'shopId', 'ownerUid', 'invoiceNumber', 'invoiceDate', 'dueDate',
+            'paymentStatus', 'currency', 'language', 'template', 'customer', 'items',
+            'invoiceDiscountType', 'invoiceDiscountValue', 'shippingCharge', 'paidAmount',
+            'notes', 'terms', 'signatureTitle', 'signatureImage', 'customerSignatureTitle',
+            'customInWords', 'memoTypeTitle', 'createdAt', 'updatedAt'
+          ]);
+        allow update: if isValidId(invoiceId) && isShopTenantOwner(shopId) &&
+          isValidShopInvoice(incoming(), shopId, invoiceId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'invoiceNumber', 'invoiceDate', 'dueDate', 'paymentStatus', 'currency',
+            'language', 'template', 'customer', 'items', 'invoiceDiscountType',
+            'invoiceDiscountValue', 'shippingCharge', 'paidAmount', 'notes', 'terms',
+            'signatureTitle', 'signatureImage', 'customerSignatureTitle',
+            'customInWords', 'memoTypeTitle', 'updatedAt'
+          ]);
+        allow delete: if isValidId(invoiceId) && isShopTenantOwner(shopId);
+      }
+
+      match /receipts/{receiptId} {
+        allow get: if isValidId(receiptId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(receiptId) && isShopTenantOwner(shopId) &&
+          isValidShopReceipt(incoming(), shopId, receiptId) &&
+          incoming().keys().hasAll([
+            'id', 'shopId', 'ownerUid', 'receiptNumber', 'receiptDate',
+            'receivedFrom', 'amount', 'paymentMethod', 'createdAt'
+          ]) &&
+          incoming().keys().hasOnly([
+            'id', 'shopId', 'ownerUid', 'receiptNumber', 'receiptDate', 'receivedFrom',
+            'customerPhone', 'amount', 'amountInWords', 'paymentMethod', 'paymentPurpose',
+            'relatedInvoiceNumber', 'receivedBy', 'notes', 'createdAt'
+          ]);
+        allow update: if isValidId(receiptId) && isShopTenantOwner(shopId) &&
+          isValidShopReceipt(incoming(), shopId, receiptId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'receiptNumber', 'receiptDate', 'receivedFrom', 'customerPhone', 'amount',
+            'amountInWords', 'paymentMethod', 'paymentPurpose', 'relatedInvoiceNumber',
+            'receivedBy', 'notes'
+          ]);
+        allow delete: if isValidId(receiptId) && isShopTenantOwner(shopId);
+      }
+
+      match /customers/{customerId} {
+        allow get: if isValidId(customerId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(customerId) && isShopTenantOwner(shopId) &&
+          isValidShopCustomer(incoming(), shopId, customerId) &&
+          incoming().keys().hasAll(['id', 'shopId', 'ownerUid', 'name', 'createdAt']) &&
+          incoming().keys().hasOnly([
+            'id', 'shopId', 'ownerUid', 'name', 'companyName', 'phone', 'email',
+            'address', 'customerId', 'totalDue', 'notes', 'createdAt', 'updatedAt'
+          ]);
+        allow update: if isValidId(customerId) && isShopTenantOwner(shopId) &&
+          isValidShopCustomer(incoming(), shopId, customerId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'companyName', 'phone', 'email', 'address', 'customerId',
+            'totalDue', 'notes', 'updatedAt'
+          ]);
+        allow delete: if isValidId(customerId) && isShopTenantOwner(shopId);
+      }
+
+      match /suppliers/{supplierId} {
+        allow get: if isValidId(supplierId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(supplierId) && isShopTenantOwner(shopId) &&
+          isValidShopSupplier(incoming(), shopId, supplierId) &&
+          incoming().keys().hasAll(['id', 'shopId', 'ownerUid', 'name', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly([
+            'id', 'shopId', 'ownerUid', 'name', 'company', 'phone', 'address',
+            'totalPayable', 'notes', 'createdAt', 'updatedAt'
+          ]);
+        allow update: if isValidId(supplierId) && isShopTenantOwner(shopId) &&
+          isValidShopSupplier(incoming(), shopId, supplierId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'company', 'phone', 'address', 'totalPayable', 'notes', 'updatedAt'
+          ]);
+        allow delete: if isValidId(supplierId) && isShopTenantOwner(shopId);
+      }
+
+      match /expenses/{expenseId} {
+        allow get: if isValidId(expenseId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(expenseId) && isShopTenantOwner(shopId) &&
+          isValidShopExpense(incoming(), shopId, expenseId) &&
+          incoming().keys().hasAll(['id', 'shopId', 'ownerUid', 'title', 'amount', 'date', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly([
+            'id', 'shopId', 'ownerUid', 'title', 'category', 'amount', 'date',
+            'paymentMethod', 'note', 'createdAt', 'updatedAt'
+          ]);
+        allow update: if isValidId(expenseId) && isShopTenantOwner(shopId) &&
+          isValidShopExpense(incoming(), shopId, expenseId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'category', 'amount', 'date', 'paymentMethod', 'note', 'updatedAt'
+          ]);
+        allow delete: if isValidId(expenseId) && isShopTenantOwner(shopId);
+      }
+
+      match /repairs/{repairId} {
+        allow get: if isValidId(repairId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(repairId) && isShopTenantOwner(shopId) &&
+          isValidShopRepair(incoming(), shopId, repairId) &&
+          incoming().keys().hasAll(['id', 'shopId', 'ownerUid', 'ticketNumber', 'customerName', 'deviceName', 'status', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly([
+            'id', 'shopId', 'ownerUid', 'ticketNumber', 'customerName', 'customerPhone',
+            'deviceName', 'serialOrImei', 'issueDescription', 'estimatedCost', 'advancePaid',
+            'status', 'receivedDate', 'deliveryDate', 'notes', 'createdAt', 'updatedAt'
+          ]);
+        allow update: if isValidId(repairId) && isShopTenantOwner(shopId) &&
+          isValidShopRepair(incoming(), shopId, repairId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'ticketNumber', 'customerName', 'customerPhone', 'deviceName', 'serialOrImei',
+            'issueDescription', 'estimatedCost', 'advancePaid', 'status',
+            'receivedDate', 'deliveryDate', 'notes', 'updatedAt'
+          ]);
+        allow delete: if isValidId(repairId) && isShopTenantOwner(shopId);
+      }
+
+      match /documents/{docId} {
+        allow get: if isValidId(docId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(docId) && isShopTenantOwner(shopId) &&
+          isValidShopDocument(incoming(), shopId, docId) &&
+          incoming().keys().hasAll(['id', 'shopId', 'ownerUid', 'title', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly(['id', 'shopId', 'ownerUid', 'title', 'docType', 'content', 'createdAt', 'updatedAt']);
+        allow update: if isValidId(docId) && isShopTenantOwner(shopId) &&
+          isValidShopDocument(incoming(), shopId, docId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'docType', 'content', 'updatedAt']);
+        allow delete: if isValidId(docId) && isShopTenantOwner(shopId);
+      }
+
+      match /dailySales/{saleId} {
+        allow get: if isValidId(saleId) && isShopTenantOwner(shopId);
+        allow list: if isOwner(shopId) && resource.data.ownerUid == request.auth.uid;
+        allow create: if isValidId(saleId) && isShopTenantOwner(shopId) &&
+          isValidShopDailySale(incoming(), shopId, saleId) &&
+          incoming().keys().hasAll([
+            'id', 'shopId', 'ownerUid', 'date', 'title', 'paymentMethod',
+            'totalAmount', 'paidAmount', 'dueAmount', 'createdAt', 'updatedAt'
+          ]) &&
+          incoming().keys().hasOnly([
+            'id', 'shopId', 'ownerUid', 'date', 'title', 'customerName', 'paymentMethod',
+            'totalAmount', 'paidAmount', 'dueAmount', 'costAmount', 'quantity', 'note',
+            'createdAt', 'updatedAt'
+          ]);
+        allow update: if isValidId(saleId) && isShopTenantOwner(shopId) &&
+          isValidShopDailySale(incoming(), shopId, saleId) &&
+          incoming().id == existing().id &&
+          incoming().shopId == existing().shopId &&
+          incoming().ownerUid == existing().ownerUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'date', 'title', 'customerName', 'paymentMethod', 'totalAmount',
+            'paidAmount', 'dueAmount', 'costAmount', 'quantity', 'note', 'updatedAt'
+          ]);
+        allow delete: if isValidId(saleId) && isShopTenantOwner(shopId);
+      }
     }
   }
 }

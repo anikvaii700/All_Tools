@@ -1490,6 +1490,98 @@ export const CVRenderer: React.FC<CVRendererProps> = ({
           )}
         </div>
       )}
+
+      {/* ================= OPTIONAL JOB CV HELPER EXTENSIONS (EXTRA SECTIONS, BIO BLOCK & SIGNATURE) ================= */}
+      {((data.aiExtraSections && data.aiExtraSections.length > 0) ||
+        (personal.includePersonalDetailsBlock &&
+          Boolean(
+            personal.fatherName ||
+              personal.motherName ||
+              personal.dateOfBirth ||
+              personal.permanentAddress ||
+              personal.nationality
+          )) ||
+        Boolean(personal.signatureUrl)) && (
+        <div className="px-8 pb-8 pt-4 space-y-4 border-t border-slate-200/70 bg-transparent">
+          {data.aiExtraSections &&
+            data.aiExtraSections.map((sec) => (
+              <div key={sec.id} className="space-y-1.5">
+                <h3
+                  className="text-xs font-bold uppercase tracking-wider pb-1 border-b"
+                  style={{ borderColor: `${primary}40`, color: primary }}
+                >
+                  {sec.title}
+                </h3>
+                <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{sec.content}</p>
+              </div>
+            ))}
+
+          {personal.includePersonalDetailsBlock &&
+            (personal.fatherName ||
+              personal.motherName ||
+              personal.dateOfBirth ||
+              personal.permanentAddress ||
+              personal.nationality) && (
+              <div className="space-y-2">
+                <h3
+                  className="text-xs font-bold uppercase tracking-wider pb-1 border-b"
+                  style={{ borderColor: `${primary}40`, color: primary }}
+                >
+                  Personal Information
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-slate-700">
+                  {personal.fatherName && (
+                    <div>
+                      <span className="font-semibold text-slate-900">Father's Name: </span>
+                      <span>{personal.fatherName}</span>
+                    </div>
+                  )}
+                  {personal.motherName && (
+                    <div>
+                      <span className="font-semibold text-slate-900">Mother's Name: </span>
+                      <span>{personal.motherName}</span>
+                    </div>
+                  )}
+                  {personal.dateOfBirth && (
+                    <div>
+                      <span className="font-semibold text-slate-900">Date of Birth: </span>
+                      <span>{personal.dateOfBirth}</span>
+                    </div>
+                  )}
+                  {personal.nationality && (
+                    <div>
+                      <span className="font-semibold text-slate-900">Nationality: </span>
+                      <span>{personal.nationality}</span>
+                    </div>
+                  )}
+                  {personal.permanentAddress && (
+                    <div className="sm:col-span-2">
+                      <span className="font-semibold text-slate-900">Permanent Address: </span>
+                      <span>{personal.permanentAddress}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+          {personal.signatureUrl && (
+            <div className="pt-4 flex justify-end">
+              <div className="text-center min-w-[160px]">
+                <img
+                  src={personal.signatureUrl}
+                  alt="Signature"
+                  className="h-12 max-w-[180px] object-contain mx-auto mb-1"
+                  crossOrigin="anonymous"
+                />
+                <div className="border-t border-slate-500 pt-1 text-[11px] font-semibold text-slate-700">
+                  Signature ({personal.fullName || 'Applicant'})
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
+

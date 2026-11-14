@@ -85,26 +85,103 @@ import { InvoiceTemplateFestiveMobile } from './invoice/InvoiceTemplateFestiveMo
 import { MoneyReceiptView } from './invoice/MoneyReceiptView';
 import { DigitalSignatureModal } from './invoice/DigitalSignatureModal';
 
+export interface InvoiceMakerShopBridge {
+  shopId: string;
+  shopCategory: string;
+  defaultTemplate: InvoiceTemplateId;
+  businessProfile: BusinessProfile;
+  invoices: Invoice[];
+  receipts: MoneyReceipt[];
+  customers: Customer[];
+  products?: Array<{
+    id: string;
+    name: string;
+    brand?: string;
+    model?: string;
+    unit?: string;
+    sellingPrice: number;
+    stock: number;
+    customFields?: Record<string, string>;
+    warranty?: string;
+  }>;
+  prefillProduct?: {
+    id: string;
+    name: string;
+    brand?: string;
+    model?: string;
+    unit?: string;
+    sellingPrice: number;
+    customFields?: Record<string, string>;
+    warranty?: string;
+  } | null;
+  onClearPrefillProduct?: () => void;
+  onUpdateBusinessProfile: (updates: Partial<BusinessProfile>) => void;
+  onSaveInvoice: (invoice: Invoice) => void;
+  onDeleteInvoice: (id: string) => void;
+  onSaveReceipt: (receipt: MoneyReceipt) => void;
+  onDeleteReceipt: (id: string) => void;
+  onSaveCustomer: (customer: Customer) => void;
+  hideStandaloneHeader?: boolean;
+  onOpenShopSection?: (section: string) => void;
+  onOpenVisitingCard?: () => void;
+  onLogoutShop?: () => void;
+  visitingCardDataUrl?: string;
+}
+
 interface InvoiceMakerProps {
   onBackToHub: () => void;
   onShowToast: (message: string, icon?: string) => void;
+  shopBridge?: InvoiceMakerShopBridge;
 }
 
 type MainTab = 'dashboard' | 'create-invoice' | 'create-receipt' | 'saved' | 'settings' | 'templates';
 
-export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowToast }) => {
+export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowToast, shopBridge }) => {
   // Navigation / Tab state
-  const [activeTab, setActiveTab] = useState<MainTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<MainTab>(
+    shopBridge?.hideStandaloneHeader ? 'create-invoice' : 'dashboard'
+  );
   const [mobileEditorMode, setMobileEditorMode] = useState<'editor' | 'preview'>('editor');
 
-  // Persistence States
-  const [business, setBusiness] = useState<BusinessProfile>(() => getSavedBusinessProfile());
-  const [savedInvoicesList, setSavedInvoicesList] = useState<Invoice[]>(() => getSavedInvoices());
-  const [savedReceiptsList, setSavedReceiptsList] = useState<MoneyReceipt[]>(() => getSavedReceipts());
-  const [savedCustomersList, setSavedCustomersList] = useState<Customer[]>(() => getSavedCustomers());
+  // Persistence States (Strictly isolated to shopBridge when active, otherwise existing standalone localStorage)
+  const [business, setBusiness] = useState<BusinessProfile>(() =>
+    shopBridge ? shopBridge.businessProfile : getSavedBusinessProfile()
+  );
+  const [savedInvoicesList, setSavedInvoicesList] = useState<Invoice[]>(() =>
+    shopBridge ? shopBridge.invoices : getSavedInvoices()
+  );
+  const [savedReceiptsList, setSavedReceiptsList] = useState<MoneyReceipt[]>(() =>
+    shopBridge ? shopBridge.receipts : getSavedReceipts()
+  );
+  const [savedCustomersList, setSavedCustomersList] = useState<Customer[]>(() =>
+    shopBridge ? shopBridge.customers : getSavedCustomers()
+  );
+
+  // Sync reactive updates when shopBridge data changes or user switches shop account
+  useEffect(() => {
+    if (!shopBridge) return;
+    setBusiness(shopBridge.businessProfile);
+  }, [shopBridge?.businessProfile]);
+
+  useEffect(() => {
+    if (!shopBridge) return;
+    setSavedInvoicesList(shopBridge.invoices);
+  }, [shopBridge?.invoices]);
+
+  useEffect(() => {
+    if (!shopBridge) return;
+    setSavedReceiptsList(shopBridge.receipts);
+  }, [shopBridge?.receipts]);
+
+  useEffect(() => {
+    if (!shopBridge) return;
+    setSavedCustomersList(shopBridge.customers);
+  }, [shopBridge?.customers]);
 
   // Show welcome modal/screen if no invoices exist yet
-  const [showWelcome, setShowWelcome] = useState<boolean>(() => savedInvoicesList.length === 0);
+  const [showWelcome, setShowWelcome] = useState<boolean>(() =>
+    shopBridge ? false : savedInvoicesList.length === 0
+  );
 
   // Helper to generate next sequential invoice number
   const generateNextInvoiceNumber = (invoices: Invoice[]): string => {
@@ -127,8 +204,8 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
     dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
     paymentStatus: 'unpaid',
     currency: 'BDT (৳)',
-    language: 'bn',
-    template: 'classic',
+    language: shopBridge?.businessProfile?.defaultLanguage || 'bn',
+    template: shopBridge?.defaultTemplate || 'classic',
     customer: {
       id: `cust-${Date.now()}`,
       name: '',
@@ -141,15 +218,19 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
     items: [
       {
         id: `item-${Date.now()}-1`,
-        name: 'ওয়েব ডেভেলপমেন্ট সার্ভিস',
-        description: 'রেসপনসিভ ওয়েবসাইট ডিজাইন ও টেকনিক্যাল সেটআপ',
+        name: shopBridge
+          ? shopBridge.shopCategory === 'mobile-shop'
+            ? 'স্মার্টফোন / মোবাইল এক্সেসরিজ'
+            : ''
+          : 'ওয়েব ডেভেলপমেন্ট সার্ভিস',
+        description: shopBridge ? '' : 'রেসপনসিভ ওয়েবসাইট ডিজাইন ও টেকনিক্যাল সেটআপ',
         quantity: 1,
-        unit: 'service',
-        unitPrice: 10000,
+        unit: shopBridge ? 'piece' : 'service',
+        unitPrice: shopBridge ? 0 : 10000,
         discountType: 'fixed',
         discountValue: 0,
         vatRate: 0,
-        lineTotal: 10000,
+        lineTotal: shopBridge ? 0 : 10000,
       },
     ],
     invoiceDiscountType: 'fixed',
@@ -157,11 +238,50 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
     shippingCharge: 0,
     paidAmount: 0,
     notes: '',
-    terms: '১. বিল প্রাপ্তির ৭ কার্যদিবসের মধ্যে অবশিষ্ট বকেয়া পরিশোধ করতে হবে।',
-    signatureTitle: 'অনুমোদিত স্বাক্ষর',
+    terms:
+      shopBridge?.businessProfile?.defaultInvoiceFooter ||
+      '১. বিল প্রাপ্তির ৭ কার্যদিবসের মধ্যে অবশিষ্ট বকেয়া পরিশোধ করতে হবে।',
+    signatureTitle: shopBridge?.businessProfile?.signatureTitle || 'অনুমোদিত স্বাক্ষর',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }));
+
+  // Prefill product into Cash Memo when triggered from Shop Inventory
+  useEffect(() => {
+    if (!shopBridge?.prefillProduct) return;
+    const p = shopBridge.prefillProduct;
+    const detailsParts = [
+      p.brand,
+      p.model,
+      p.customFields?.imei ? `IMEI: ${p.customFields.imei}` : '',
+      p.customFields?.serialNumber ? `S/N: ${p.customFields.serialNumber}` : '',
+      p.warranty ? `Warranty: ${p.warranty}` : '',
+    ].filter(Boolean);
+
+    const newItem: InvoiceItem = {
+      id: `item-${Date.now()}`,
+      name: p.name,
+      description: detailsParts.join(' • '),
+      quantity: 1,
+      unit: (p.unit as UnitType) || 'piece',
+      unitPrice: p.sellingPrice || 0,
+      discountType: 'fixed',
+      discountValue: 0,
+      vatRate: 0,
+      lineTotal: p.sellingPrice || 0,
+    };
+
+    setInvoice((prev) => {
+      const onlyBlankFirst =
+        prev.items.length === 1 && !prev.items[0].name.trim() && prev.items[0].unitPrice === 0;
+      return {
+        ...prev,
+        items: onlyBlankFirst ? [newItem] : [...prev.items, newItem],
+      };
+    });
+    setActiveTab('create-invoice');
+    shopBridge.onClearPrefillProduct?.();
+  }, [shopBridge?.prefillProduct]);
 
   // Active Receipt Form State
   const [receipt, setReceipt] = useState<MoneyReceipt>(() => ({
@@ -196,6 +316,17 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
   useEffect(() => {
     const timer = setTimeout(() => {
       if (invoice && invoice.invoiceNumber) {
+        if (shopBridge) {
+          // Only auto-save in shop mode if user added real customer/item content
+          const hasRealContent =
+            invoice.customer.name.trim().length > 0 ||
+            invoice.items.some((it) => it.name.trim().length > 0 && it.unitPrice > 0);
+          if (hasRealContent) {
+            const stamped = { ...invoice, updatedAt: new Date().toISOString() };
+            shopBridge.onSaveInvoice(stamped);
+          }
+          return;
+        }
         setSavedInvoicesList((prev) => {
           const idx = prev.findIndex((i) => i.id === invoice.id);
           let updated: Invoice[];
@@ -211,14 +342,15 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [invoice]);
+  }, [invoice, shopBridge]);
 
   useEffect(() => {
+    if (shopBridge) return;
     const timer = setTimeout(() => {
       saveBusinessProfile(business);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [business]);
+  }, [business, shopBridge]);
 
   // Interactive Click-to-Point State
   const [highlightedFieldId, setHighlightedFieldId] = useState<string | null>(null);
@@ -291,10 +423,14 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
   // Auto Calculations for active invoice
   const currentCalc = calculateInvoice(invoice);
 
-  // Sync business settings to localStorage
+  // Sync business settings to localStorage or active ShopProfile
   const handleSaveBusinessSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    saveBusinessProfile(business);
+    if (shopBridge) {
+      shopBridge.onUpdateBusinessProfile(business);
+    } else {
+      saveBusinessProfile(business);
+    }
     onShowToast('ব্যবসার প্রোফাইল সফলভাবে সংরক্ষিত হয়েছে! 🏢', '✅');
   };
 
@@ -330,6 +466,11 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
   const handleSaveCurrentCustomer = () => {
     if (!invoice.customer.name.trim()) {
       onShowToast('অনুগ্রহ করে গ্রাহকের নাম লিখুন!', '⚠️');
+      return;
+    }
+    if (shopBridge) {
+      shopBridge.onSaveCustomer(invoice.customer);
+      onShowToast('গ্রাহকের তথ্য সংরক্ষিত হয়েছে!', '💾');
       return;
     }
     const existingIdx = savedCustomersList.findIndex(
@@ -418,6 +559,12 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
       updatedAt: new Date().toISOString(),
     };
 
+    if (shopBridge) {
+      shopBridge.onSaveInvoice(updatedInvoice);
+      onShowToast(`ইনভয়েস #${invoice.invoiceNumber} সফলভাবে সংরক্ষিত হয়েছে! 💾`, '✅');
+      return;
+    }
+
     const existingIdx = savedInvoicesList.findIndex((inv) => inv.id === invoice.id);
     let newList: Invoice[];
     if (existingIdx >= 0) {
@@ -442,6 +589,12 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
       ...receipt,
       createdAt: receipt.createdAt || new Date().toISOString(),
     };
+
+    if (shopBridge) {
+      shopBridge.onSaveReceipt(updatedReceipt);
+      onShowToast(`মানি রিসিট #${receipt.receiptNumber} সংরক্ষিত হয়েছে! 💾`, '✅');
+      return;
+    }
 
     const existingIdx = savedReceiptsList.findIndex((r) => r.id === receipt.id);
     let newList: MoneyReceipt[];
@@ -468,7 +621,7 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
       paymentStatus: 'unpaid',
       currency: business.defaultCurrency || 'BDT (৳)',
       language: business.defaultLanguage || 'bn',
-      template: 'classic',
+      template: shopBridge?.defaultTemplate || 'classic',
       customer: {
         id: `cust-${Date.now()}`,
         name: '',
@@ -543,14 +696,22 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
   const confirmDelete = () => {
     if (!deleteConfirmId) return;
     if (receiptOrInvoiceToDelete === 'invoice') {
-      const filtered = savedInvoicesList.filter((i) => i.id !== deleteConfirmId);
-      setSavedInvoicesList(filtered);
-      saveInvoices(filtered);
+      if (shopBridge) {
+        shopBridge.onDeleteInvoice(deleteConfirmId);
+      } else {
+        const filtered = savedInvoicesList.filter((i) => i.id !== deleteConfirmId);
+        setSavedInvoicesList(filtered);
+        saveInvoices(filtered);
+      }
       onShowToast('ইনভয়েস মুছে ফেলা হয়েছে! 🗑️', '✅');
     } else {
-      const filtered = savedReceiptsList.filter((r) => r.id !== deleteConfirmId);
-      setSavedReceiptsList(filtered);
-      saveReceipts(filtered);
+      if (shopBridge) {
+        shopBridge.onDeleteReceipt(deleteConfirmId);
+      } else {
+        const filtered = savedReceiptsList.filter((r) => r.id !== deleteConfirmId);
+        setSavedReceiptsList(filtered);
+        saveReceipts(filtered);
+      }
       onShowToast('মানি রিসিট মুছে ফেলা হয়েছে! 🗑️', '✅');
     }
     setDeleteConfirmId(null);
@@ -567,9 +728,13 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    const updated = [dup, ...savedInvoicesList];
-    setSavedInvoicesList(updated);
-    saveInvoices(updated);
+    if (shopBridge) {
+      shopBridge.onSaveInvoice(dup);
+    } else {
+      const updated = [dup, ...savedInvoicesList];
+      setSavedInvoicesList(updated);
+      saveInvoices(updated);
+    }
     setInvoice(dup);
     setActiveTab('create-invoice');
     onShowToast(`ইনভয়েস ডুপ্লিকেট হয়ে #${newNum} হিসেবে ওপেন হয়েছে!`, '📋');
@@ -816,91 +981,147 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800 font-sans print:bg-white print:p-0">
       {/* Top Header Bar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs print:hidden">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBackToHub}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
-              title="সকল ২২টি টুলসের মূল পোর্টালে ফিরে যান"
-            >
-              <ArrowLeft className="w-4 h-4 text-slate-600" />
-              <span className="hidden sm:inline">সকল টুলস</span>
-            </button>
+      {!shopBridge?.hideStandaloneHeader && (
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs print:hidden">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBackToHub}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                title="মূল পোর্টালে ফিরে যান"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-600" />
+                <span className="hidden sm:inline">সকল টুলস</span>
+              </button>
 
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 via-pink-600 to-indigo-600 flex items-center justify-center text-white shadow-xs">
-                <Receipt className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h1 className="text-sm sm:text-base font-extrabold text-slate-900 leading-tight">
-                    MoSaFa Invoice Maker
-                  </h1>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black border border-emerald-200">
-                    ফ্রি বিল ও রিসিট
-                  </span>
+              <div className="flex items-center gap-2">
+                {shopBridge && business.logoUrl ? (
+                  <img
+                    src={business.logoUrl}
+                    alt={business.businessName}
+                    className="w-9 h-9 rounded-xl object-contain border border-slate-200 bg-white p-0.5 shadow-xs"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 via-pink-600 to-indigo-600 flex items-center justify-center text-white shadow-xs">
+                    <Receipt className="w-5 h-5" />
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h1 className="text-sm sm:text-base font-extrabold text-slate-900 leading-tight">
+                      {shopBridge ? business.businessName : 'MoSaFa Invoice Maker'}
+                    </h1>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black border border-emerald-200">
+                      {shopBridge ? 'মোবাইল শপ সিস্টেম' : 'ফ্রি বিল ও রিসিট'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 hidden sm:block">
+                    {shopBridge
+                      ? `${business.ownerName || ''} • ${business.phone || ''}`
+                      : 'প্রফেশনাল ইনভয়েস ও মানি রিসিট জেনারেটর • ১০০% ক্লায়েন্ট সাইড'}
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-500 hidden sm:block">
-                  প্রফেশনাল ইনভয়েস ও মানি রিসিট জেনারেটর • ১০০% ক্লায়েন্ট সাইড
-                </p>
               </div>
+            </div>
+
+            {/* Quick Actions in Header */}
+            <div className="flex items-center gap-2">
+              {shopBridge?.onOpenVisitingCard && (
+                <button
+                  type="button"
+                  onClick={shopBridge.onOpenVisitingCard}
+                  className="hidden md:flex px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition items-center gap-1.5 cursor-pointer"
+                >
+                  <span>💳 ভিজিটিং কার্ড</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleCreateNewInvoice}
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>নতুন ইনভয়েস</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateNewReceipt}
+                className="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <Wallet className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">মানি রিসিট</span>
+              </button>
             </div>
           </div>
 
-          {/* Quick Actions in Header */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCreateNewInvoice}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>নতুন ইনভয়েস</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleCreateNewReceipt}
-              className="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <Wallet className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">মানি রিসিট</span>
-            </button>
-          </div>
-        </div>
+          {/* Navigation Tabs Bar */}
+          <div className="max-w-7xl mx-auto px-4 border-t border-slate-100 flex items-center justify-between gap-2 overflow-x-auto py-1 text-xs font-bold scrollbar-none">
+            <div className="flex items-center gap-1">
+              {[
+                { id: 'dashboard', label: '📊 ড্যাশবোর্ড', badge: totalInvoicesCount ? String(totalInvoicesCount) : undefined },
+                { id: 'create-invoice', label: '✏️ ইনভয়েস তৈরি' },
+                { id: 'create-receipt', label: '💵 মানি রিসিট' },
+                { id: 'saved', label: '📁 সংরক্ষিত নথি', badge: savedInvoicesList.length + savedReceiptsList.length > 0 ? String(savedInvoicesList.length + savedReceiptsList.length) : undefined },
+                { id: 'templates', label: '🎨 ১৫টি টেমপ্লেট' },
+                { id: 'settings', label: '🏢 ব্যবসার প্রোফাইল' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as MainTab);
+                    setShowWelcome(false);
+                  }}
+                  className={`px-3 py-2 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === tab.id
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {tab.badge && (
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
 
-        {/* Navigation Tabs Bar */}
-        <div className="max-w-7xl mx-auto px-4 border-t border-slate-100 flex items-center gap-1 overflow-x-auto py-1 text-xs font-bold scrollbar-none">
-          {[
-            { id: 'dashboard', label: '📊 ড্যাশবোর্ড', badge: totalInvoicesCount ? String(totalInvoicesCount) : undefined },
-            { id: 'create-invoice', label: '✏️ ইনভয়েস তৈরি' },
-            { id: 'create-receipt', label: '💵 মানি রিসিট' },
-            { id: 'saved', label: '📁 সংরক্ষিত নথি', badge: savedInvoicesList.length + savedReceiptsList.length > 0 ? String(savedInvoicesList.length + savedReceiptsList.length) : undefined },
-            { id: 'templates', label: '🎨 ১৫টি টেমপ্লেট' },
-            { id: 'settings', label: '🏢 ব্যবসার প্রোফাইল' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id as MainTab);
-                setShowWelcome(false);
-              }}
-              className={`px-3 py-2 rounded-xl transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                activeTab === tab.id
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
-            >
-              <span>{tab.label}</span>
-              {tab.badge && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </header>
+            {shopBridge?.onOpenShopSection && (
+              <div className="flex items-center gap-1 pl-2 border-l border-slate-200 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => shopBridge.onOpenShopSection?.('inventory')}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 whitespace-nowrap cursor-pointer"
+                >
+                  📦 মোবাইল স্টক
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shopBridge.onOpenShopSection?.('repairs')}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 whitespace-nowrap cursor-pointer"
+                >
+                  🛠️ সার্ভিসিং
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shopBridge.onOpenShopSection?.('expenses')}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 whitespace-nowrap cursor-pointer"
+                >
+                  📒 বাকি/খরচ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shopBridge.onOpenShopSection?.('settings')}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 whitespace-nowrap cursor-pointer"
+                >
+                  ⚙️ শপ সেটিংস
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+      )}
 
       {/* Main Content Area */}
       <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 flex-1 print:p-0 print:m-0">
@@ -1592,19 +1813,70 @@ export const InvoiceMaker: React.FC<InvoiceMakerProps> = ({ onBackToHub, onShowT
 
                 {/* 3. Items & Services Table Card */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4 text-xs">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
                       <Sliders className="w-4 h-4 text-indigo-600" />
                       <span>৩. পণ্য ও সেবাসমূহ ({invoice.items.length}টি)</span>
                     </h3>
-                    <button
-                      type="button"
-                      onClick={handleAddItem}
-                      className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>আইটেম যোগ করুন</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {shopBridge?.products && shopBridge.products.length > 0 && (
+                        <select
+                          defaultValue=""
+                          onChange={(e) => {
+                            const prod = shopBridge.products?.find((pr) => pr.id === e.target.value);
+                            if (prod) {
+                              const desc = [
+                                prod.brand,
+                                prod.model,
+                                prod.customFields?.imei ? `IMEI: ${prod.customFields.imei}` : '',
+                                prod.warranty ? `Warranty: ${prod.warranty}` : '',
+                              ]
+                                .filter(Boolean)
+                                .join(' • ');
+                              const added: InvoiceItem = {
+                                id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+                                name: prod.name,
+                                description: desc,
+                                quantity: 1,
+                                unit: (prod.unit as UnitType) || 'piece',
+                                unitPrice: prod.sellingPrice || 0,
+                                discountType: 'fixed',
+                                discountValue: 0,
+                                vatRate: 0,
+                                lineTotal: prod.sellingPrice || 0,
+                              };
+                              setInvoice((prev) => ({
+                                ...prev,
+                                items:
+                                  prev.items.length === 1 && !prev.items[0].name.trim() && prev.items[0].unitPrice === 0
+                                    ? [added]
+                                    : [...prev.items, added],
+                              }));
+                              onShowToast(`"${prod.name}" মেমোতে যোগ হয়েছে!`, '📦');
+                            }
+                            e.target.value = '';
+                          }}
+                          className="p-1.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900 text-[11px] font-bold max-w-[175px]"
+                        >
+                          <option value="" disabled>
+                            + স্টক থেকে পণ্য নিন...
+                          </option>
+                          {shopBridge.products.map((pr) => (
+                            <option key={pr.id} value={pr.id}>
+                              {pr.name} (৳{pr.sellingPrice})
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleAddItem}
+                        className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold transition flex items-center gap-1 cursor-pointer active:scale-95"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>আইটেম যোগ করুন</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* List of items editor */}
