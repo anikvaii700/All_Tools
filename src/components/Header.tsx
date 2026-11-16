@@ -41,6 +41,7 @@ import {
   Store,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { isCurrentAdminUser } from '../services/adminUserService';
 import { BanglaLiveDateTimeWidget } from './BanglaLiveDateTimeWidget';
 
 export type DeviceSector = 'all' | 'desktop' | 'mobile';
@@ -165,6 +166,10 @@ export const Header: React.FC<HeaderProps> = ({
   const clickTimerRef = React.useRef<any>(null);
 
   const handleBrandClick = () => {
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+
     clickCountRef.current += 1;
 
     // First click navigates home
@@ -172,20 +177,18 @@ export const Header: React.FC<HeaderProps> = ({
       onNavigateHome();
     }
 
-    if (clickTimerRef.current) {
-      clearTimeout(clickTimerRef.current);
-    }
-
     if (clickCountRef.current >= 5) {
       clickCountRef.current = 0;
-      onOpenAdminPanel?.();
+      if (isLoggedIn && user && isCurrentAdminUser()) {
+        onOpenAdminPanel?.();
+      }
       return;
     }
 
-    // Reset after 1.6 seconds without clicks
+    // Reset after 2 seconds without clicks
     clickTimerRef.current = setTimeout(() => {
       clickCountRef.current = 0;
-    }, 1600);
+    }, 2000);
   };
 
   return (

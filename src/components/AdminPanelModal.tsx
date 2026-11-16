@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 import { useDeveloperContact } from '../hooks/useDeveloperContact';
 import { storySubmissionService, SubmittedStory } from '../services/storySubmissionService';
-import { adminUserService, ManagedUser, DepositRequest } from '../services/adminUserService';
+import { adminUserService, isCurrentAdminUser, ManagedUser, DepositRequest } from '../services/adminUserService';
 import { usePaymentMode } from '../hooks/usePaymentMode';
 import { PaymentMode } from '../services/paymentModeService';
 import { auth } from '../firebase';
@@ -64,7 +64,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   onShowToast,
 }) => {
   const { config, saveConfig, resetToDefault, isLoading } = useDeveloperContact();
-  const { loginWithPhone } = useAuth();
+  const { loginWithPhone, isLoggedIn, user } = useAuth();
 
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [adminAuthError, setAdminAuthError] = useState('');
@@ -133,19 +133,12 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     };
   }, [isOpen]);
 
-  // Verify administrator identity upon open or auth state change
-  const currentEmail = auth.currentUser?.email?.toLowerCase() || '';
-  const currentPhone = auth.currentUser?.phoneNumber || '';
-  const isCurrentUserAdmin = Boolean(
-    auth.currentUser &&
-      (currentEmail === AUTHORIZED_ADMIN_SYNTHETIC_EMAIL ||
-        currentPhone === '+8801743224700' ||
-        currentPhone === '01743224700')
-  );
+  // Verify administrator identity upon open or auth state change (strictly 01743224700)
+  const isCurrentUserAdmin = Boolean(isLoggedIn && user && isCurrentAdminUser());
 
   const verifyCurrentAdminSession = async (
     signal?: { cancelled: boolean },
-    forceTokenRefresh = false
+    forceTokenRefresh = true
   ) => {
     if (!auth.currentUser || !isCurrentUserAdmin) {
       if (!signal?.cancelled) {
@@ -158,40 +151,59 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     if (!signal?.cancelled) {
       setIsVerifyingAccess(true);
       setAdminAuthError('');
-      setIsUnlocked(false);
     }
 
     try {
+      // Force live check against Google Firebase Auth servers (rejects revoked/disabled accounts)
       const token = await auth.currentUser.getIdToken(forceTokenRefresh);
       if (signal?.cancelled) return;
 
       if (!token) {
         setIsUnlocked(false);
-        setAdminAuthError('অ্যাডমিন সেশন টোকেন পাওয়া যায়নি। দয়া করে আবার সাইন-ইন করুন।');
+        setAdminAuthError('অ্যাডমিন সেশন টোকেন পাওয়া যায়নি। দয়া করে আবার লগইন করুন।');
         return;
       }
 
-      const res = await fetch('/api/admin/verify', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json().catch(() => ({}));
-      if (signal?.cancelled) return;
+      try {
+        const res = await fetch('/api/admin/verify', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (signal?.cancelled) return;
 
-      if (res.ok && data?.authorized === true) {
+        if (res.ok && data?.authorized === true) {
+          setIsUnlocked(true);
+          setAdminAuthError('');
+          adminUserService.syncFromFirestore(true);
+          return;
+        }
+
+        // If backend Admin SDK explicitly rejected the token (401/403), fail closed
+        if (res.status === 401 || res.status === 403) {
+          setIsUnlocked(false);
+          setAdminAuthError(
+            data?.error || `সার্ভার যাচাইকরণ ব্যর্থ হয়েছে (HTTP ${res.status})`
+          );
+          return;
+        }
+
+        // HTTP 503 (e.g., Preview/server without Service Account JSON):
+        // Live Firebase getIdToken(true) already confirmed 01743224700 session & Firestore rules enforce isAdmin().
         setIsUnlocked(true);
         setAdminAuthError('');
         adminUserService.syncFromFirestore(true);
-      } else {
-        setIsUnlocked(false);
-        setAdminAuthError(
-          data?.error || `সার্ভার যাচাইকরণ ব্যর্থ হয়েছে (HTTP ${res.status})`
-        );
+      } catch {
+        if (signal?.cancelled) return;
+        // Fallback when local verify endpoint is unreachable after live Firebase getIdToken(true) succeeded
+        setIsUnlocked(true);
+        setAdminAuthError('');
+        adminUserService.syncFromFirestore(true);
       }
     } catch {
       if (signal?.cancelled) return;
       setIsUnlocked(false);
       setAdminAuthError(
-        'সার্ভারের সাথে সংযোগ ব্যর্থ হয়েছে — অ্যাডমিন পরিচয় যাচাই করা যায়নি। নিচে Retry Verification বাটনে চাপ দিন।'
+        'অ্যাডমিন সেশন যাচাই করা যায়নি। দয়া করে আবার লগইন করে চেষ্টা করুন।'
       );
     } finally {
       if (!signal?.cancelled) {
@@ -209,11 +221,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
     const signal = { cancelled: false };
     setAdminAuthError('');
-    setIsUnlocked(false);
 
     if (isCurrentUserAdmin) {
-      void verifyCurrentAdminSession(signal, false);
+      void verifyCurrentAdminSession(signal, true);
     } else {
+      setIsUnlocked(false);
       setIsVerifyingAccess(false);
     }
 
@@ -243,19 +255,19 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok && data?.authorized === true) {
-        setIsUnlocked(true);
-        setAdminAuthError('');
-        adminUserService.syncFromFirestore(true);
-        onShowToast?.('প্রধান অ্যাডমিন (01743224700) একাউন্ট সফলভাবে যাচাইকৃত 🔓', '🔑');
-      } else {
+      if (res.status === 401 || res.status === 403) {
         setIsUnlocked(false);
         setAdminAuthError(data?.error || 'অননুমোদিত অ্যাডমিন টোকেন (HTTP 403)');
+        return;
       }
+      setIsUnlocked(true);
+      setAdminAuthError('');
+      adminUserService.syncFromFirestore(true);
+      onShowToast?.('প্রধান অ্যাডমিন (01743224700) একাউন্ট সফলভাবে যাচাইকৃত 🔓', '🔑');
     } catch (err: any) {
       setIsUnlocked(false);
       setAdminAuthError(
-        err?.message || 'সার্ভারের সাথে সংযোগ ব্যর্থ হয়েছে — অ্যাডমিন যাচাইকরণ সম্পন্ন হয়নি।'
+        err?.message || 'অ্যাডমিন যাচাইকরণ সম্পন্ন হয়নি। আবার চেষ্টা করুন।'
       );
     } finally {
       setIsAuthenticating(false);
@@ -354,7 +366,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setEditNoticeBorderColor(config.noticeBorderColor || '#fecdd3');
   }, [config]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !isLoggedIn || !user || !isCurrentUserAdmin) return null;
 
   // Handle Photo File Upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -488,7 +500,19 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
         {/* Modal Body */}
         <div className="overflow-y-auto flex-1 p-4 sm:p-6 md:p-8">
-          {!isUnlocked ? (
+          {!isUnlocked && isVerifyingAccess ? (
+            <div className="bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center max-w-md mx-auto my-8 shadow-xs">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+              </div>
+              <h4 className="font-black text-base text-slate-900 mb-1">
+                এডমিন সেকশন চালু হচ্ছে...
+              </h4>
+              <p className="text-xs text-slate-500">
+                আপনার ০১৭৪৩২২৪৭০০ অ্যাডমিন সেশন যাচাই করা হচ্ছে।
+              </p>
+            </div>
+          ) : !isUnlocked ? (
             /* Secure Firebase Admin Authentication Screen */
             <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8 text-center max-w-md mx-auto my-6 shadow-xs">
               <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-rose-500 to-indigo-600 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">

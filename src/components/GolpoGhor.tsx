@@ -139,8 +139,6 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
       if (isAdmin) {
         setIsAdminReviewOpen(true);
         onShowToast('গল্প পর্যালোচনা প্যানেল সক্রিয় হয়েছে 🔓', '🔑');
-      } else {
-        onShowToast('শুধুমাত্র অনুমোদিত অ্যাডমিন (01743224700) এই প্যানেল দেখতে পারেন।', '⚠️');
       }
       return;
     }

@@ -62,6 +62,7 @@ import { ToolsNoticeBanner } from './components/ToolsNoticeBanner';
 import { UserReviewsMarquee } from './components/UserReviewsMarquee';
 import { WaterDropletButton } from './components/WaterDropletButton';
 import { useAuth } from './context/AuthContext';
+import { isCurrentAdminUser } from './services/adminUserService';
 import { APP_VERSION_CONFIG } from './versionConfig';
 import { trackPageView, trackEvent } from './utils/analytics';
 import { getToolSeoData, HOMEPAGE_SEO, generateSchemaJsonLd } from './data/seoToolsData';
@@ -323,9 +324,21 @@ export default function App() {
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<'about' | 'contact' | 'privacy' | 'terms'>('about');
 
+  const { user, isLoggedIn, canSpinToday } = useAuth();
+
   // Secret 5-click Easter Egg on "The MoSaFa Tools" brand text
   const navSecretClicksRef = React.useRef(0);
   const navSecretTimerRef = React.useRef<any>(null);
+
+  const openAdminPanelSafely = (withToast = false) => {
+    if (!isLoggedIn || !user || !isCurrentAdminUser()) {
+      return;
+    }
+    setIsAdminModalOpen(true);
+    if (withToast) {
+      showToast('কন্ট্রোল প্যানেল খোলা হয়েছে 🔓', '⚙️');
+    }
+  };
 
   const handleNavSecretAdmin = () => {
     navSecretClicksRef.current += 1;
@@ -334,7 +347,7 @@ export default function App() {
     }
     if (navSecretClicksRef.current >= 5) {
       navSecretClicksRef.current = 0;
-      setIsAdminModalOpen(true);
+      openAdminPanelSafely(false);
       return;
     }
     navSecretTimerRef.current = setTimeout(() => {
@@ -342,7 +355,11 @@ export default function App() {
     }, 1600);
   };
 
-  const { user, isLoggedIn, canSpinToday } = useAuth();
+  useEffect(() => {
+    if (isAdminModalOpen && (!isLoggedIn || !user || !isCurrentAdminUser())) {
+      setIsAdminModalOpen(false);
+    }
+  }, [isAdminModalOpen, user, isLoggedIn]);
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const updateSync = useAppUpdateSync();
 
@@ -1804,10 +1821,7 @@ export default function App() {
         onOpenDeveloperContact={() => {
           setIsDeveloperModalOpen(true);
         }}
-        onOpenAdminPanel={() => {
-          setIsAdminModalOpen(true);
-          showToast('কন্ট্রোল প্যানেল খোলা হয়েছে 🔓', '⚙️');
-        }}
+        onOpenAdminPanel={() => openAdminPanelSafely(true)}
         onShowToast={showToast}
       />
 
@@ -1856,7 +1870,7 @@ export default function App() {
       {/* Tools Grid Section */}
       <main className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pb-16 w-full flex-1 relative z-10">
         {/* Tools Notice & Announcement Banner (Editable from Secret Admin Panel) */}
-        <ToolsNoticeBanner onOpenAdmin={() => setIsAdminModalOpen(true)} />
+        <ToolsNoticeBanner onOpenAdmin={() => openAdminPanelSafely(false)} />
 
         {/* 6 Category Filter Tabs Bar */}
         <div className="mb-4 bg-white/95 backdrop-blur-sm p-2 sm:p-2.5 rounded-3xl border border-slate-200/90 shadow-xs">
@@ -2230,7 +2244,7 @@ export default function App() {
 
       {/* Secret Admin Control Panel Modal (Triggered by 5 clicks on "The MoSaFa") */}
       <AdminPanelModal
-        isOpen={isAdminModalOpen}
+        isOpen={isAdminModalOpen && isLoggedIn && Boolean(user) && isCurrentAdminUser()}
         onClose={() => setIsAdminModalOpen(false)}
         onShowToast={showToast}
       />

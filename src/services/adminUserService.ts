@@ -15,10 +15,16 @@ export function isCurrentAdminUser(): boolean {
   if (!auth.currentUser) return false;
   const currentEmail = auth.currentUser.email?.toLowerCase() || '';
   const currentPhone = auth.currentUser.phoneNumber || '';
+  const digits = currentPhone.replace(/[^0-9]/g, '');
+  const normalizedPhone =
+    digits.startsWith('880') && digits.length === 13
+      ? '0' + digits.slice(3)
+      : digits.startsWith('88') && digits.length === 13
+      ? digits.slice(2)
+      : digits;
   return (
     currentEmail === AUTHORIZED_ADMIN_SYNTHETIC_EMAIL ||
-    currentPhone === '+8801743224700' ||
-    currentPhone === '01743224700'
+    normalizedPhone === AUTHORIZED_ADMIN_PHONE
   );
 }
 
