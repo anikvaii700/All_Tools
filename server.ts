@@ -1469,7 +1469,7 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
       next();
     };
 
-    app.get(['/tools/:slug', '/tools/:slug/', '/:legal(about|contact|privacy|terms)'], handleToolSeo);
+    app.get(['/tools/:slug', '/tools/:slug/', '/:legal(about|contact|privacy|terms)', '/:legal(about|contact|privacy|terms)/'], handleToolSeo);
 
     // 2. Serve static assets with redirect: false so Express never redirects directories with trailing slash
     app.use(express.static(path.resolve(__dirname, 'dist'), { redirect: false, index: false }));
@@ -1490,7 +1490,7 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
     });
 
     // Tool & Legal SEO route in development (BEFORE vite.middlewares)
-    app.get(['/tools/:slug', '/tools/:slug/', '/:legal(about|contact|privacy|terms)'], async (req, res, next) => {
+    app.get(['/tools/:slug', '/tools/:slug/', '/:legal(about|contact|privacy|terms)', '/:legal(about|contact|privacy|terms)/'], async (req, res, next) => {
       try {
         const slug = (req.params.slug || req.params.legal || '').toLowerCase().trim();
         const tool = TOOLS_SEO_REGISTRY[slug];

@@ -77,12 +77,12 @@ export const AgeCalculator: React.FC<AgeCalculatorProps> = ({ onBackToHub, onSho
     const target = new Date(targetYear, targetMonth - 1, targetDay);
 
     if (isNaN(birth.getTime()) || isNaN(target.getTime())) {
-      alert('সঠিক দিন, মাস ও বছর নির্বাচন করুন');
+      onShowToast('সঠিক দিন, মাস ও বছর নির্বাচন করুন', '⚠️');
       return;
     }
 
     if (birth > target) {
-      alert('জন্মতারিখ বর্তমান বা গণনার তারিখের চেয়ে বড় হতে পারে না!');
+      onShowToast('জন্মতারিখ বর্তমান বা গণনার তারিখের চেয়ে বড় হতে পারে না!', '⚠️');
       return;
     }
 
@@ -276,22 +276,22 @@ export const AgeCalculator: React.FC<AgeCalculatorProps> = ({ onBackToHub, onSho
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
-      <header className="w-full max-w-3xl mx-auto px-4 py-4 flex items-center justify-between border-b border-slate-200">
-        <div className="flex items-center gap-3">
+      <header className="w-full max-w-3xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onBackToHub}
-            className="p-2 rounded-xl bg-white text-slate-700 hover:text-emerald-600 border border-slate-200 shadow-xs transition flex items-center gap-1 text-xs font-bold cursor-pointer"
+            className="p-2 rounded-xl bg-white text-slate-700 hover:text-emerald-600 border border-slate-200 shadow-xs transition flex items-center gap-1 text-xs font-bold cursor-pointer shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>সকল টুলস</span>
           </button>
-          <div>
-            <h1 className="text-lg font-bold text-slate-900">বয়স ক্যালকুলেটর (দিন / মাস / বছর)</h1>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-bold text-slate-900">বয়স ক্যালকুলেটর (দিন / মাস / বছর)</h1>
             <p className="text-xs text-slate-500">নিখুঁত বছর, মাস ও দিনের পুঙ্খানুপুঙ্খ হিসাব</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={copyResultText}
             className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95"
@@ -495,19 +495,19 @@ export const AgeCalculator: React.FC<AgeCalculatorProps> = ({ onBackToHub, onSho
                 </div>
 
                 {/* Quick Result Action Buttons */}
-                <div className="pt-2 flex items-center gap-3">
+                <div className="pt-2 flex flex-wrap sm:flex-nowrap items-center gap-3">
                   <button
                     onClick={copyResultText}
-                    className="flex-1 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                    className="flex-1 min-w-[130px] py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                   >
-                    <Copy className="w-4 h-4 text-emerald-600" />
+                    <Copy className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span>ফলাফল কপি করুন</span>
                   </button>
                   <button
                     onClick={downloadAgeCard}
-                    className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-200 transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                    className="flex-1 min-w-[130px] py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-200 transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                   >
-                    <Download className="w-4 h-4" />
+                    <Download className="w-4 h-4 shrink-0" />
                     <span>বয়স সনদ কার্ড (PNG)</span>
                   </button>
                 </div>

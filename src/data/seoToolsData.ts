@@ -363,7 +363,7 @@ export const TOOLS_SEO_REGISTRY: Record<string, ToolSeoInfo> = {
     title: 'PDF Toolkit – PDF Merge, Split ও Compress Online',
     h1: 'PDF Toolkit – PDF Merge, Split ও Compress Online',
     description:
-      'অনলাইনে PDF Merge, Split, Compress, Rotate, Image to PDF এবং PDF থেকে ছবি তৈরি করুন।',
+      'কোনো সফটওয়্যার ছাড়াই সরাসরি ব্রাউজারে সম্পূর্ণ বিনামূল্যে PDF Merge, Split, Compress, Rotate, Image to PDF এবং PDF থেকে ছবি তৈরি করুন।',
     path: '/tools/pdf-toolkit',
     canonicalUrl: 'https://tools.mosafabd.com/tools/pdf-toolkit',
     ogImage: DEFAULT_OG_IMAGE,
@@ -475,33 +475,36 @@ export const TOOLS_SEO_REGISTRY: Record<string, ToolSeoInfo> = {
     slug: 'about',
     title: 'আমাদের সম্পর্কে (About Us) – MoSaFa Tools',
     h1: 'আমাদের সম্পর্কে – MoSaFa Tools ডিজিটাল প্ল্যাটফর্ম',
-    description: 'MoSaFa Tools প্ল্যাটফর্মের পরিচিতি, উদ্দেশ্য ও নাগরিক সেবাসমূহ। সরকারি ফর্ম, ক্যারিয়ার ও এডুকেশন টুলস।',
+    description:
+      'MoSaFa Tools-এর পরিচিতি, উদ্দেশ্য ও ২৮টি বাংলা অনলাইন সেবাসমূহ জানুন। সরকারি ফরম সহায়তা, সিভি মেকার, PDF ও শিক্ষা টুলস এক ঠিকানায়।',
     path: '/about',
     canonicalUrl: 'https://tools.mosafabd.com/about',
     ogImage: DEFAULT_OG_IMAGE,
     category: 'About & Information',
     applicationCategory: 'WebApplication',
-    keywords: ['about mosafa tools', 'আমাদের সম্পর্কে', 'মুফাসসিরুল ইসলাম টুলস', 'ডিজিটাল টুলস পরিচিতি'],
+    keywords: ['about mosafa tools', 'আমাদের সম্পর্কে', 'মোঃ আনিসুল ইসলাম', 'ডিজিটাল টুলস পরিচিতি'],
   },
   'contact': {
     id: 'contact',
     slug: 'contact',
     title: 'যোগাযোগ (Contact Us) – MoSaFa Tools',
     h1: 'যোগাযোগ ও সাপোর্ট – MoSaFa Tools',
-    description: 'MoSaFa Tools-এর অফিশিয়াল সাপোর্ট টিম ও ডেভেলপারের সাথে সরাসরি হোয়াটসঅ্যাপ ও ইমেইলে যোগাযোগ করুন।',
+    description:
+      'MoSaFa Tools-এর ডেভেলপার ও সাপোর্টের সাথে সরাসরি ইমেইল (anikvaii700@gmail.com) অথবা হোয়াটসঅ্যাপের মাধ্যমে যোগাযোগ করুন।',
     path: '/contact',
     canonicalUrl: 'https://tools.mosafabd.com/contact',
     ogImage: DEFAULT_OG_IMAGE,
     category: 'Contact & Support',
     applicationCategory: 'WebApplication',
-    keywords: ['contact mosafa tools', 'যোগাযোগ', 'মুফাসসিরুল ইসলাম যোগাযোগ', 'সাপোর্ট হোয়াটসঅ্যাপ'],
+    keywords: ['contact mosafa tools', 'যোগাযোগ', 'মোঃ আনিসুল ইসলাম যোগাযোগ', 'সাপোর্ট হোয়াটসঅ্যাপ'],
   },
   'privacy': {
     id: 'privacy',
     slug: 'privacy',
     title: 'গোপনীয়তা নীতিমালা (Privacy Policy) – MoSaFa Tools',
     h1: 'গোপনীয়তা নীতিমালা – MoSaFa Tools',
-    description: 'MoSaFa Tools গোপনীয়তা নীতি। ডাটা নিরাপত্তা, ফায়ারবেস অথেন্টিকেশন, ক্লাউড ফায়ারস্টোর ও কুকিজ নীতিমালা।',
+    description:
+      'MoSaFa Tools-এর গোপনীয়তা নীতিমালা পড়ুন। ব্রাউজার-ভিত্তিক ফাইল প্রসেসিং, Firebase ডেটা সুরক্ষা, কুকিজ ও তথ্য অপসারণ নীতি জানুন।',
     path: '/privacy',
     canonicalUrl: 'https://tools.mosafabd.com/privacy',
     ogImage: DEFAULT_OG_IMAGE,
@@ -514,7 +517,8 @@ export const TOOLS_SEO_REGISTRY: Record<string, ToolSeoInfo> = {
     slug: 'terms',
     title: 'ব্যবহারের শর্তাবলী (Terms & Conditions) – MoSaFa Tools',
     h1: 'ব্যবহারের শর্তাবলী – MoSaFa Tools',
-    description: 'MoSaFa Tools ওয়েবসাইট ও ডিজিটাল টুল ব্যবহারের নিয়মাবলী, পয়েন্ট পলিসি ও শর্তাবলী।',
+    description:
+      'MoSaFa Tools ওয়েবসাইট ও অনলাইন টুলস ব্যবহারের শর্তাবলী, ফরম ও ডকুমেন্টের দায়বদ্ধতা এবং কয়েন ও ওয়ালেট নীতিমালা সম্পর্কে জানুন।',
     path: '/terms',
     canonicalUrl: 'https://tools.mosafabd.com/terms',
     ogImage: DEFAULT_OG_IMAGE,
@@ -572,25 +576,51 @@ export function generateSchemaJsonLd(info: ToolSeoInfo): Record<string, any> {
   };
 
   if (!isHome) {
-    baseSchema['@graph'].push({
-      '@type': 'WebApplication',
-      '@id': `${info.canonicalUrl}#webapp`,
-      name: info.title,
-      url: info.canonicalUrl,
-      description: info.description,
-      applicationCategory: info.applicationCategory || 'UtilitiesApplication',
-      operatingSystem: 'All',
-      browserRequirements: 'Requires JavaScript. Requires HTML5.',
-      offers: {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'BDT',
-      },
-      inLanguage: 'bn',
-      isPartOf: {
-        '@id': `${SITE_BASE_URL}/#website`,
-      },
-    });
+    const isLegalPage = ['about', 'contact', 'privacy', 'terms'].includes(info.slug);
+
+    if (isLegalPage) {
+      const pageType =
+        info.slug === 'about'
+          ? 'AboutPage'
+          : info.slug === 'contact'
+          ? 'ContactPage'
+          : 'WebPage';
+
+      baseSchema['@graph'].push({
+        '@type': pageType,
+        '@id': `${info.canonicalUrl}#webpage`,
+        name: info.title,
+        url: info.canonicalUrl,
+        description: info.description,
+        inLanguage: 'bn',
+        isPartOf: {
+          '@id': `${SITE_BASE_URL}/#website`,
+        },
+        about: {
+          '@id': `${SITE_BASE_URL}/#organization`,
+        },
+      });
+    } else {
+      baseSchema['@graph'].push({
+        '@type': 'WebApplication',
+        '@id': `${info.canonicalUrl}#webapp`,
+        name: info.title,
+        url: info.canonicalUrl,
+        description: info.description,
+        applicationCategory: info.applicationCategory || 'UtilitiesApplication',
+        operatingSystem: 'All',
+        browserRequirements: 'Requires JavaScript. Requires HTML5.',
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'BDT',
+        },
+        inLanguage: 'bn',
+        isPartOf: {
+          '@id': `${SITE_BASE_URL}/#website`,
+        },
+      });
+    }
 
     // Add BreadcrumbList for rich snippet navigation in Google Search
     baseSchema['@graph'].push({
@@ -614,7 +644,7 @@ export function generateSchemaJsonLd(info: ToolSeoInfo): Record<string, any> {
 
     // Add FAQPage schema for rich snippet accordions in Google search
     const richContent = TOOLS_RICH_CONTENT[info.slug];
-    if (richContent && richContent.faqs && richContent.faqs.length > 0) {
+    if (!isLegalPage && richContent && richContent.faqs && richContent.faqs.length > 0) {
       baseSchema['@graph'].push({
         '@type': 'FAQPage',
         '@id': `${info.canonicalUrl}#faq`,

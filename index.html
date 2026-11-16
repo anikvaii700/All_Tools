@@ -160,6 +160,7 @@
   <body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-rose-100 selection:text-rose-900">
     <!-- Visible branded initial fallback: replaced instantaneously once React mounts -->
     <div id="root">
+      <!-- ROOT_FALLBACK_START -->
       <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Hind Siliguri', -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 24px; text-align: center;">
         <div style="width: 72px; height: 72px; border-radius: 22px; background: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.25); border: 1px solid #f1f5f9; margin-bottom: 16px; overflow: hidden; padding: 2px;">
           <img src="/logo.png" alt="MoSaFa Tools" style="width: 100%; height: 100%; object-fit: contain;" />
@@ -171,7 +172,30 @@
         <p style="font-size: 13px; color: #64748b; margin: 0 0 20px 0; font-weight: 500;">ডিজিটাল সফটওয়্যার অনলাইন টুলস লোড হচ্ছে...</p>
         <div style="width: 32px; height: 32px; border: 3.5px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; animation: mosafa-spin 0.75s linear infinite;"></div>
         <style>@keyframes mosafa-spin { to { transform: rotate(360deg); } }</style>
+        <noscript>
+          <div style="max-width: 760px; margin-top: 28px; text-align: left; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <h1 style="font-size: 20px; font-weight: 800; margin: 0 0 8px 0;">MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল</h1>
+            <p style="font-size: 14px; color: #475569; margin: 0 0 14px 0;">বাংলাদেশের শিক্ষার্থী, চাকরিপ্রার্থী, ব্যবসায়ী ও সাধারণ নাগরিকদের জন্য প্রয়োজনীয় বাংলা অনলাইন টুলস পোর্টাল।</p>
+            <nav aria-label="Primary Tools and Pages">
+              <ul style="line-height: 1.9; padding-left: 20px; margin: 0; font-size: 14px;">
+                <li><a href="/tools/age-calc">বয়স ক্যালকুলেটর (Age Calculator)</a></li>
+                <li><a href="/tools/bangladesh-map">বাংলাদেশ ভ্রমণ ম্যাপ (Bangladesh Map)</a></li>
+                <li><a href="/tools/pdf-toolkit">PDF Toolkit (Merge, Split ও Compress)</a></li>
+                <li><a href="/tools/cv-maker">CV Maker (বাংলা ও ইংরেজি সিভি)</a></li>
+                <li><a href="/tools/studymate-bd">StudyMate BD (AI পড়াশোনা সহকারী)</a></li>
+                <li><a href="/tools/bd-online-portal">BD Online Portal (সরকারি ও নাগরিক সেবা)</a></li>
+                <li><a href="/tools/all-form-fillup">All Form Fillup (অনলাইন ফরম ও রসিদ)</a></li>
+                <li><a href="/tools/job-photo-signature-resizer">Job Photo &amp; Signature Resizer</a></li>
+                <li><a href="/about">আমাদের সম্পর্কে (About Us)</a></li>
+                <li><a href="/contact">যোগাযোগ (Contact Us)</a></li>
+                <li><a href="/privacy">গোপনীয়তা নীতিমালা (Privacy Policy)</a></li>
+                <li><a href="/terms">ব্যবহারের শর্তাবলী (Terms &amp; Conditions)</a></li>
+              </ul>
+            </nav>
+          </div>
+        </noscript>
       </div>
+      <!-- ROOT_FALLBACK_END -->
     </div>
 
     <script type="module" src="/src/main.tsx"></script>

@@ -157,7 +157,7 @@ export const DeveloperContactModal: React.FC<DeveloperContactModalProps> = ({
                 {/* Subtitle / Description (Highlight Target) */}
                 <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed font-medium mt-2 max-w-xl">
                   {config.supportSubtitle ||
-                    'আপনার যেকোনো তথ্য বিশদভাবে জানতে বা যেকোনো টেকনিক্যাল সহায়তার জন্য সরাসরি আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন। আমাদের টিম ২৪/৭ আপনাকে সাহায্য করতে প্রস্তুত।'}
+                    'যেকোনো তথ্য, পরামর্শ বা কারিগরি সহায়তার জন্য ইমেইল (anikvaii700@gmail.com) অথবা হোয়াটসঅ্যাপের মাধ্যমে সরাসরি যোগাযোগ করতে পারেন।'}
                 </p>
 
                 {/* Contact Info Row */}

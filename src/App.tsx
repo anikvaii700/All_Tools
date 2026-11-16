@@ -96,7 +96,10 @@ const AllFormFillup = React.lazy(() => import('./components/all-form-fillup/AllF
 const JobPhotoSignatureResizer = React.lazy(() => import('./components/job-resizer/JobPhotoSignatureResizer').then((m) => ({ default: m.JobPhotoSignatureResizer })));
 const UltraDigitalStudio = React.lazy(() => import('./components/ultra-studio/UltraDigitalStudio').then((m) => ({ default: m.UltraDigitalStudio })));
 const LegalPagesModal = React.lazy(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPagesModal })));
+const LegalPageBody = React.lazy(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPageBody })));
 const MyDigitalShopApp = React.lazy(() => import('./shop/MyDigitalShopApp').then((m) => ({ default: m.MyDigitalShopApp })));
+
+export type LegalPageId = 'about' | 'contact' | 'privacy' | 'terms' | null;
 
 export type ToolId =
   | 'ultra-digital-studio'
@@ -203,6 +206,20 @@ export const getInitialToolFromUrl = (): ToolId => {
   return null;
 };
 
+export const getInitialLegalPageFromUrl = (): LegalPageId => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const pathname = window.location.pathname;
+    const legalMatch = pathname.match(/^\/(about|contact|privacy|terms)\/?$/i);
+    if (legalMatch && legalMatch[1]) {
+      return legalMatch[1].toLowerCase() as LegalPageId;
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+};
+
 export type DeviceSector = 'all' | 'desktop' | 'mobile';
 
 export type ToolCategory =
@@ -228,7 +245,7 @@ export const TOOL_CATEGORIES: CategoryInfo[] = [
     name: 'All Tools',
     banglaName: 'সকল টুলস',
     icon: '🌐',
-    description: 'মোসাফার সকল ২৬টি ডিজিটাল টুলস',
+    description: 'মোসাফার সকল ২৮টি ডিজিটাল টুলস',
   },
   {
     id: 'government',
@@ -290,6 +307,7 @@ export interface ToolCardInfo {
 
 export default function App() {
   const [activeTool, setActiveTool] = useState<ToolId>(getInitialToolFromUrl);
+  const [activeLegalPage, setActiveLegalPage] = useState<LegalPageId>(getInitialLegalPageFromUrl);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<ToolCategory>('all');
   const [deviceSector, setDeviceSector] = useState<DeviceSector>('all');
@@ -328,14 +346,14 @@ export default function App() {
   const { isInstallable, isInstalled, install } = usePWAInstall();
   const updateSync = useAppUpdateSync();
 
-  // Guest entry state: tracks if visitor skipped initial auth screen OR entered directly via a tool URL
+  // Guest entry state: tracks if visitor skipped initial auth screen OR entered directly via a tool or legal URL
   const [hasGuestEntered, setHasGuestEntered] = useState<boolean>(() => {
     try {
       if (sessionStorage.getItem('mosafa_guest_entered') === 'true') {
         return true;
       }
-      // If visitor opens any direct Tool URL (/tools/:slug or ?tool=:slug), activate guest access immediately
-      if (getInitialToolFromUrl() !== null) {
+      // If visitor opens any direct Tool or Legal URL, activate guest access immediately
+      if (getInitialToolFromUrl() !== null || getInitialLegalPageFromUrl() !== null) {
         sessionStorage.setItem('mosafa_guest_entered', 'true');
         return true;
       }
@@ -345,22 +363,22 @@ export default function App() {
     }
   });
 
-  // Guarantee guest access is marked as active whenever any tool is loaded or active
+  // Guarantee guest access is marked as active whenever any tool or legal page is loaded
   useEffect(() => {
-    if (activeTool) {
+    if (activeTool || activeLegalPage) {
       try {
         sessionStorage.setItem('mosafa_guest_entered', 'true');
       } catch {}
       setHasGuestEntered(true);
     }
-  }, [activeTool]);
+  }, [activeTool, activeLegalPage]);
 
   // Delayed Welcome Login Popup (appears after 2.5s on Homepage for first-time unauthenticated visitors)
   const [isDelayedAuthOpen, setIsDelayedAuthOpen] = useState<boolean>(false);
 
   useEffect(() => {
     // Only schedule if on Homepage, not logged in, and hasn't entered/skipped yet
-    if (!activeTool && !user && !hasGuestEntered) {
+    if (!activeTool && !activeLegalPage && !user && !hasGuestEntered) {
       const timer = setTimeout(() => {
         setIsDelayedAuthOpen(true);
       }, 2500);
@@ -368,7 +386,7 @@ export default function App() {
     } else {
       setIsDelayedAuthOpen(false);
     }
-  }, [activeTool, user, hasGuestEntered]);
+  }, [activeTool, activeLegalPage, user, hasGuestEntered]);
 
   const handleSkipAuth = () => {
     try {
@@ -386,7 +404,9 @@ export default function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       const tool = getInitialToolFromUrl();
+      const legal = getInitialLegalPageFromUrl();
       setActiveTool(tool);
+      setActiveLegalPage(legal);
       window.scrollTo(0, 0);
     };
 
@@ -401,7 +421,20 @@ export default function App() {
     setHasGuestEntered(true);
     const newUrl = tool ? `/tools/${tool}` : '/';
     window.history.pushState({ tool }, '', newUrl);
+    setActiveLegalPage(null);
     setActiveTool(tool);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToLegalPage = (page: LegalPageId) => {
+    try {
+      sessionStorage.setItem('mosafa_guest_entered', 'true');
+    } catch {}
+    setHasGuestEntered(true);
+    const newUrl = page ? `/${page}` : '/';
+    window.history.pushState({ legal: page }, '', newUrl);
+    setActiveTool(null);
+    setActiveLegalPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -1147,8 +1180,9 @@ export default function App() {
   const lastTrackedPathRef = React.useRef<string | null>(null);
 
   useEffect(() => {
-    const seo = getToolSeoData(activeTool);
-    const path = activeTool ? `/tools/${activeTool}` : '/';
+    const activeSeoKey = activeTool || activeLegalPage;
+    const seo = getToolSeoData(activeSeoKey);
+    const path = activeTool ? `/tools/${activeTool}` : activeLegalPage ? `/${activeLegalPage}` : '/';
 
     // 1. Dynamic Page Title
     document.title = seo.title;
@@ -1217,7 +1251,7 @@ export default function App() {
         page_path: path,
       });
     }
-  }, [activeTool, currentActiveToolInfo]);
+  }, [activeTool, activeLegalPage, currentActiveToolInfo]);
 
   const toBanglaNum = (n: number | string): string => {
     const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -1286,6 +1320,69 @@ export default function App() {
             {component}
           </React.Suspense>
         </div>
+
+        {/* Crawlable Compact Tool Footer Strip with Internal Links */}
+        <footer className="w-full bg-white border-t border-slate-200 py-4 px-4 mt-auto">
+          <nav
+            aria-label="Tool Footer Navigation"
+            className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-semibold text-slate-600"
+          >
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToTool(null);
+              }}
+              className="hover:text-indigo-600 transition no-underline text-inherit"
+            >
+              সকল টুলস (হোম)
+            </a>
+            <span className="text-slate-300" aria-hidden="true">•</span>
+            <a
+              href="/about"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToLegalPage('about');
+              }}
+              className="hover:text-indigo-600 transition no-underline text-inherit"
+            >
+              আমাদের সম্পর্কে (About)
+            </a>
+            <span className="text-slate-300" aria-hidden="true">•</span>
+            <a
+              href="/contact"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToLegalPage('contact');
+              }}
+              className="hover:text-emerald-600 transition no-underline text-inherit"
+            >
+              যোগাযোগ (Contact)
+            </a>
+            <span className="text-slate-300" aria-hidden="true">•</span>
+            <a
+              href="/privacy"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToLegalPage('privacy');
+              }}
+              className="hover:text-rose-600 transition no-underline text-inherit"
+            >
+              গোপনীয়তা নীতি (Privacy)
+            </a>
+            <span className="text-slate-300" aria-hidden="true">•</span>
+            <a
+              href="/terms"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToLegalPage('terms');
+              }}
+              className="hover:text-amber-600 transition no-underline text-inherit"
+            >
+              শর্তাবলী (Terms)
+            </a>
+          </nav>
+        </footer>
 
         {/* Legal Pages Modal in Tool View */}
         <React.Suspense fallback={null}>
@@ -1531,8 +1628,143 @@ export default function App() {
     );
   }
 
+  if (activeLegalPage) {
+    const legalSeo = getToolSeoData(activeLegalPage);
+    const legalTabs: Array<{ id: Exclude<LegalPageId, null>; label: string }> = [
+      { id: 'about', label: 'আমাদের সম্পর্কে (About Us)' },
+      { id: 'contact', label: 'যোগাযোগ (Contact Us)' },
+      { id: 'privacy', label: 'গোপনীয়তা নীতি (Privacy Policy)' },
+      { id: 'terms', label: 'শর্তাবলী (Terms & Conditions)' },
+    ];
+    const quickToolLinks: Array<{ id: Exclude<ToolId, null>; label: string }> = [
+      { id: 'age-calc', label: 'বয়স ক্যালকুলেটর (Age Calculator)' },
+      { id: 'bangladesh-map', label: 'বাংলাদেশ ভ্রমণ ম্যাপ (Bangladesh Map)' },
+      { id: 'pdf-toolkit', label: 'PDF Toolkit (Merge, Split ও Compress)' },
+      { id: 'cv-maker', label: 'CV Maker (বাংলা ও ইংরেজি সিভি)' },
+      { id: 'studymate-bd', label: 'StudyMate BD (AI পড়াশোনা সহকারী)' },
+      { id: 'bd-online-portal', label: 'BD Online Portal (সরকারি ও নাগরিক সেবা)' },
+    ];
+
+    return (
+      <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800">
+        <nav className="w-full bg-slate-900 text-white border-b border-slate-800 px-3 sm:px-6 py-2.5 flex items-center justify-between sticky top-0 z-50 shadow-md">
+          <button
+            type="button"
+            onClick={() => navigateToLegalPage(null)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition text-xs sm:text-sm border border-slate-700 cursor-pointer shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4 text-rose-400" />
+            <span className="hidden xs:inline">পিছনে যান</span>
+          </button>
+
+          <div className="flex-1 px-3 text-center min-w-0">
+            <span className="text-xs sm:text-base font-black text-white truncate block">
+              MoSaFa Tools • তথ্য ও নীতিমালা
+            </span>
+          </div>
+
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              navigateToLegalPage(null);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-bold transition text-xs sm:text-sm shrink-0 no-underline"
+          >
+            <Home className="w-4 h-4 text-white" />
+            <span className="hidden xs:inline">হোমে ফিরে যান</span>
+          </a>
+        </nav>
+
+        <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
+          <nav aria-label="Breadcrumb" className="text-xs text-slate-500 flex items-center gap-2">
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToLegalPage(null);
+              }}
+              className="hover:text-indigo-600 no-underline text-inherit font-medium"
+            >
+              হোম
+            </a>
+            <span>/</span>
+            <span className="text-slate-900 font-bold">{legalSeo.title.split('–')[0].trim()}</span>
+          </nav>
+
+          <div className="flex flex-wrap gap-2">
+            {legalTabs.map((tab) => {
+              const isSelected = activeLegalPage === tab.id;
+              return (
+                <a
+                  key={tab.id}
+                  href={`/${tab.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateToLegalPage(tab.id);
+                  }}
+                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border transition no-underline ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:text-indigo-700'
+                  }`}
+                >
+                  {tab.label}
+                </a>
+              );
+            })}
+          </div>
+
+          <article className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-8 shadow-sm space-y-5">
+            <h1 className="text-xl sm:text-3xl font-black text-slate-900 leading-snug">
+              {legalSeo.h1}
+            </h1>
+            <React.Suspense fallback={<ToolLoadingFallback />}>
+              <LegalPageBody
+                activeTab={activeLegalPage}
+                onOpenDeveloperModal={() => setIsDeveloperModalOpen(true)}
+              />
+            </React.Suspense>
+          </article>
+
+          <section className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs">
+            <h2 className="text-sm sm:text-base font-extrabold text-slate-900 mb-3">
+              MoSaFa Tools-এর জনপ্রিয় অনলাইন টুলস
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm font-semibold">
+              {quickToolLinks.map((item) => (
+                <a
+                  key={item.id}
+                  href={`/tools/${item.id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigateToTool(item.id);
+                  }}
+                  className="px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-indigo-700 transition no-underline block"
+                >
+                  ➔ {item.label}
+                </a>
+              ))}
+            </div>
+          </section>
+        </main>
+
+        <Footer
+          onNavigateTool={(tool) => navigateToTool(tool)}
+          onOpenDeveloperModal={() => setIsDeveloperModalOpen(true)}
+          onNavigateLegal={(tab) => navigateToLegalPage(tab)}
+        />
+
+        <DeveloperContactModal
+          isOpen={isDeveloperModalOpen}
+          onClose={() => setIsDeveloperModalOpen(false)}
+        />
+      </div>
+    );
+  }
+
   // Check if background homepage should be blurred due to delayed auth popup
-  const isDelayedPopupActive = isDelayedAuthOpen && !user && !hasGuestEntered && !activeTool;
+  const isDelayedPopupActive = isDelayedAuthOpen && !user && !hasGuestEntered && !activeTool && !activeLegalPage;
 
   // Render Main Tools Hub View
   return (
@@ -1692,7 +1924,7 @@ export default function App() {
               type="button"
               onClick={handleResetAllFilters}
               className="text-rose-700 hover:text-rose-950 font-bold shrink-0 text-xs px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/90 border border-rose-200 shadow-2xs hover:bg-white transition cursor-pointer flex items-center gap-1"
-              title="সকল ফিল্টার রিসেট করে ২৬টি টুলস দেখুন"
+              title="সকল ফিল্টার রিসেট করে ২৮টি টুলস দেখুন"
             >
               <span>✕</span>
               <span className="hidden sm:inline">সব ফিল্টার মুছুন</span>
@@ -1733,7 +1965,7 @@ export default function App() {
                 type="button"
                 onClick={handleResetAllFilters}
                 className="inline-flex items-center gap-1 text-[11px] bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold px-2.5 py-0.5 rounded-full border border-rose-200 transition cursor-pointer"
-                title="সবগুলো ফিল্টার রিসেট করে ২৬টি টুলস দেখুন"
+                title="সবগুলো ফিল্টার রিসেট করে ২৮টি টুলস দেখুন"
               >
                 <span>✕ সব ফিল্টার মুছুন</span>
               </button>
@@ -1917,7 +2149,7 @@ export default function App() {
                 onClick={handleResetAllFilters}
                 className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 transition shadow-xs cursor-pointer active:scale-95"
               >
-                <span>✕ সব ফিল্টার মুছুন ও সকল ২৬টি টুল দেখুন</span>
+                <span>✕ সব ফিল্টার মুছুন ও সকল ২৮টি টুল দেখুন</span>
               </button>
             )}
           </div>
@@ -1973,6 +2205,7 @@ export default function App() {
         onOpenDeveloperModal={() => {
           setIsDeveloperModalOpen(true);
         }}
+        onNavigateLegal={(tab) => navigateToLegalPage(tab)}
         onOpenLegalModal={(tab) => {
           setLegalModalTab(tab);
           setIsLegalModalOpen(true);

@@ -5,9 +5,26 @@ interface FooterProps {
   onNavigateTool?: (tool: any) => void;
   onOpenDeveloperModal?: () => void;
   onOpenLegalModal?: (tab: 'about' | 'contact' | 'privacy' | 'terms') => void;
+  onNavigateLegal?: (tab: 'about' | 'contact' | 'privacy' | 'terms') => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenDeveloperModal, onOpenLegalModal }) => {
+export const Footer: React.FC<FooterProps> = ({
+  onOpenDeveloperModal,
+  onOpenLegalModal,
+  onNavigateLegal,
+}) => {
+  const handleLegalClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    tab: 'about' | 'contact' | 'privacy' | 'terms'
+  ) => {
+    e.preventDefault();
+    if (onNavigateLegal) {
+      onNavigateLegal(tab);
+    } else {
+      onOpenLegalModal?.(tab);
+    }
+  };
+
   return (
     <footer className="w-full bg-white border-t border-slate-200 pt-6 pb-8 px-4 mt-auto relative z-10">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -23,40 +40,43 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDeveloperModal, onOpenLega
           </button>
         </div>
 
-        {/* ৩। লিগ্যাল ও ট্রাস্ট পেজ লিংকসমূহ (AdSense & User Trust) */}
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-bold text-slate-600">
-          <button
-            type="button"
-            onClick={() => onOpenLegalModal?.('about')}
-            className="hover:text-indigo-600 transition cursor-pointer"
+        {/* ৩। লিগ্যাল ও ট্রাস্ট পেজ লিংকসমূহ (Crawlable Internal Links) */}
+        <nav
+          aria-label="Legal and Information Links"
+          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-bold text-slate-600"
+        >
+          <a
+            href="/about"
+            onClick={(e) => handleLegalClick(e, 'about')}
+            className="hover:text-indigo-600 transition cursor-pointer no-underline text-inherit"
           >
             আমাদের সম্পর্কে (About Us)
-          </button>
-          <span className="text-slate-300">•</span>
-          <button
-            type="button"
-            onClick={() => onOpenLegalModal?.('contact')}
-            className="hover:text-emerald-600 transition cursor-pointer"
+          </a>
+          <span className="text-slate-300" aria-hidden="true">•</span>
+          <a
+            href="/contact"
+            onClick={(e) => handleLegalClick(e, 'contact')}
+            className="hover:text-emerald-600 transition cursor-pointer no-underline text-inherit"
           >
             যোগাযোগ (Contact Us)
-          </button>
-          <span className="text-slate-300">•</span>
-          <button
-            type="button"
-            onClick={() => onOpenLegalModal?.('privacy')}
-            className="hover:text-rose-600 transition cursor-pointer"
+          </a>
+          <span className="text-slate-300" aria-hidden="true">•</span>
+          <a
+            href="/privacy"
+            onClick={(e) => handleLegalClick(e, 'privacy')}
+            className="hover:text-rose-600 transition cursor-pointer no-underline text-inherit"
           >
             গোপনীয়তা নীতি (Privacy Policy)
-          </button>
-          <span className="text-slate-300">•</span>
-          <button
-            type="button"
-            onClick={() => onOpenLegalModal?.('terms')}
-            className="hover:text-amber-600 transition cursor-pointer"
+          </a>
+          <span className="text-slate-300" aria-hidden="true">•</span>
+          <a
+            href="/terms"
+            onClick={(e) => handleLegalClick(e, 'terms')}
+            className="hover:text-amber-600 transition cursor-pointer no-underline text-inherit"
           >
             শর্তাবলী (Terms & Conditions)
-          </button>
-        </div>
+          </a>
+        </nav>
 
         {/* ৪। ফুটার কপিরাইট ও ডেভেলপার সাপোর্ট লিংক */}
         <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 text-center sm:text-left">

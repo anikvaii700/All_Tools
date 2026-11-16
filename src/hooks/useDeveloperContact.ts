@@ -39,7 +39,7 @@ export const DEFAULT_DEVELOPER_CONFIG: DeveloperContactConfig = {
   supportBadge: 'সাপোর্ট ও ইনকোয়ারি',
   supportHeading: 'প্রফেশনাল সাপোর্ট নিন।',
   supportSubtitle:
-    'আপনার যেকোনো তথ্য বিশদভাবে জানতে বা যেকোনো টেকনিক্যাল সহায়তার জন্য সরাসরি আমাদের সাপোর্ট টিমের সাথে যোগাযোগ করুন। আমাদের টিম ২৪/৭ আপনাকে সাহায্য করতে প্রস্তুত।',
+    'যেকোনো তথ্য, পরামর্শ বা কারিগরি সহায়তার জন্য ইমেইল (anikvaii700@gmail.com) অথবা হোয়াটসঅ্যাপের মাধ্যমে সরাসরি যোগাযোগ করতে পারেন।',
   
   // Default Announcement Banner Settings
   noticeEnabled: true,

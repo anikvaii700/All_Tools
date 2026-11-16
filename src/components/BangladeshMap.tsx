@@ -714,10 +714,10 @@ export const BangladeshMap: React.FC<BangladeshMapProps> = ({
 
       {/* Top Navigation & App Bar */}
       <header className="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-sm">
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
           <button
             onClick={onBackToHub}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs shrink-0"
           >
             <span>⬅️</span>
             <span>{lang === 'bn' ? 'মূল টুলস হাব' : 'Tools Hub'}</span>
@@ -725,9 +725,9 @@ export const BangladeshMap: React.FC<BangladeshMapProps> = ({
 
           <div className="h-4 w-px bg-slate-200 hidden sm:block" />
 
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-xl font-black text-slate-900 tracking-tight leading-tight flex items-center gap-1.5">
+              <h1 className="text-base sm:text-xl font-black text-slate-900 tracking-tight leading-tight flex flex-wrap items-center gap-1.5">
                 <span>MoSaFa My Bangladesh Map</span>
                 <span className="text-[10px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full uppercase">
                   ৬৪ জেলা

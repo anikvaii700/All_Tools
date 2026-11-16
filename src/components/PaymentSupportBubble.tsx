@@ -58,8 +58,8 @@ export const PaymentSupportBubble: React.FC<PaymentSupportBubbleProps> = ({ onOp
           <div className="flex flex-col text-left">
             <span className="font-black text-[12px] tracking-tight leading-tight flex items-center gap-1">
               <span>পেমেন্ট সাপোর্ট</span>
-              <span className="text-[10px] bg-emerald-800/80 text-emerald-100 px-1.5 py-0.2 rounded-full font-sans uppercase">
-                24/7
+              <span className="text-[10px] bg-emerald-800/80 text-emerald-100 px-1.5 py-0.2 rounded-full font-sans">
+                WhatsApp
               </span>
             </span>
             <span className="text-[10px] text-emerald-100 font-semibold opacity-90 hidden sm:inline">
