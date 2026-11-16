@@ -4,7 +4,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getAuth, DecodedIdToken } from 'firebase-admin/auth';
 import dotenv from 'dotenv';
 
@@ -90,53 +90,173 @@ async function startServer() {
   const AUTHORIZED_ADMIN_SYNTHETIC_EMAIL = 'user_01743224700@phone.mosafabd.com';
   const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'ai-studio-applet-webapp-2019a';
 
-  if (!getApps().length) {
+  const serviceAccountEnvCandidates = [
+    { name: 'FIREBASE_SERVICE_ACCOUNT_KEY', raw: process.env.FIREBASE_SERVICE_ACCOUNT_KEY },
+    { name: 'FIREBASE_SERVICE_ACCOUNT', raw: process.env.FIREBASE_SERVICE_ACCOUNT },
+  ];
+
+  function getSafeInitErrorMessage(err: unknown): string {
+    const rawMsg = err instanceof Error ? err.message : 'Initialization error';
+    if (/private_key|BEGIN .*KEY|client_email|\{.*\}|credential/i.test(rawMsg)) {
+      return 'Service account configuration could not be parsed or initialized.';
+    }
+    return rawMsg.slice(0, 160);
+  }
+
+  function parseServiceAccountJson(rawValue?: string): Record<string, any> | null {
+    const trimmed = rawValue?.trim();
+    if (!trimmed) return null;
     try {
-      initializeApp({
-        projectId: FIREBASE_PROJECT_ID,
-      });
-    } catch (err) {
-      console.warn('Firebase Admin SDK initialization note:', err);
+      const parsed = JSON.parse(trimmed);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return null;
+      }
+      if (typeof parsed.private_key === 'string') {
+        parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+      }
+      if (typeof parsed.client_email !== 'string' || typeof parsed.private_key !== 'string') {
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
     }
   }
 
-  async function authenticateAdminRequest(req: express.Request): Promise<{ authorized: boolean; uid?: string; phone?: string; error?: string }> {
+  if (!getApps().length) {
+    const providedCandidates = serviceAccountEnvCandidates.filter(
+      (candidate) => Boolean(candidate.raw && candidate.raw.trim())
+    );
+
+    if (providedCandidates.length > 0) {
+      for (const candidate of providedCandidates) {
+        if (getApps().length) break;
+        const parsedServiceAccount = parseServiceAccountJson(candidate.raw);
+        if (!parsedServiceAccount) {
+          console.warn(
+            `Firebase Admin SDK initialization note: ${candidate.name} contains invalid or incomplete JSON.`
+          );
+          continue;
+        }
+        try {
+          initializeApp({
+            credential: cert(parsedServiceAccount),
+            projectId: FIREBASE_PROJECT_ID,
+          });
+        } catch (err) {
+          console.warn(
+            `Firebase Admin SDK initialization note (${candidate.name}):`,
+            getSafeInitErrorMessage(err)
+          );
+        }
+      }
+    } else {
+      try {
+        initializeApp({
+          projectId: FIREBASE_PROJECT_ID,
+        });
+      } catch (err) {
+        console.warn('Firebase Admin SDK initialization note:', getSafeInitErrorMessage(err));
+      }
+    }
+  }
+
+  async function authenticateAdminRequest(
+    req: express.Request
+  ): Promise<{ authorized: boolean; status?: number; uid?: string; phone?: string; error?: string }> {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return { authorized: false, error: 'অননুমোদিত: টোকেন অনুপস্থিত (Missing Bearer Token)' };
+      return { authorized: false, status: 401, error: 'অননুমোদিত: টোকেন অনুপস্থিত (Missing Bearer Token)' };
     }
     const token = authHeader.split('Bearer ')[1].trim();
     if (!token) {
-      return { authorized: false, error: 'অননুমোদিত: ফাঁকা টোকেন' };
+      return { authorized: false, status: 401, error: 'অননুমোদিত: ফাঁকা টোকেন' };
+    }
+
+    if (!getApps().length) {
+      return {
+        authorized: false,
+        status: 503,
+        error: 'সার্ভারের Firebase Admin SDK সক্রিয় নয় — নিরাপত্তার স্বার্থে অ্যাডমিন যাচাইকরণ বন্ধ আছে (HTTP 503)',
+      };
     }
 
     let decodedToken: DecodedIdToken | null = null;
     try {
-      decodedToken = await getAuth().verifyIdToken(token);
-    } catch {
-      try {
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-          const now = Math.floor(Date.now() / 1000);
-          if (payload.exp && payload.exp < now) {
-            return { authorized: false, error: 'টোকেনের মেয়াদ শেষ হয়ে গেছে (Token Expired)' };
-          }
-          if (
-            payload.aud !== FIREBASE_PROJECT_ID &&
-            payload.iss !== `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`
-          ) {
-            return { authorized: false, error: 'টোকেন প্রজেক্ট অসামঞ্জস্যপূর্ণ' };
-          }
-          decodedToken = payload as any;
-        }
-      } catch {
-        return { authorized: false, error: 'টোকেন যাচাইকরণ ব্যর্থ হয়েছে' };
+      decodedToken = await getAuth().verifyIdToken(token, true);
+    } catch (sdkErr: any) {
+      const code = String(sdkErr?.code || '');
+      const message = String(sdkErr?.message || '');
+
+      if (code === 'auth/id-token-revoked') {
+        return {
+          authorized: false,
+          status: 401,
+          error: 'অ্যাডমিন সেশন বাতিল (Revoked) করা হয়েছে — অনুগ্রহ করে পুনরায় লগইন করুন।',
+        };
       }
+      if (code === 'auth/user-disabled' || code === 'auth/user-not-found') {
+        return {
+          authorized: false,
+          status: 401,
+          error: 'অ্যাডমিন অ্যাকাউন্টটি নিষ্ক্রিয় (Disabled) বা অকার্যকর করা হয়েছে।',
+        };
+      }
+      if (code === 'auth/id-token-expired') {
+        return {
+          authorized: false,
+          status: 401,
+          error: 'টোকেনের মেয়াদ শেষ হয়ে গেছে (Token Expired)',
+        };
+      }
+      if (
+        code === 'auth/argument-error' ||
+        /decoding firebase id token failed|incorrect "aud"|incorrect "iss"|invalid signature|kid|algorithm/i.test(
+          message
+        )
+      ) {
+        return {
+          authorized: false,
+          status: 401,
+          error: 'অবৈধ বা অসামঞ্জস্যপূর্ণ অ্যাডমিন টোকেন (Invalid Token)',
+        };
+      }
+
+      if (
+        code === 'app/invalid-credential' ||
+        code === 'app/no-app' ||
+        code === 'auth/insufficient-permission' ||
+        code === 'auth/internal-error' ||
+        /credential|default credentials|project id|metadata|enotfound|econnrefused|etimedout|eai_again|fetch failed/i.test(
+          message
+        )
+      ) {
+        return {
+          authorized: false,
+          status: 503,
+          error:
+            'সার্ভারে Firebase Admin Service Account credentials অনুপলব্ধ বা যাচাইকরণ সার্ভার অপ্রাপ্য — নিরাপত্তার স্বার্থে অ্যাডমিন অ্যাক্সেস বন্ধ রাখা হয়েছে (Fail-Closed HTTP 503)।',
+        };
+      }
+
+      return {
+        authorized: false,
+        status: 401,
+        error: 'Firebase Admin SDK টোকেন যাচাইকরণ ব্যর্থ হয়েছে (Fail-Closed HTTP 401)',
+      };
     }
 
-    if (!decodedToken) {
-      return { authorized: false, error: 'টোকেন যাচাই করা সম্ভব হয়নি' };
+    if (
+      !decodedToken ||
+      !decodedToken.uid ||
+      decodedToken.aud !== FIREBASE_PROJECT_ID ||
+      decodedToken.iss !== `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`
+    ) {
+      return {
+        authorized: false,
+        status: 401,
+        error: 'টোকেন প্রজেক্ট বা পরিচয় যাচাইকরণ ব্যর্থ হয়েছে (Invalid Project/Identity)',
+      };
     }
 
     const email = (decodedToken.email || '').toLowerCase();
@@ -154,6 +274,7 @@ async function startServer() {
     if (!isMatch) {
       return {
         authorized: false,
+        status: 403,
         error: 'অ্যাক্সেস ডিনাইড: শুধুমাত্র অনুমোদিত অ্যাডমিন একাউন্ট (01743224700) এই অপারেশন করতে পারবে। (HTTP 403 Forbidden)',
       };
     }
@@ -165,7 +286,7 @@ async function startServer() {
   app.get('/api/admin/verify', async (req, res) => {
     const authResult = await authenticateAdminRequest(req);
     if (!authResult.authorized) {
-      return res.status(403).json({
+      return res.status(authResult.status || 403).json({
         success: false,
         authorized: false,
         error: authResult.error || 'অ্যাক্সেস ডিনাইড (HTTP 403 Forbidden)',
@@ -185,7 +306,7 @@ async function startServer() {
     if (req.path === '/api/admin/verify') return next();
     const authResult = await authenticateAdminRequest(req);
     if (!authResult.authorized) {
-      return res.status(403).json({
+      return res.status(authResult.status || 403).json({
         success: false,
         authorized: false,
         error: authResult.error || 'অ্যাক্সেস ডিনাইড: অননুমোদিত ইউজার (HTTP 403 Forbidden)',

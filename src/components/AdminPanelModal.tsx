@@ -69,6 +69,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [adminAuthError, setAdminAuthError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isVerifyingAccess, setIsVerifyingAccess] = useState(false);
   const [adminPin, setAdminPin] = useState('');
   const [activeTab, setActiveTab] = useState<'support' | 'notice' | 'profile' | 'stories' | 'users'>('support');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -142,37 +143,83 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         currentPhone === '01743224700')
   );
 
-  useEffect(() => {
-    if (isOpen) {
+  const verifyCurrentAdminSession = async (
+    signal?: { cancelled: boolean },
+    forceTokenRefresh = false
+  ) => {
+    if (!auth.currentUser || !isCurrentUserAdmin) {
+      if (!signal?.cancelled) {
+        setIsUnlocked(false);
+        setIsVerifyingAccess(false);
+      }
+      return;
+    }
+
+    if (!signal?.cancelled) {
+      setIsVerifyingAccess(true);
       setAdminAuthError('');
-      if (isCurrentUserAdmin) {
-        (async () => {
-          try {
-            const token = await auth.currentUser?.getIdToken();
-            if (token) {
-              const res = await fetch('/api/admin/verify', {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              if (res.ok) {
-                setIsUnlocked(true);
-                adminUserService.syncFromFirestore(true);
-              } else {
-                const data = await res.json().catch(() => ({}));
-                setIsUnlocked(false);
-                setAdminAuthError(data.error || 'অ্যাক্সেস ডিনাইড (HTTP 403 Forbidden)');
-              }
-            } else {
-              setIsUnlocked(false);
-            }
-          } catch {
-            setIsUnlocked(true);
-            adminUserService.syncFromFirestore(true);
-          }
-        })();
+      setIsUnlocked(false);
+    }
+
+    try {
+      const token = await auth.currentUser.getIdToken(forceTokenRefresh);
+      if (signal?.cancelled) return;
+
+      if (!token) {
+        setIsUnlocked(false);
+        setAdminAuthError('অ্যাডমিন সেশন টোকেন পাওয়া যায়নি। দয়া করে আবার সাইন-ইন করুন।');
+        return;
+      }
+
+      const res = await fetch('/api/admin/verify', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (signal?.cancelled) return;
+
+      if (res.ok && data?.authorized === true) {
+        setIsUnlocked(true);
+        setAdminAuthError('');
+        adminUserService.syncFromFirestore(true);
       } else {
         setIsUnlocked(false);
+        setAdminAuthError(
+          data?.error || `সার্ভার যাচাইকরণ ব্যর্থ হয়েছে (HTTP ${res.status})`
+        );
+      }
+    } catch {
+      if (signal?.cancelled) return;
+      setIsUnlocked(false);
+      setAdminAuthError(
+        'সার্ভারের সাথে সংযোগ ব্যর্থ হয়েছে — অ্যাডমিন পরিচয় যাচাই করা যায়নি। নিচে Retry Verification বাটনে চাপ দিন।'
+      );
+    } finally {
+      if (!signal?.cancelled) {
+        setIsVerifyingAccess(false);
       }
     }
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsUnlocked(false);
+      setIsVerifyingAccess(false);
+      return;
+    }
+
+    const signal = { cancelled: false };
+    setAdminAuthError('');
+    setIsUnlocked(false);
+
+    if (isCurrentUserAdmin) {
+      void verifyCurrentAdminSession(signal, false);
+    } else {
+      setIsVerifyingAccess(false);
+    }
+
+    return () => {
+      signal.cancelled = true;
+    };
   }, [isOpen, isCurrentUserAdmin]);
 
   const handleAdminPhoneLogin = async (e: React.FormEvent) => {
@@ -184,23 +231,32 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     try {
       setIsAuthenticating(true);
       setAdminAuthError('');
+      setIsUnlocked(false);
       await loginWithPhone(AUTHORIZED_ADMIN_PHONE, adminPin);
-      const token = await auth.currentUser?.getIdToken();
-      if (token) {
-        const res = await fetch('/api/admin/verify', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          setIsUnlocked(true);
-          adminUserService.syncFromFirestore(true);
-          onShowToast?.('প্রধান অ্যাডমিন (01743224700) একাউন্ট সফলভাবে যাচাইকৃত 🔓', '🔑');
-        } else {
-          const data = await res.json().catch(() => ({}));
-          setAdminAuthError(data.error || 'অননুমোদিত অ্যাডমিন টোকেন (HTTP 403)');
-        }
+      const token = await auth.currentUser?.getIdToken(true);
+      if (!token) {
+        setIsUnlocked(false);
+        setAdminAuthError('টোকেন পাওয়া যায়নি — অ্যাডমিন যাচাইকরণ ব্যর্থ হয়েছে।');
+        return;
+      }
+      const res = await fetch('/api/admin/verify', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.authorized === true) {
+        setIsUnlocked(true);
+        setAdminAuthError('');
+        adminUserService.syncFromFirestore(true);
+        onShowToast?.('প্রধান অ্যাডমিন (01743224700) একাউন্ট সফলভাবে যাচাইকৃত 🔓', '🔑');
+      } else {
+        setIsUnlocked(false);
+        setAdminAuthError(data?.error || 'অননুমোদিত অ্যাডমিন টোকেন (HTTP 403)');
       }
     } catch (err: any) {
-      setAdminAuthError(err?.message || 'লগইন করতে সমস্যা হয়েছে।');
+      setIsUnlocked(false);
+      setAdminAuthError(
+        err?.message || 'সার্ভারের সাথে সংযোগ ব্যর্থ হয়েছে — অ্যাডমিন যাচাইকরণ সম্পন্ন হয়নি।'
+      );
     } finally {
       setIsAuthenticating(false);
     }
@@ -450,10 +506,30 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   <div className="p-3.5 rounded-2xl bg-white border border-slate-200 text-left">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">বর্তমান সাইন-ইন একাউন্ট</span>
                     <p className="text-xs font-extrabold text-slate-800 break-all">{auth.currentUser.phoneNumber || auth.currentUser.email || 'অজ্ঞাত ইউজার'}</p>
-                    <span className="inline-block mt-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
-                      ⚠️ অ্যাডমিন অনুমতি নেই (শুধুমাত্র 01743224700 অনুমোদিত)
-                    </span>
+                    {isCurrentUserAdmin ? (
+                      <span className="inline-block mt-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                        {isVerifyingAccess
+                          ? '⏳ সার্ভারের মাধ্যমে অ্যাডমিন পরিচয় যাচাই চলছে...'
+                          : '🔒 অ্যাডমিন প্যানেল লক করা আছে (সার্ভার যাচাইকরণ প্রয়োজন)'}
+                      </span>
+                    ) : (
+                      <span className="inline-block mt-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                        ⚠️ অ্যাডমিন অনুমতি নেই (শুধুমাত্র 01743224700 অনুমোদিত)
+                      </span>
+                    )}
                   </div>
+
+                  {isCurrentUserAdmin && (
+                    <button
+                      type="button"
+                      disabled={isVerifyingAccess}
+                      onClick={() => void verifyCurrentAdminSession(undefined, true)}
+                      className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer shadow-md active:scale-95 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isVerifyingAccess ? 'animate-spin' : ''}`} />
+                      <span>{isVerifyingAccess ? 'যাচাই চলছে...' : 'Retry Verification (পুনরায় যাচাই করুন)'}</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -461,7 +537,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-bold text-xs cursor-pointer shadow-md active:scale-95 transition flex items-center justify-center gap-2"
                   >
                     <RotateCcw className="w-4 h-4" />
-                    <span>লগআউট করে 01743224700 দিয়ে লগইন করুন</span>
+                    <span>{isCurrentUserAdmin ? 'লগআউট করে আবার সাইন-ইন করুন' : 'লগআউট করে 01743224700 দিয়ে লগইন করুন'}</span>
                   </button>
                 </div>
               ) : (
