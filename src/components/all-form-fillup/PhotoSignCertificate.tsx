@@ -64,17 +64,17 @@ export interface PhotoSignCertificateData {
 }
 
 export const SAMPLE_PHOTO_SIGN_DATA: PhotoSignCertificateData = {
-  unionParishad: '০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ',
-  upazila: 'মাধবপুর',
-  district: 'হবিগঞ্জ',
+  unionParishad: 'আশুলিয়া ইউনিয়ন পরিষদ',
+  upazila: 'সাভার',
+  district: 'ঢাকা',
   memoNo: '',
   issueDate: '২৮/১০/২০২৬',
   applicantName: 'ছামিরা',
   relationType: 'father',
   guardianName: 'মোঃ মিলন মিয়া',
   motherName: 'আলিমা বেগম',
-  village: 'আন্দিউড়া',
-  postOffice: 'আন্দিউড়া-৩৩০১',
+  village: 'আশুলিয়া',
+  postOffice: 'আশুলিয়া-১৩৪১',
   voterYear: '২০২২',
   nidNumber: '৪৬৭২৯২৮৭৪৬',
   dateOfBirth: '০৫-০৫-১৯৯৮',
@@ -85,9 +85,9 @@ export const SAMPLE_PHOTO_SIGN_DATA: PhotoSignCertificateData = {
 };
 
 export const EMPTY_PHOTO_SIGN_DATA: PhotoSignCertificateData = {
-  unionParishad: '০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ',
-  upazila: 'মাধবপুর',
-  district: 'হবিগঞ্জ',
+  unionParishad: 'আশুলিয়া ইউনিয়ন পরিষদ',
+  upazila: 'সাভার',
+  district: 'ঢাকা',
   memoNo: '',
   issueDate: new Date().toLocaleDateString('bn-BD'),
   applicantName: '',
@@ -174,7 +174,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
 
   const handleLoadSample = () => {
     setData(SAMPLE_PHOTO_SIGN_DATA);
-    onShowToast?.('০৫ নং আন্দিউড়া ইউপির নমুনা প্রত্যয়নপত্র লোড হয়েছে', '✨');
+    onShowToast?.('আশুলিয়া ইউনিয়ন পরিষদের নমুনা প্রত্যয়নপত্র লোড হয়েছে', '✨');
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -267,7 +267,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              ০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ সহ সকল তথ্য এডিটেবল • হুবহু A4 সাইজ • তাৎক্ষণিক প্রিন্ট ও PDF
+              আশুলিয়া ইউনিয়ন পরিষদ সহ সকল তথ্য এডিটেবল • হুবহু A4 সাইজ • তাৎক্ষণিক প্রিন্ট ও PDF
             </p>
           </div>
         </div>
@@ -369,7 +369,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
                   type="text"
                   value={data.unionParishad}
                   onChange={(e) => updateField('unionParishad', e.target.value)}
-                  placeholder="যেমন: ০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ"
+                  placeholder="যেমন: আশুলিয়া ইউনিয়ন পরিষদ"
                   className="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600 font-bold text-slate-900"
                 />
               </div>
@@ -381,7 +381,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
                     type="text"
                     value={data.upazila}
                     onChange={(e) => updateField('upazila', e.target.value)}
-                    placeholder="যেমন: মাধবপুর"
+                    placeholder="যেমন: সাভার"
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600 font-medium text-slate-900"
                   />
                 </div>
@@ -391,7 +391,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
                     type="text"
                     value={data.district}
                     onChange={(e) => updateField('district', e.target.value)}
-                    placeholder="যেমন: হবিগঞ্জ"
+                    placeholder="যেমন: ঢাকা"
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600 font-medium text-slate-900"
                   />
                 </div>
@@ -488,7 +488,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
                     type="text"
                     value={data.village}
                     onChange={(e) => updateField('village', e.target.value)}
-                    placeholder="যেমন: আন্দিউড়া"
+                    placeholder="যেমন: আশুলিয়া"
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium"
                   />
                 </div>
@@ -498,7 +498,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
                     type="text"
                     value={data.postOffice}
                     onChange={(e) => updateField('postOffice', e.target.value)}
-                    placeholder="যেমন: আন্দিউড়া-৩৩০১"
+                    placeholder="যেমন: আশুলিয়া-১৩৪১"
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium"
                   />
                 </div>
@@ -727,12 +727,12 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
 
                     {/* Union Parishad Name (Highlighted Large Header as in image_d5c7e51c.png) */}
                     <h1 className="text-2xl sm:text-[28px] font-black tracking-tight text-black my-0.5 leading-snug">
-                      {data.unionParishad || '০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ'}
+                      {data.unionParishad || 'আশুলিয়া ইউনিয়ন পরিষদ'}
                     </h1>
 
                     {/* Upazila & District */}
                     <div className="text-[12.5px] sm:text-[13px] font-bold text-slate-800">
-                      উপজেলা: {data.upazila || 'মাধবপুর'}, জেলা: {data.district || 'হবিগঞ্জ'}।
+                      উপজেলা: {data.upazila || 'সাভার'}, জেলা: {data.district || 'ঢাকা'}।
                     </div>
                   </div>
 
@@ -787,7 +787,7 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
                     , উপজেলাঃ {data.upazila || '................................'}, জেলাঃ{' '}
                     {data.district || '................................'}। তিনি অত্র{' '}
                     <span className="font-bold text-black">
-                      {data.unionParishad || '০৫ নং আন্দিউড়া'}
+                      {data.unionParishad || 'আশুলিয়া'}
                     </span>{' '}
                     ইউনিয়নের স্থায়ী বাসিন্দা ও বাংলাদেশের নাগরিক। তিনি আমার নিকট ব্যক্তিগত ভাবে পরিচিত। তিনি{' '}
                     <span className="font-bold text-black">{data.voterYear || '২০২২'}</span> সালের
@@ -898,10 +898,10 @@ export const PhotoSignCertificate: React.FC<PhotoSignCertificateProps> = ({
                       {data.signatoryDesignation || 'চেয়ারম্যান'}
                     </div>
                     <div className="text-[12px] font-bold text-slate-800">
-                      {data.unionParishad || '০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ'}
+                      {data.unionParishad || 'আশুলিয়া ইউনিয়ন পরিষদ'}
                     </div>
                     <div className="text-[11.5px] text-slate-700">
-                      {data.upazila || 'মাধবপুর'}, {data.district || 'হবিগঞ্জ'}।
+                      {data.upazila || 'সাভার'}, {data.district || 'ঢাকা'}।
                     </div>
                   </div>
                 </div>

@@ -761,14 +761,14 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
 
   // Map current table data into PhotoSignCertificateData structure (image_d5c7e51c.png)
   const mappedPhotoSignData: Partial<PhotoSignCertificateData> = {
-    unionParishad: '০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ',
-    upazila: 'মাধবপুর',
-    district: 'হবিগঞ্জ',
+    unionParishad: 'আশুলিয়া ইউনিয়ন পরিষদ',
+    upazila: 'সাভার',
+    district: 'ঢাকা',
     applicantName: formData.self_name_bn.desired || formData.self_name_bn.existing || 'ছামিরা',
     guardianName: formData.father_name.desired || formData.father_name.existing || 'মোঃ মিলন মিয়া',
     motherName: formData.mother_name.desired || formData.mother_name.existing || 'আলিমা বেগম',
-    village: 'আন্দিউড়া',
-    postOffice: 'আন্দিউড়া-৩৩০১',
+    village: 'আশুলিয়া',
+    postOffice: 'আশুলিয়া-১৩৪১',
     nidNumber: formNidNumber || '৪৬৭২৯২৮৭৪৬',
     voterYear: '২০২২',
     dateOfBirth: '০৫-০৫-১৯৯৮',
@@ -796,7 +796,7 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
                 </span>
               </div>
               <p className="text-xs text-rose-100 font-medium">
-                ০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ সহ সকল তথ্য এডিটেবল • গণপ্রজাতন্ত্রী লোগো • ৩-ঘর নমুনা ছক • লাইভ A4 প্রিভিউ ও PDF ডাউনলোড
+                আশুলিয়া ইউনিয়ন পরিষদ সহ সকল তথ্য এডিটেবল • গণপ্রজাতন্ত্রী লোগো • ৩-ঘর নমুনা ছক • লাইভ A4 প্রিভিউ ও PDF ডাউনলোড
               </p>
             </div>
           </div>
@@ -824,8 +824,8 @@ export const NidSimpleFormat: React.FC<NidSimpleFormatProps> = ({ onShowToast })
   // Map current table data into ServerCopyApplicationData structure (image_44a1549a.png)
   const mappedServerCopyData: Partial<ServerCopyApplicationData> = {
     recipientDesignation: 'উপজেলা নির্বাচন কর্মকর্তা',
-    upazila: 'মাধবপুর',
-    district: 'হবিগঞ্জ',
+    upazila: 'সাভার',
+    district: 'ঢাকা',
     applicantName: formData.self_name_bn.desired || formData.self_name_bn.existing || 'নাঈম মিয়া',
     applicantNid: formNidNumber || '১৯৯৫২৬৯১৬৪৫০৪৫৭১২',
     applicantMobile: formMobileNumber || '০১৭১২-৩৪৫৬৭৮',

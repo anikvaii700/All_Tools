@@ -1130,7 +1130,7 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-rose-100 font-medium">
-                    ০৫ নং আন্দিউড়া ইউনিয়ন পরিষদ সহ সকল তথ্য এডিটেবল, গণপ্রজাতন্ত্রী লোগো, নমুনা ছক, লাইভ A4 প্রিভিউ ও PDF ডাউনলোড
+                    আশুলিয়া ইউনিয়ন পরিষদ সহ সকল তথ্য এডিটেবল, গণপ্রজাতন্ত্রী লোগো, নমুনা ছক, লাইভ A4 প্রিভিউ ও PDF ডাউনলোড
                   </p>
                 </div>
               </div>

@@ -57,8 +57,8 @@ export interface ServerCopyApplicationData {
 
 export const SAMPLE_SERVER_COPY_DATA: ServerCopyApplicationData = {
   recipientDesignation: 'উপজেলা নির্বাচন কর্মকর্তা',
-  upazila: 'মাধবপুর',
-  district: 'হবিগঞ্জ',
+  upazila: 'সাভার',
+  district: 'ঢাকা',
   subject: 'জাতীয় পরিচয়পত্রের সার্ভার কপি সরবরাহের জন্য আবেদন।',
   purposeText: 'পাসপোর্ট তৈরি, ভূমি সংক্রান্ত কাজ, সরকারি দাপ্তরিক যাচাই ইত্যাদি',
   applicantName: 'নাঈম মিয়া',
@@ -357,7 +357,7 @@ export const NidServerCopyApplication: React.FC<NidServerCopyApplicationProps> =
                     type="text"
                     value={data.upazila}
                     onChange={(e) => updateField('upazila', e.target.value)}
-                    placeholder="যেমন: মাধবপুর"
+                    placeholder="যেমন: সাভার"
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 font-bold text-slate-900"
                   />
                 </div>
@@ -367,7 +367,7 @@ export const NidServerCopyApplication: React.FC<NidServerCopyApplicationProps> =
                     type="text"
                     value={data.district}
                     onChange={(e) => updateField('district', e.target.value)}
-                    placeholder="যেমন: হবিগঞ্জ"
+                    placeholder="যেমন: ঢাকা"
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 font-bold text-slate-900"
                   />
                 </div>
