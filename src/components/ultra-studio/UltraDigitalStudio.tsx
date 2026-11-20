@@ -17,16 +17,41 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { IdCardJoiner } from './IdCardJoiner';
-import { StudioDashboard, StudioSection } from './StudioDashboard';
-import { MultiPhotoStudioEditor } from './MultiPhotoStudioEditor';
+import { StudioDashboard, StudioLaunchOptions, StudioSection } from './StudioDashboard';
 import { TwoPersonStudioEditor } from './TwoPersonStudioEditor';
-import { StudioBackgroundEditor } from './StudioBackgroundEditor';
 import { SmartDocScannerStudio } from './SmartDocScannerStudio';
-import { PhotoSizePreset, StudioBgColor } from './photoStudioTypes';
+import { PhotoSizePreset } from './photoStudioTypes';
+import { MoSaFaAIPhotoStudio } from './ai-photo-studio/MoSaFaAIPhotoStudio';
+import { PassportPresetId, StudioWorkspaceTab } from './ai-photo-studio/types';
 
 interface UltraDigitalStudioProps {
   onBackToHub?: () => void;
   onShowToast: (msg: string, icon?: string) => void;
+}
+
+function mapLegacyPresetToPassportId(preset?: PhotoSizePreset): PassportPresetId {
+  switch (preset) {
+    case 'passport-bd':
+      return 'bd-standard-35x45';
+    case 'passport-intl':
+      return 'cv-portrait-40x50';
+    case 'stamp':
+      return 'bd-stamp-20x25';
+    case 'us-visa':
+      return 'us-visa-51x51';
+    case 'schengen':
+      return 'schengen-uk-35x45';
+    case '3r':
+      return 'photo-3r';
+    case '4r':
+      return 'photo-4r';
+    case 'a4-full':
+      return 'full-a4';
+    case 'custom':
+      return 'custom';
+    default:
+      return 'original-free';
+  }
 }
 
 export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
@@ -35,12 +60,34 @@ export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
 }) => {
   // Navigation state inside Ultra Digital Studio
   const [activeSection, setActiveSection] = useState<StudioSection>('dashboard');
-  const [initialPreset, setInitialPreset] = useState<PhotoSizePreset | undefined>(undefined);
+  const [aiStudioTab, setAiStudioTab] = useState<StudioWorkspaceTab>('backgrounds');
+  const [aiPassportPreset, setAiPassportPreset] = useState<PassportPresetId>('original-free');
 
   // Handle switching sections
-  const handleSelectSection = (section: StudioSection, preset?: PhotoSizePreset) => {
-    setInitialPreset(preset);
-    setActiveSection(section);
+  const handleSelectSection = (
+    section: StudioSection,
+    preset?: PhotoSizePreset,
+    launchOptions?: StudioLaunchOptions
+  ) => {
+    if (section === 'ai-photo-studio') {
+      setAiStudioTab(launchOptions?.aiStudioTab || 'backgrounds');
+      setAiPassportPreset(
+        launchOptions?.aiPassportPreset || mapLegacyPresetToPassportId(preset)
+      );
+      setActiveSection('ai-photo-studio');
+    } else if (section === 'multi-photo') {
+      // Consolidated into MoSaFa AI Photo Studio – All-in-One
+      setAiStudioTab('passport');
+      setAiPassportPreset(mapLegacyPresetToPassportId(preset || 'passport-bd'));
+      setActiveSection('ai-photo-studio');
+    } else if (section === 'background-changer') {
+      // Consolidated into MoSaFa AI Photo Studio – All-in-One
+      setAiStudioTab('backgrounds');
+      setAiPassportPreset('original-free');
+      setActiveSection('ai-photo-studio');
+    } else {
+      setActiveSection(section);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -59,7 +106,20 @@ export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
         />
       )}
 
-      {/* 2. Smart Document Scanner & Auto A4 Maker */}
+      {/* 2. MoSaFa AI Photo Studio – All-in-One (Merges Digital Photo & Print Studio + Studio Backdrop Changer) */}
+      {(activeSection === 'ai-photo-studio' ||
+        activeSection === 'multi-photo' ||
+        activeSection === 'background-changer') && (
+        <MoSaFaAIPhotoStudio
+          key={`${aiStudioTab}-${aiPassportPreset}`}
+          initialTab={aiStudioTab}
+          initialPassportPreset={aiPassportPreset}
+          onBackToDashboard={handleReturnToDashboard}
+          onShowToast={onShowToast}
+        />
+      )}
+
+      {/* 3. Smart Document Scanner & Auto A4 Maker (Kept Separate) */}
       {activeSection === 'doc-scanner' && (
         <SmartDocScannerStudio
           onBackToDashboard={handleReturnToDashboard}
@@ -67,16 +127,7 @@ export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
         />
       )}
 
-      {/* 3. Multi-Photo Studio Editor (Passport, Stamp, Visa, 3R, 4R, Full A4, Custom) */}
-      {activeSection === 'multi-photo' && (
-        <MultiPhotoStudioEditor
-          initialPreset={initialPreset}
-          onBackToDashboard={handleReturnToDashboard}
-          onShowToast={onShowToast}
-        />
-      )}
-
-      {/* 3. ID Card Joiner (Front & Back on Single Page) */}
+      {/* 4. ID Card Joiner (Front & Back on Single Page — Kept Separate) */}
       {activeSection === 'id-card' && (
         <div className="relative">
           {/* Quick back link to Ultra Digital Studio Hub */}
@@ -96,24 +147,10 @@ export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
         </div>
       )}
 
-      {/* 4. Two-Person Joint Photo Studio Editor */}
+      {/* 5. Two-Person Joint Photo Studio Editor (Kept Separate) */}
       {activeSection === 'two-person' && (
         <TwoPersonStudioEditor
           onBackToDashboard={handleReturnToDashboard}
-          onShowToast={onShowToast}
-        />
-      )}
-
-      {/* 5. Studio Background Color Editor */}
-      {activeSection === 'background-changer' && (
-        <StudioBackgroundEditor
-          onBackToDashboard={handleReturnToDashboard}
-          onSendToPrintSheet={(file, bgColor) => {
-            // Navigate to multi-photo editor with passport preset and notify user
-            setActiveSection('multi-photo');
-            setInitialPreset('passport-bd');
-            onShowToast('ছবিটি প্রিন্ট স্টুডিওতে পাঠানো হয়েছে!', '✨');
-          }}
           onShowToast={onShowToast}
         />
       )}

@@ -25,6 +25,22 @@ class RootErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('App runtime error caught by boundary:', error, errorInfo);
+    const msg = error?.message || '';
+    if (
+      /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk|Outdated Optimize Dep/i.test(
+        msg
+      )
+    ) {
+      try {
+        const key = 'mosafa_root_chunk_reload';
+        if (sessionStorage.getItem(key) !== '1') {
+          sessionStorage.setItem(key, '1');
+          window.location.reload();
+        }
+      } catch {
+        // ignore storage errors
+      }
+    }
   }
 
   render() {

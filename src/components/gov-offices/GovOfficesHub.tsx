@@ -138,92 +138,28 @@ export const GovOfficesHub: React.FC<GovOfficesHubProps> = ({ onBackToHub, onSho
             </div>
           </div>
 
-          {/* 3×3 Grid Container matching user sketch:
-              3 lines, each line 3 offices on desktop/tablet */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-            {filteredOffices.map((office, idx) => {
+          {/* 3×3 Grid Container: Big visual logo on top + office name directly underneath */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
+            {filteredOffices.map((office) => {
               const isActive = office.status === 'active';
               return (
-                <div
+                <button
                   key={office.id}
+                  type="button"
                   onClick={() => handleOfficeCardClick(office)}
-                  className={`group relative bg-white rounded-3xl border-2 transition-all duration-300 cursor-pointer flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 ${
+                  className={`group cursor-pointer bg-white rounded-2xl p-4 sm:p-6 border transition-all duration-200 flex flex-col items-center justify-center text-center shadow-xs hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     isActive
-                      ? 'border-emerald-500/80 ring-2 ring-emerald-100 hover:border-emerald-600'
+                      ? 'border-emerald-400 ring-2 ring-emerald-100 hover:border-emerald-500'
                       : 'border-slate-200 hover:border-indigo-400'
                   }`}
                 >
-                  {/* Active Status Badge in Top-Right */}
-                  <div className="absolute top-3.5 right-3.5 z-10">
-                    {isActive ? (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-600 text-white px-2.5 py-1 rounded-full shadow-xs">
-                        <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                        <span>সক্রিয় সেবা</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full">
-                        <Clock className="w-3 h-3 text-slate-400" />
-                        <span>শীঘ্রই আসছে</span>
-                      </span>
-                    )}
+                  <div className="mb-3.5 transform transition-transform duration-200 group-hover:scale-105">
+                    <GovOfficeLogo officeId={office.id} size="lg" />
                   </div>
-
-                  {/* Top Office Number / Line Indicator */}
-                  <div className="absolute top-3.5 left-4 z-10">
-                    <span className="text-[11px] font-mono font-bold text-slate-400 bg-slate-50 border border-slate-200/80 px-2 py-0.5 rounded-md">
-                      #{idx + 1}
-                    </span>
-                  </div>
-
-                  {/* 1. TOP PORTION: BIG LOGO (EXACT USER DRAWING "লোগো") */}
-                  <div className="h-44 sm:h-48 w-full bg-gradient-to-b from-slate-50/90 to-slate-100/60 flex flex-col items-center justify-center p-6 relative group-hover:from-white group-hover:to-slate-50 transition-colors">
-                    <div className="transform transition-transform duration-300 group-hover:scale-110">
-                      <GovOfficeLogo officeId={office.id} size="lg" />
-                    </div>
-                  </div>
-
-                  {/* HORIZONTAL DIVIDING BORDER (AS DRAWN IN USER SKETCH) */}
-                  <div className="w-full border-t-2 border-slate-200 group-hover:border-slate-300 transition-colors" />
-
-                  {/* 2. BOTTOM PORTION: OFFICE NAME (AS DRAWN IN USER SKETCH) */}
-                  <div className="p-4 sm:p-5 bg-white flex flex-col justify-between flex-1 text-center">
-                    <div>
-                      {/* Bold prominent office name as in sketch (e.g. "নির্বাচন অফিস", "সমাজ সেবা অফিস", "পাসপোর্ট অফিস") */}
-                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors tracking-tight">
-                        {office.displayGridTitle}
-                      </h3>
-
-                      {/* Official Department Name */}
-                      <p className="text-xs text-slate-500 font-medium mt-1">
-                        {office.nameBn}
-                      </p>
-
-                      <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                        {office.description}
-                      </p>
-                    </div>
-
-                    {/* Action button bar */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                      <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-rose-500" />
-                        <span>{office.helpline || 'হেল্পলাইন'}</span>
-                      </span>
-
-                      {isActive ? (
-                        <span className="inline-flex items-center gap-1 font-bold text-emerald-700 group-hover:translate-x-0.5 transition-transform">
-                          <span>সেবা শুরু করুন</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform">
-                          <span>বিবরণ দেখুন</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                  <h3 className="text-sm sm:text-base md:text-lg font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
+                    {office.displayGridTitle}
+                  </h3>
+                </button>
               );
             })}
           </div>

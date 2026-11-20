@@ -48,6 +48,7 @@ import {
 } from './pdfServices';
 import { jsPDF } from 'jspdf';
 import { PDFVisualEditor } from './PDFVisualEditor';
+import { SubToolVisualLogo } from '../SubToolVisualLogo';
 
 interface PDFToolkitProps {
   onBackToHub: () => void;
@@ -525,126 +526,55 @@ export const PDFToolkit: React.FC<PDFToolkitProps> = ({ onBackToHub, onShowToast
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* SPECIAL TOOL: DIRECT TEXT & LINE EDITOR */}
-              <div
-                onClick={() => setActiveSubTool('edit-text')}
-                className="p-5 rounded-3xl bg-gradient-to-br from-rose-500 via-pink-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition duration-200 cursor-pointer group flex flex-col justify-between border border-rose-400 relative overflow-hidden"
-              >
-                <div className="absolute top-3 right-3 px-2 py-0.5 bg-yellow-400 text-slate-950 font-black text-[9px] rounded-full uppercase tracking-wider">
-                  স্পেশাল ফিচার 🔥
-                </div>
-                <div>
-                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-3">
-                    <Eraser className="w-6 h-6 text-yellow-300" />
-                  </div>
-                  <h3 className="text-base font-bold mb-1">সরাসরি টেক্সট ও শব্দ সংশোধন</h3>
-                  <p className="text-xs text-rose-100 leading-relaxed mb-4">
-                    PDF বা ছবিতে যেকোনো লাইন বা শব্দ হোয়াইটআউট করে মুছে ঠিক সেই জায়গায় একই ফন্টে নতুন লেখা বসান।
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-white/20 flex items-center justify-between text-xs font-bold text-yellow-200">
-                  <span>এডিটর চালু করুন</span>
-                  <span>➔</span>
-                </div>
-              </div>
-
-              {/* Merge PDF */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
               <ToolCard
-                icon={<Files className="w-6 h-6 text-rose-600" />}
-                iconBg="bg-rose-50"
+                logoId="pdf-edit-text"
+                title="সরাসরি টেক্সট ও শব্দ সংশোধন"
+                onClick={() => setActiveSubTool('edit-text')}
+              />
+              <ToolCard
+                logoId="pdf-merge"
                 title="PDF মার্জ (Merge PDF)"
-                badge="সবচেয়ে জনপ্রিয়"
-                badgeColor="bg-rose-50 text-rose-700"
-                description="একাধিক PDF ফাইলকে নিজের পছন্দের ধারাবাহিকতায় একত্রিত করে একটি ফাইলে রূপান্তর করুন।"
                 onClick={() => setActiveSubTool('merge')}
               />
-
-              {/* Split PDF */}
               <ToolCard
-                icon={<Scissors className="w-6 h-6 text-indigo-600" />}
-                iconBg="bg-indigo-50"
+                logoId="pdf-split"
                 title="PDF স্প্লিট (Split PDF)"
-                badge="পেজ ভাগ"
-                badgeColor="bg-indigo-50 text-indigo-700"
-                description="বড় PDF থেকে প্রতিটি পৃষ্ঠা আলাদা করুন অথবা নির্দিষ্ট রেঞ্জ (১-৩, ৫) অনুযায়ী কেটে বের করুন।"
                 onClick={() => setActiveSubTool('split')}
               />
-
-              {/* Compress PDF */}
               <ToolCard
-                icon={<Minimize2 className="w-6 h-6 text-emerald-600" />}
-                iconBg="bg-emerald-50"
-                title="PDF কম্প্রেস (Compress Size)"
-                badge="সাইজ কমান"
-                badgeColor="bg-emerald-50 text-emerald-700"
-                description="গুণগত মান অক্ষুণ্ণ রেখে PDF ফাইলের আকার (MB থেকে KB) কমিয়ে দ্রুত আপলোড উপযোগী করুন।"
+                logoId="pdf-compress"
+                title="PDF কম্প্রেস (Compress)"
                 onClick={() => setActiveSubTool('compress')}
               />
-
-              {/* Images to PDF */}
               <ToolCard
-                icon={<ImageIcon className="w-6 h-6 text-amber-600" />}
-                iconBg="bg-amber-50"
-                title="ছবি থেকে PDF (Images to PDF)"
-                badge="JPG/PNG to PDF"
-                badgeColor="bg-amber-50 text-amber-800"
-                description="JPG, PNG বা WebP ছবিগুলো যুক্ত করে এক ক্লিকে প্রফেশনাল A4 সাইজ PDF ডকুমেন্টে পরিণত করুন।"
+                logoId="pdf-images-to-pdf"
+                title="ছবি থেকে PDF"
                 onClick={() => setActiveSubTool('images-to-pdf')}
               />
-
-              {/* PDF to Images */}
               <ToolCard
-                icon={<ImageIcon className="w-6 h-6 text-purple-600" />}
-                iconBg="bg-purple-50"
-                title="PDF থেকে ছবি (PDF to Images)"
-                badge="PDF to JPG/PNG"
-                badgeColor="bg-purple-50 text-purple-700"
-                description="PDF ফাইলের পৃষ্ঠাগুলোকে পরিষ্কার ও ঝকঝকে ছবিতে কনভার্ট করে এক ক্লিকে বা ZIP হিসেবে নামান।"
+                logoId="pdf-to-images"
+                title="PDF থেকে ছবি"
                 onClick={() => setActiveSubTool('pdf-to-images')}
               />
-
-              {/* Rotate PDF */}
               <ToolCard
-                icon={<RotateCw className="w-6 h-6 text-sky-600" />}
-                iconBg="bg-sky-50"
-                title="পৃষ্ঠা ঘোরানো (Rotate PDF)"
-                badge="৯০°/১৮০°"
-                badgeColor="bg-sky-50 text-sky-700"
-                description="উল্টো বা বাঁকা পৃষ্ঠাগুলোকে সঠিক অভিমুখে ঘুরিয়ে সোজা ও পড়ার উপযোগী করুন।"
+                logoId="pdf-rotate"
+                title="পৃষ্ঠা ঘোরানো (Rotate)"
                 onClick={() => setActiveSubTool('rotate')}
               />
-
-              {/* Add Page Numbers */}
               <ToolCard
-                icon={<Bookmark className="w-6 h-6 text-teal-600" />}
-                iconBg="bg-teal-50"
-                title="পৃষ্ঠা নম্বর যোগ (Page Numbers)"
-                badge="নম্বর বসান"
-                badgeColor="bg-teal-50 text-teal-700"
-                description="ডকুমেন্টের উপরে বা নিচে সুন্দর ও সুশৃঙ্খলভাবে পেজ নম্বর ও 'Page X of Y' ফরম্যাট যোগ করুন।"
+                logoId="pdf-page-numbers"
+                title="পৃষ্ঠা নম্বর যোগ"
                 onClick={() => setActiveSubTool('page-numbers')}
               />
-
-              {/* Add Watermark */}
               <ToolCard
-                icon={<ShieldCheck className="w-6 h-6 text-blue-600" />}
-                iconBg="bg-blue-50"
-                title="ওয়াটারমার্ক যোগ (Add Watermark)"
-                badge="কপিরাইট রক্ষা"
-                badgeColor="bg-blue-50 text-blue-700"
-                description="অননুমোদিত কপি ঠেকাতে ডকুমেন্টে আড়াআড়ি নিজস্ব নাম, সিল বা লোগোর জলছাপ বসান।"
+                logoId="pdf-watermark"
+                title="ওয়াটারমার্ক যোগ"
                 onClick={() => setActiveSubTool('watermark')}
               />
-
-              {/* Edit Metadata */}
               <ToolCard
-                icon={<FileText className="w-6 h-6 text-slate-700" />}
-                iconBg="bg-slate-100"
-                title="মেটাডাটা এডিটর (Edit Metadata)"
-                badge="ডকুমেন্ট তথ্য"
-                badgeColor="bg-slate-100 text-slate-800"
-                description="ফাইলের টাইটেল, লেখক, বিষয় ও কীওয়ার্ড পরিবর্তন করে অফিশিয়াল লুক দিন।"
+                logoId="pdf-metadata"
+                title="মেটাডাটা এডিটর"
                 onClick={() => setActiveSubTool('metadata')}
               />
             </div>
@@ -1185,43 +1115,28 @@ export const PDFToolkit: React.FC<PDFToolkitProps> = ({ onBackToHub, onShowToast
   );
 };
 
-// Tool Card Component for the Dashboard
+// Tool Card Component for the Dashboard (Big Visual Logo + Name Below)
 const ToolCard: React.FC<{
-  icon: React.ReactNode;
-  iconBg: string;
+  logoId: string;
   title: string;
-  badge: string;
-  badgeColor: string;
-  description: string;
   onClick: () => void;
-}> = ({ icon, iconBg, title, badge, badgeColor, description, onClick }) => {
+}> = ({ logoId, title, onClick }) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-lg hover:-translate-y-1 transition duration-200 cursor-pointer group flex flex-col justify-between"
+      className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer group flex flex-col items-center justify-center text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
     >
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center group-hover:scale-105 transition-transform`}>
-            {icon}
-          </div>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badgeColor}`}>
-            {badge}
-          </span>
-        </div>
-        <h3 className="text-sm font-extrabold text-slate-900 mb-1 group-hover:text-rose-600 transition-colors">
-          {title}
-        </h3>
-        <p className="text-xs text-slate-600 leading-relaxed font-medium">
-          {description}
-        </p>
+      <div className="mb-3 flex items-center justify-center">
+        <SubToolVisualLogo
+          logoId={logoId}
+          className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+        />
       </div>
-
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-700 group-hover:text-rose-600">
-        <span>টুল শুরু করুন</span>
-        <span>➔</span>
-      </div>
-    </div>
+      <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors leading-snug line-clamp-2">
+        {title}
+      </h3>
+    </button>
   );
 };
 

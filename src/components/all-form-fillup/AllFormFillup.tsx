@@ -48,6 +48,7 @@ import { LandlordVoterCertificate } from './LandlordVoterCertificate';
 import { PhotoSignCertificate } from './PhotoSignCertificate';
 import { NidServerCopyApplication } from './NidServerCopyApplication';
 import { DownloadPaywallModal } from '../DownloadPaywallModal';
+import { SubToolVisualLogo } from '../SubToolVisualLogo';
 
 interface AllFormFillupProps {
   onBackToHub: () => void;
@@ -643,86 +644,34 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
         {/* ========================================================= */}
         {hubMode === 'grid' && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            {/* THE 3x3 CATEGORIES GRID (9 BUTTONS) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                {HUB_CATEGORIES.map((cat, index) => {
-                  const IconComp = cat.icon;
-                  const count =
-                    cat.id === 'custom'
-                      ? templates.filter((t) => t.isCustom).length || 'নতুন'
-                      : templates.filter((t) => t.category === cat.id).length;
-
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => {
-                        if (cat.id === 'custom') {
-                          setIsBuilderOpen(true);
-                          return;
-                        }
-                        setActiveCategory(cat.id as FormCategory);
-                        setHubMode('category_list');
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="p-5 sm:p-6 bg-white hover:bg-slate-50/80 rounded-3xl border-2 border-slate-200/90 hover:border-indigo-400 hover:shadow-xl transition-all cursor-pointer group text-left flex flex-col justify-between relative overflow-hidden active:scale-98"
-                    >
-                      {/* Top Header in Card */}
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${cat.iconBg} group-hover:scale-105 transition-transform`}>
-                            <IconComp className="w-6 h-6" />
-                          </div>
-                          <span className={`text-[10px] sm:text-xs font-black px-2.5 py-1 rounded-full ${cat.badgeClass}`}>
-                            {cat.id === 'custom' ? '✨ নিজস্ব তৈরি' : `${toBanglaDigits(count)}টি ফরম`}
-                          </span>
-                        </div>
-
-                        {/* Title & English */}
-                        <div className="mb-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-mono font-bold text-slate-400">
-                              #{toBanglaDigits(index + 1)}
-                            </span>
-                            <h3 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
-                              {cat.name}
-                            </h3>
-                          </div>
-                          <span className="text-[11px] text-slate-400 font-semibold block">
-                            {cat.english}
-                          </span>
-                        </div>
-
-                        {/* Description */}
-                        <p className="text-xs text-slate-600 leading-relaxed mb-3 line-clamp-2">
-                          {cat.description}
-                        </p>
-
-                        {/* Features chips */}
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {cat.features.map((feat, idx) => (
-                            <span
-                              key={idx}
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700"
-                            >
-                              ✓ {feat}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Footer Call-to-action Button */}
-                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-600 group-hover:text-indigo-700">
-                        <span>
-                          {cat.id === 'custom' ? 'নতুন ফরম তৈরি করুন' : 'ফরম তালিকা দেখুন'}
-                        </span>
-                        <div className="w-7 h-7 rounded-full bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition-colors">
-                          <ChevronRight className="w-4 h-4" />
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+            {/* Visual Logo Categories Grid (9 Sub-Tools) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
+                {HUB_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      if (cat.id === 'custom') {
+                        setIsBuilderOpen(true);
+                        return;
+                      }
+                      setActiveCategory(cat.id as FormCategory);
+                      setHubMode('category_list');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer group flex flex-col items-center justify-center text-center active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  >
+                    <div className="mb-3 flex items-center justify-center">
+                      <SubToolVisualLogo
+                        logoId={`form-${cat.id}`}
+                        className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
+                    <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug line-clamp-2">
+                      {cat.name}
+                    </h3>
+                  </button>
+                ))}
               </div>
           </div>
         )}
@@ -778,8 +727,8 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
               </div>
             </div>
 
-            {/* List of Forms in LARGE CARDS (বড় বড় করে লিস্ট) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+            {/* List of Forms as Clean Visual Logo Tile Buttons */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
               {templates
                 .filter((t) => {
                   const matchCat = activeCategory === 'all' || t.category === activeCategory;
@@ -794,83 +743,29 @@ export const AllFormFillup: React.FC<AllFormFillupProps> = ({
                 .map((tmpl) => {
                   const isCurrent = selectedTemplate?.id === tmpl.id;
                   return (
-                    <div
+                    <button
                       key={tmpl.id}
+                      type="button"
                       onClick={() => {
                         handleSelectTemplate(tmpl, true);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className={`p-6 sm:p-7 rounded-3xl border-2 transition-all cursor-pointer group flex flex-col justify-between ${
+                      className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 cursor-pointer group flex flex-col items-center justify-center text-center hover:-translate-y-1 hover:shadow-lg ${
                         isCurrent
-                          ? 'bg-gradient-to-br from-indigo-50/60 to-white border-indigo-500 shadow-lg ring-2 ring-indigo-500/20'
-                          : 'bg-white hover:bg-slate-50/60 border-slate-200/90 hover:border-indigo-400 hover:shadow-xl'
+                          ? 'bg-indigo-50/50 border-indigo-500 ring-2 ring-indigo-500/20'
+                          : 'bg-white border-slate-200/90 hover:border-indigo-400'
                       }`}
                     >
-                      <div>
-                        {/* Badges row */}
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                              {tmpl.categoryName}
-                            </span>
-                            {tmpl.badge && (
-                              <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                                tmpl.badgeColor || 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                              }`}>
-                                {tmpl.badge}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
-                            A4 পোর্ট্রেট
-                          </span>
-                        </div>
-
-                        {/* Big Form Name */}
-                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight mb-2">
-                          {tmpl.name}
-                        </h3>
-
-                        {/* Tagline */}
-                        {tmpl.tagline && (
-                          <p className="text-xs sm:text-sm font-bold text-indigo-700 mb-2 leading-snug">
-                            {tmpl.tagline}
-                          </p>
-                        )}
-
-                        {/* Description */}
-                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                          {tmpl.shortDescription}
-                        </p>
-
-                        {/* Feature Badges */}
-                        <div className="flex flex-wrap gap-1.5 mb-5">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            ✓ শতভাগ এডিটেবল
-                          </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
-                            ✓ তাৎক্ষণিক লাইভ প্রিভিউ
-                          </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
-                            ✓ প্রমিত A4 প্রিন্ট ও PDF
-                          </span>
-                        </div>
+                      <div className="mb-3 flex items-center justify-center">
+                        <SubToolVisualLogo
+                          logoId={`form-${tmpl.category || 'custom'}`}
+                          className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+                        />
                       </div>
-
-                      {/* Large Button to Open */}
-                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                        <span className="text-xs font-semibold text-slate-500">
-                          {isCurrent ? '✓ বর্তমানে সক্রিয় আছে' : 'ক্লিক করে ওপেন করুন'}
-                        </span>
-                        <button
-                          type="button"
-                          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 group-hover:from-rose-600 group-hover:to-indigo-600 shadow-md transition-all active:scale-95 cursor-pointer"
-                        >
-                          <span>এই ফরমটি ওপেন ও ফিলাপ করুন</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                      <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug line-clamp-2">
+                        {tmpl.name}
+                      </h3>
+                    </button>
                   );
                 })}
             </div>

@@ -11,6 +11,26 @@ export default defineConfig(() => {
         '@': path.resolve(import.meta.dirname, '.'),
       },
     },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'lucide-react',
+        'jspdf',
+        'html2canvas-pro',
+        'canvas-confetti',
+        'qrcode',
+        'jszip',
+        'pdf-lib',
+        'docx',
+        'bijoy2unicode',
+        'firebase/app',
+        'firebase/auth',
+        'firebase/firestore',
+        '@mediapipe/tasks-vision',
+      ],
+    },
     server: {
       allowedHosts: true as const,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

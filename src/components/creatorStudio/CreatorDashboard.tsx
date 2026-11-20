@@ -22,6 +22,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { CreatorProject, CalendarTask } from '../../types/creatorStudio';
+import { SubToolVisualLogo } from '../SubToolVisualLogo';
 
 interface CreatorDashboardProps {
   projects: CreatorProject[];
@@ -184,27 +185,24 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({
           <span className="text-xs text-slate-500">৮টি ডেডিকেটেড ওয়ার্কস্পেস</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4">
           {quickStudios.map((studio) => (
-            <div
+            <button
               key={studio.id}
+              type="button"
               onClick={() => onNavigateTab(studio.id)}
-              className={`p-4 rounded-3xl border ${studio.color} transition cursor-pointer hover:shadow-md active:scale-98 flex flex-col justify-between group`}
+              className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer active:scale-[0.98] flex flex-col items-center justify-center text-center group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
             >
-              <div className="space-y-2">
-                <div className="w-10 h-10 rounded-2xl bg-white shadow-xs flex items-center justify-center group-hover:scale-105 transition">
-                  {studio.icon}
-                </div>
-                <h3 className="font-bold text-sm text-slate-900 group-hover:text-indigo-600 transition">
-                  {studio.title}
-                </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">{studio.desc}</p>
+              <div className="mb-3 flex items-center justify-center">
+                <SubToolVisualLogo
+                  logoId={`creator-${studio.id}`}
+                  className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+                />
               </div>
-              <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold text-slate-600 group-hover:text-indigo-600">
-                <span>প্রবেশ করুন</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-              </div>
-            </div>
+              <h3 className="font-extrabold text-xs sm:text-sm md:text-[15px] text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug line-clamp-2">
+                {studio.title}
+              </h3>
+            </button>
           ))}
         </div>
       </div>

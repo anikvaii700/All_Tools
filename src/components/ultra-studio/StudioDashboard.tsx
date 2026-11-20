@@ -18,17 +18,30 @@ import {
   Zap,
 } from 'lucide-react';
 import { PhotoSizePreset } from './photoStudioTypes';
+import { PassportPresetId, StudioWorkspaceTab } from './ai-photo-studio/types';
+import { SubToolVisualLogo } from '../SubToolVisualLogo';
 
 export type StudioSection =
   | 'dashboard'
+  | 'ai-photo-studio'
   | 'multi-photo'
   | 'doc-scanner'
   | 'id-card'
   | 'two-person'
   | 'background-changer';
 
+export interface StudioLaunchOptions {
+  preset?: PhotoSizePreset;
+  aiStudioTab?: StudioWorkspaceTab;
+  aiPassportPreset?: PassportPresetId;
+}
+
 interface StudioDashboardProps {
-  onSelectSection: (section: StudioSection, initialPreset?: PhotoSizePreset) => void;
+  onSelectSection: (
+    section: StudioSection,
+    initialPreset?: PhotoSizePreset,
+    launchOptions?: StudioLaunchOptions
+  ) => void;
   onBackToHome?: () => void;
 }
 
@@ -38,12 +51,51 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
 }) => {
   const tools = [
     {
+      id: 'ai-photo-studio',
+      title: 'MoSaFa AI Photo Studio – All-in-One',
+      englishTitle: '216+ Styles, Free Neural Background Changer, Attire Overlays, Passport & Print Studio',
+      subtitle:
+        'একই স্টুডিওতে ২১৬+ ফটো স্টাইল, ১৫ ক্যাটাগরি ফ্রি ব্যাকগ্রাউন্ড রিমুভ ও পরিবর্তন, ফরমাল পোশাক ওভারলে, বাংলাদেশ পাসপোর্ট (৪৫×৫৫ / ৩৫×৪৫ মিমি), ভিসা সাইজ এবং 4R/5R/A4 মাল্টি-কপি প্রিন্ট ও PDF।',
+      badge: '✨ নতুন: অল-ইন-ওয়ান ফ্রি স্টুডিও',
+      badgeColor: 'bg-indigo-50 text-indigo-800 border-indigo-300 font-bold',
+      icon: <Sparkles className="w-7 h-7 text-indigo-600" />,
+      iconBg: 'bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200',
+      onClick: () =>
+        onSelectSection('ai-photo-studio', undefined, {
+          aiStudioTab: 'backgrounds',
+          aiPassportPreset: 'original-free',
+        }),
+      actionLabel: 'MoSaFa AI Photo Studio ওপেন করুন',
+      presets: [
+        {
+          label: '🎨 ব্যাকগ্রাউন্ড চেঞ্জার',
+          targetSection: 'ai-photo-studio' as StudioSection,
+          launchOptions: { aiStudioTab: 'backgrounds' as StudioWorkspaceTab, aiPassportPreset: 'original-free' as PassportPresetId },
+        },
+        {
+          label: '✨ ২১৬+ স্টাইল',
+          targetSection: 'ai-photo-studio' as StudioSection,
+          launchOptions: { aiStudioTab: 'styles' as StudioWorkspaceTab, aiPassportPreset: 'original-free' as PassportPresetId },
+        },
+        {
+          label: '🪪 পাসপোর্ট (৪৫×৫৫ / ৩৫×৪৫)',
+          targetSection: 'ai-photo-studio' as StudioSection,
+          launchOptions: { aiStudioTab: 'passport' as StudioWorkspaceTab, aiPassportPreset: 'bd-passport-45x55' as PassportPresetId },
+        },
+        {
+          label: '🖨️ 4R / 5R / A4 প্রিন্ট শিট',
+          targetSection: 'ai-photo-studio' as StudioSection,
+          launchOptions: { aiStudioTab: 'print' as StudioWorkspaceTab, aiPassportPreset: 'bd-standard-35x45' as PassportPresetId },
+        },
+      ],
+    },
+    {
       id: 'doc-scanner',
       title: 'স্মার্ট ডকুমেন্ট স্ক্যানার ও অটো A4 মেকার (Smart Document Scanner)',
       englishTitle: 'Auto Edge Detection, Perspective Deskew, Shadow Clean & Multi-Page A4 PDF',
       subtitle:
         'মোবাইল দিয়ে তোলা আঁকাবাঁকা ও ছায়াযুক্ত দরখাস্ত, সনদপত্র, রসিদ বা দলিলের ছবি এক ক্লিকে সোজা, অটো ক্রপ, ছায়া দূর ও বহু-পৃষ্ঠা প্রিন্ট-রেডি A4 সাইজ ও PDF তৈরি।',
-      badge: '🔥 নতুন ফিচার: AI স্ক্যানার ও অটো A4',
+      badge: 'ডকুমেন্ট স্ক্যানার ও A4',
       badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
       icon: <FileText className="w-7 h-7 text-emerald-600" />,
       iconBg: 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200',
@@ -52,25 +104,6 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
       presets: [
         { label: '📄 পেপার স্ক্যান ও A4', preset: 'a4-full' as PhotoSizePreset, targetSection: 'doc-scanner' as StudioSection },
         { label: '📑 বহু-পৃষ্ঠা PDF মেকার', preset: 'custom' as PhotoSizePreset, targetSection: 'doc-scanner' as StudioSection },
-      ],
-    },
-    {
-      id: 'multi-photo',
-      title: 'ডিজিটাল ফটো ও প্রিন্ট স্টুডিও (Digital Photo & Print Studio)',
-      englishTitle: 'Passport, Stamp, Visa, Full A4 & Custom Multi-Size Photos',
-      subtitle:
-        'পাসপোর্ট (৩৫×৪৫ মিমি), স্ট্যাম্প (২০×২৫ মিমি), ভিসা, ৩R, ৪R, সম্পূর্ণ A4 পেজ বা কাস্টম মাপে ছবি সাজিয়ে আসল স্কেলে প্রিন্ট ও পিডিএফ ডাউনলোড।',
-      badge: 'অল-ইন-ওয়ান স্টুডিও',
-      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-      icon: <Camera className="w-7 h-7 text-emerald-600" />,
-      iconBg: 'bg-emerald-50 border border-emerald-200',
-      onClick: () => onSelectSection('multi-photo', 'passport-bd'),
-      actionLabel: 'ফটো স্টুডিও শুরু করুন',
-      presets: [
-        { label: 'পাসপোর্ট (৩৫×৪৫)', preset: 'passport-bd' as PhotoSizePreset, targetSection: 'multi-photo' as StudioSection },
-        { label: 'স্ট্যাম্প (২০×২৫)', preset: 'stamp' as PhotoSizePreset, targetSection: 'multi-photo' as StudioSection },
-        { label: 'ফুল A4 পেজ', preset: 'a4-full' as PhotoSizePreset, targetSection: 'multi-photo' as StudioSection },
-        { label: 'কাস্টম মাপ', preset: 'custom' as PhotoSizePreset, targetSection: 'multi-photo' as StudioSection },
       ],
     },
     {
@@ -98,19 +131,6 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
       iconBg: 'bg-purple-50 border border-purple-200',
       onClick: () => onSelectSection('two-person'),
       actionLabel: 'দুইজনের জয়েন্ট ছবি সাজান',
-    },
-    {
-      id: 'background-changer',
-      title: 'ছবির ব্যাকগ্রাউন্ড পরিবর্তন (Studio Backdrop Changer)',
-      englishTitle: 'Studio Background Color (White / Blue / Sky / Transparent)',
-      subtitle:
-        'এক ক্লিকে যেকোনো ছবির ব্যাকগ্রাউন্ড প্রমিত স্টুডিও হোয়াইট, পাসপোর্ট ব্লু বা ট্রান্সপারেন্ট PNG করে ডাউনলোড বা সরাসরি A4 শিটে প্রিন্ট করুন।',
-      badge: 'স্টুডিও কালার রিপ্লেসমেন্ট',
-      badgeColor: 'bg-rose-50 text-rose-800 border-rose-200',
-      icon: <Palette className="w-7 h-7 text-rose-600" />,
-      iconBg: 'bg-rose-50 border border-rose-200',
-      onClick: () => onSelectSection('background-changer'),
-      actionLabel: 'ব্যাকগ্রাউন্ড পরিবর্তন করুন',
     },
   ];
 
@@ -178,78 +198,26 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
           )}
         </div>
 
-        {/* 4 Dedicated, Specialized Tools */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+        {/* 4 Dedicated Visual Logo Sub-Tool Buttons */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {tools.map((tool) => (
-            <div
+            <button
               key={tool.id}
-              className="bg-white rounded-3xl border border-slate-200/90 hover:border-indigo-400 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+              type="button"
+              onClick={tool.onClick}
+              className="bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-400 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center text-center group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
             >
-              <div>
-                {/* Header row: Icon & Badge */}
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${tool.iconBg} group-hover:scale-105 transition-transform`}
-                  >
-                    {tool.icon}
-                  </div>
-                  <span
-                    className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${tool.badgeColor}`}
-                  >
-                    {tool.badge}
-                  </span>
-                </div>
-
-                {/* Tool Titles */}
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors">
-                  {tool.title}
-                </h3>
-                <p className="text-[11px] font-medium text-slate-400 mb-2">
-                  {tool.englishTitle}
-                </p>
-
-                {/* Subtitle / Description */}
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {tool.subtitle}
-                </p>
-
-                {/* Preset Chips (If Multi-Photo Studio) */}
-                {tool.presets && (
-                  <div className="mt-4 pt-3 border-t border-slate-100">
-                    <span className="text-[10px] font-bold text-slate-500 block mb-1.5">
-                      দ্রুত সাইজ নির্বাচন:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {tool.presets.map((p, pIdx) => (
-                        <button
-                          key={`${tool.id}-${p.preset}-${pIdx}`}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectSection((p as any).targetSection || (tool.id as StudioSection), p.preset);
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 text-[11px] font-bold border border-slate-200 hover:border-indigo-200 transition cursor-pointer"
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              <div className="mb-3.5 flex items-center justify-center">
+                <SubToolVisualLogo
+                  logoId={tool.id}
+                  className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+                />
               </div>
 
-              {/* Action Button */}
-              <div className="mt-6 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={tool.onClick}
-                  className="w-full py-2.5 px-4 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center justify-between cursor-pointer group-hover:shadow-md"
-                >
-                  <span>{tool.actionLabel}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            </div>
+              <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors">
+                {tool.title}
+              </h3>
+            </button>
           ))}
         </div>
       </div>

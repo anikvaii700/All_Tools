@@ -83,12 +83,30 @@ async function startServer() {
     });
   });
 
+  // Serve local MediaPipe WASM binaries for Zero-Cost browser-side AI Photo Studio segmentation
+  const mediapipeWasmDir = path.resolve(__dirname, 'node_modules/@mediapipe/tasks-vision/wasm');
+  if (fs.existsSync(mediapipeWasmDir)) {
+    app.use('/mediapipe-wasm', express.static(mediapipeWasmDir, { maxAge: '7d' }));
+  }
+
   // ----------------------------------------------------
   // Exclusive Single Admin Authorization (01743224700)
   // ----------------------------------------------------
   const AUTHORIZED_ADMIN_PHONE = '01743224700';
   const AUTHORIZED_ADMIN_SYNTHETIC_EMAIL = 'user_01743224700@phone.mosafabd.com';
-  const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'ai-studio-applet-webapp-2019a';
+  let defaultFirebaseProjectId = 'ai-studio-applet-webapp-2019a';
+  try {
+    const appletCfgPath = path.resolve(__dirname, 'firebase-applet-config.json');
+    if (fs.existsSync(appletCfgPath)) {
+      const parsedCfg = JSON.parse(fs.readFileSync(appletCfgPath, 'utf-8'));
+      if (typeof parsedCfg?.projectId === 'string' && parsedCfg.projectId.trim()) {
+        defaultFirebaseProjectId = parsedCfg.projectId.trim();
+      }
+    }
+  } catch {
+    // Keep default fallback
+  }
+  const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || defaultFirebaseProjectId;
 
   const serviceAccountEnvCandidates = [
     { name: 'FIREBASE_SERVICE_ACCOUNT_KEY', raw: process.env.FIREBASE_SERVICE_ACCOUNT_KEY },

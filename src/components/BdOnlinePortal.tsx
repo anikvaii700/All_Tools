@@ -39,6 +39,8 @@ import {
 import { GovOfficeLogo } from './gov-offices/GovOfficeLogo';
 import { NidSimpleFormat } from './gov-offices/nid-assistant/NidSimpleFormat';
 import { JobPhotoSignatureResizer } from './job-resizer/JobPhotoSignatureResizer';
+import { SubToolVisualLogo } from './SubToolVisualLogo';
+import { ToolVisualLogo } from './ToolVisualLogo';
 
 export type BdPortalSubView = 'portal' | 'election-commission' | 'job-photo-resizer';
 
@@ -654,7 +656,7 @@ export const BdOnlinePortal: React.FC<BdOnlinePortalProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
                 {filteredServices.map((service) => (
                   <ServiceCard
                     key={service.id}
@@ -768,7 +770,7 @@ export const BdOnlinePortal: React.FC<BdOnlinePortalProps> = ({
             )}
 
             {/* Service Cards Grid for Category */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
               {filteredServices.map((service) => (
                 <ServiceCard
                   key={service.id}
@@ -804,7 +806,7 @@ export const BdOnlinePortal: React.FC<BdOnlinePortalProps> = ({
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-4">
                 {/* 1. Exact Election Commission Office Card from Screenshot 2 */}
                 <ElectionOfficeCard
                   onStart={() => {
@@ -848,67 +850,28 @@ export const BdOnlinePortal: React.FC<BdOnlinePortalProps> = ({
                 </span>
               </div>
 
-              {/* Categories Grid (Fullscreen Responsive) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4 sm:gap-5">
-                {BD_SERVICE_CATEGORIES.map((cat, index) => {
-                  const count = categoryCounts[cat.id] || 0;
-                  return (
-                    <div
-                      key={cat.id}
-                      onClick={() => setSelectedCategoryId(cat.id)}
-                      className={`group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 shadow-xs hover:shadow-xl hover:border-indigo-300 transition duration-200 flex flex-col justify-between active:scale-[0.98] relative overflow-hidden ${
-                        cat.isJobPortal ? 'ring-2 ring-indigo-500/30' : ''
-                      }`}
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div
-                            className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center text-white shadow-md group-hover:scale-105 transition`}
-                          >
-                            {renderCategoryIcon(cat.icon, 'w-6 h-6 text-white')}
-                          </div>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                              cat.isJobPortal
-                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                : 'bg-slate-100 text-slate-700'
-                            }`}
-                          >
-                            {cat.badge}
-                          </span>
-                        </div>
-
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-bold text-slate-400">
-                              {toBanglaNum(index + 1)}.
-                            </span>
-                            <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition leading-snug">
-                              {cat.name}
-                            </h3>
-                          </div>
-                          <p className="text-[11px] text-slate-400 font-medium">
-                            {cat.englishName}
-                          </p>
-                        </div>
-
-                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                          {cat.description}
-                        </p>
-                      </div>
-
-                      <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500 group-hover:text-indigo-600">
-                        <span className="bg-slate-50 group-hover:bg-indigo-50 px-2 py-0.5 rounded-lg text-[11px]">
-                          {toBanglaNum(count)}টি সেবা তালিকাভুক্ত
-                        </span>
-                        <span className="flex items-center gap-0.5">
-                          <span>প্রবেশ করুন</span>
-                          <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-                        </span>
-                      </div>
+              {/* Categories Grid — Large Self-Explanatory Visual Logo Tiles */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
+                {BD_SERVICE_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategoryId(cat.id)}
+                    className={`group cursor-pointer bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center text-center active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                      cat.isJobPortal ? 'ring-2 ring-indigo-500/30' : ''
+                    }`}
+                  >
+                    <div className="mb-3 flex items-center justify-center">
+                      <SubToolVisualLogo
+                        logoId={cat.id}
+                        className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+                      />
                     </div>
-                  );
-                })}
+                    <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug line-clamp-2">
+                      {cat.name}
+                    </h3>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -928,7 +891,7 @@ export const BdOnlinePortal: React.FC<BdOnlinePortalProps> = ({
                     সকল প্রিয় সেবা ({toBanglaNum(favorites.length)}) →
                   </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
                   {BD_SERVICES_DATA.filter((s) => favorites.includes(s.id))
                     .slice(0, 3)
                     .map((service) => (
@@ -984,118 +947,64 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 }) => {
   const [imgError, setImgError] = useState(false);
 
-  // Derive initial monogram
-  const monogram = service.englishName ? service.englishName.slice(0, 2).toUpperCase() : 'BD';
-
   return (
     <div
       onClick={onVisit}
-      className="group cursor-pointer bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs hover:shadow-xl hover:border-emerald-300 transition duration-200 flex flex-col justify-between active:scale-[0.99] relative"
+      className="group cursor-pointer bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 hover:border-emerald-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center text-center active:scale-[0.98] relative"
     >
-      <div className="space-y-3">
-        {/* Top Badges & Actions */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {service.isGov ? (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold flex items-center gap-1">
-                <span>🏛️</span>
-                <span>সরকারি পোর্টাল</span>
-              </span>
-            ) : (
-              <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-extrabold flex items-center gap-1">
-                <span>🏢</span>
-                <span>বেসরকারি সেবা</span>
-              </span>
-            )}
-            {service.badge && (
-              <span className="px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-bold">
-                {service.badge}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            {/* Copy Link */}
-            <button
-              type="button"
-              onClick={onCopyLink}
-              title="ওয়েবসাইট লিংক কপি করুন"
-              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-            >
-              {copiedId === service.id ? (
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-              ) : (
-                <Share2 className="w-3.5 h-3.5" />
-              )}
-            </button>
-
-            {/* Favorite Bookmark */}
-            <button
-              type="button"
-              onClick={onToggleFavorite}
-              title={isFavorite ? 'ফেভারিট থেকে সরান' : 'ফেভারিটে যোগ করুন'}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition cursor-pointer"
-            >
-              <Star
-                className={`w-3.5 h-3.5 ${
-                  isFavorite ? 'text-amber-500 fill-amber-500' : 'text-slate-400'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* Logo / Monogram & Institution */}
-        <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs group-hover:scale-105 transition">
-            {service.logoUrl && !imgError ? (
-              <img
-                src={service.logoUrl}
-                alt={service.name}
-                onError={() => setImgError(true)}
-                className="w-full h-full object-contain p-1"
-                loading="lazy"
-              />
-            ) : (
-              <span className="text-xs font-black text-slate-700 tracking-wider">
-                {monogram}
-              </span>
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block truncate">
-              {service.institution}
-            </span>
-            <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition leading-snug line-clamp-1">
-              {service.name}
-            </h4>
-            <span className="text-[10px] text-slate-400 block truncate font-mono">
-              {service.englishName}
-            </span>
-          </div>
-        </div>
-
-        {/* Short Description */}
-        <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-          {service.description}
-        </p>
-      </div>
-
-      {/* Bottom Button / External Link */}
-      <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-        <span className="text-[11px] text-slate-400 font-mono truncate max-w-[170px] sm:max-w-[200px]">
-          {service.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-        </span>
+      {/* Compact Corner Actions (Copy Link + Favorite) */}
+      <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
         <button
           type="button"
-          onClick={onVisit}
-          className="px-3 py-1.5 rounded-xl bg-slate-900 text-white group-hover:bg-emerald-600 transition font-bold text-xs flex items-center gap-1 shadow-xs cursor-pointer active:scale-95"
+          onClick={onCopyLink}
+          title="ওয়েবসাইট লিংক কপি করুন"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
         >
-          <span>ভিজিট করুন</span>
-          <ExternalLink className="w-3 h-3" />
+          {copiedId === service.id ? (
+            <Check className="w-3.5 h-3.5 text-emerald-600" />
+          ) : (
+            <Share2 className="w-3.5 h-3.5" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={onToggleFavorite}
+          title={isFavorite ? 'ফেভারিট থেকে সরান' : 'ফেভারিটে যোগ করুন'}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 hover:bg-amber-50 transition cursor-pointer"
+        >
+          <Star
+            className={`w-3.5 h-3.5 ${
+              isFavorite ? 'text-amber-500 fill-amber-500' : 'text-slate-400'
+            }`}
+          />
         </button>
       </div>
+
+      {/* Large Centered Logo */}
+      <div className="mt-2 mb-3 flex items-center justify-center">
+        {service.logoUrl && !imgError ? (
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center p-2.5 overflow-hidden group-hover:scale-105 transition-transform duration-200">
+            <img
+              src={service.logoUrl}
+              alt={service.name}
+              referrerPolicy="no-referrer"
+              onError={() => setImgError(true)}
+              className="w-full h-full object-contain"
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <SubToolVisualLogo
+            logoId={service.categoryId}
+            className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+          />
+        )}
+      </div>
+
+      {/* Clean Service Name Only */}
+      <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors leading-snug line-clamp-2">
+        {service.name}
+      </h4>
     </div>
   );
 };
@@ -1107,63 +1016,18 @@ interface ElectionOfficeCardProps {
 
 const ElectionOfficeCard: React.FC<ElectionOfficeCardProps> = ({ onStart, className = '' }) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={onStart}
-      className={`group relative bg-white rounded-3xl border-2 border-emerald-500/80 ring-2 ring-emerald-100 hover:border-emerald-600 transition-all duration-300 cursor-pointer flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 ${className}`}
+      className={`group bg-white rounded-2xl p-5 sm:p-6 border border-emerald-300/90 hover:border-emerald-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${className}`}
     >
-      {/* Active Status Badge in Top-Right */}
-      <div className="absolute top-3.5 right-3.5 z-10">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-600 text-white px-2.5 py-1 rounded-full shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-          <span>সক্রিয় সেবা</span>
-        </span>
+      <div className="mb-3.5 transform transition-transform duration-200 group-hover:scale-105">
+        <GovOfficeLogo officeId="election-commission" size="lg" />
       </div>
-
-      {/* Top Office Number / Line Indicator */}
-      <div className="absolute top-3.5 left-4 z-10">
-        <span className="text-[11px] font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md">
-          #১
-        </span>
-      </div>
-
-      {/* 1. TOP PORTION: BIG LOGO (EXACT USER DRAWING & SCREENSHOT 2) */}
-      <div className="h-44 sm:h-48 w-full bg-gradient-to-b from-slate-50/90 to-slate-100/60 flex flex-col items-center justify-center p-6 relative group-hover:from-white group-hover:to-slate-50 transition-colors">
-        <div className="transform transition-transform duration-300 group-hover:scale-110">
-          <GovOfficeLogo officeId="election-commission" size="lg" />
-        </div>
-      </div>
-
-      {/* HORIZONTAL DIVIDING BORDER (AS DRAWN IN USER SKETCH) */}
-      <div className="w-full border-t-2 border-slate-200 group-hover:border-slate-300 transition-colors" />
-
-      {/* 2. BOTTOM PORTION: OFFICE NAME (EXACT MATCH TO SCREENSHOT 2) */}
-      <div className="p-4 sm:p-5 bg-white flex flex-col justify-between flex-1 text-center">
-        <div>
-          <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors tracking-tight">
-            নির্বাচন অফিস
-          </h3>
-          <p className="text-xs text-slate-500 font-medium mt-1">
-            বাংলাদেশ নির্বাচন কমিশন
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-            জাতীয় পরিচয়পত্র (NID) সংশোধন, ভোটার এলাকার স্থানান্তর, নতুন ভোটার নিবন্ধন, হারানো কার্ড রিশ্যিউ এবং নির্বাচন কমিশনের সকল বিধিমালা ও তথ্য সহকারী।
-          </p>
-        </div>
-
-        {/* Action button bar */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-            <Phone className="w-3 h-3 text-rose-500" />
-            <span>১০৫ (টোল ফ্রি)</span>
-          </span>
-
-          <span className="inline-flex items-center gap-1 font-bold text-emerald-700 group-hover:translate-x-0.5 transition-transform">
-            <span>সেবা শুরু করুন</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-      </div>
-    </div>
+      <h3 className="text-base sm:text-lg font-extrabold text-slate-900 group-hover:text-emerald-700 transition-colors leading-snug">
+        নির্বাচন অফিস (NID সেবা)
+      </h3>
+    </button>
   );
 };
 
@@ -1174,71 +1038,21 @@ interface JobPhotoResizerCardProps {
 
 const JobPhotoResizerCard: React.FC<JobPhotoResizerCardProps> = ({ onStart, className = '' }) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={onStart}
-      className={`group relative bg-white rounded-3xl border-2 border-rose-500/80 ring-2 ring-rose-100 hover:border-rose-600 transition-all duration-300 cursor-pointer flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 ${className}`}
+      className={`group bg-white rounded-2xl p-5 sm:p-6 border border-rose-300/90 hover:border-rose-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${className}`}
     >
-      {/* Active Status Badge in Top-Right */}
-      <div className="absolute top-3.5 right-3.5 z-10">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-rose-600 text-white px-2.5 py-1 rounded-full shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-          <span>সক্রিয় টুল</span>
-        </span>
+      <div className="mb-3.5">
+        <ToolVisualLogo
+          toolId="job-photo-signature-resizer"
+          className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+        />
       </div>
-
-      {/* Top Number / Indicator */}
-      <div className="absolute top-3.5 left-4 z-10">
-        <span className="text-[11px] font-mono font-bold text-rose-800 bg-rose-50 border border-rose-200/80 px-2 py-0.5 rounded-md">
-          #২
-        </span>
-      </div>
-
-      {/* 1. TOP PORTION: PROMINENT CAMERA & DIMENSIONS BADGE */}
-      <div className="h-44 sm:h-48 w-full bg-gradient-to-b from-rose-50/90 to-rose-100/60 flex flex-col items-center justify-center p-6 relative group-hover:from-white group-hover:to-rose-50 transition-colors">
-        <div className="w-18 h-18 rounded-3xl bg-gradient-to-br from-rose-500 via-pink-600 to-indigo-600 text-white flex items-center justify-center shadow-lg transform transition-transform duration-300 group-hover:scale-110">
-          <Camera className="w-9 h-9" />
-        </div>
-        <div className="mt-3 flex items-center gap-1.5 flex-wrap justify-center">
-          <span className="text-[10px] font-mono font-black bg-white text-rose-700 px-2.5 py-0.5 rounded-full border border-rose-200 shadow-2xs">
-            ৩০০×৩০০ px (১০০ KB)
-          </span>
-          <span className="text-[10px] font-mono font-black bg-white text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-200 shadow-2xs">
-            ৩০০×৮০ px (৬০ KB)
-          </span>
-        </div>
-      </div>
-
-      {/* HORIZONTAL DIVIDING BORDER */}
-      <div className="w-full border-t-2 border-slate-200 group-hover:border-slate-300 transition-colors" />
-
-      {/* 2. BOTTOM PORTION: TITLE & DETAILS */}
-      <div className="p-4 sm:p-5 bg-white flex flex-col justify-between flex-1 text-center">
-        <div>
-          <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors tracking-tight">
-            টেলিটক চাকরির ছবি ও স্বাক্ষর
-          </h3>
-          <p className="text-xs text-slate-500 font-medium mt-1">
-            সরকারি চাকরির আবেদন ফটো ও সিগনেচার সাইজার
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-            টেলিটক ও সরকারি চাকরির আবেদনের ছবি (৩০০×৩০০ px) ও স্বাক্ষর (৩০০×৮০ px) ১-ক্লিকে সঠিক সাইজ ও কেবিতে প্রস্তুত ও সরাসরি ডাউনলোড।
-          </p>
-        </div>
-
-        {/* Action button bar */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-rose-500" />
-            <span>টেলিটক ভেরিফাইড</span>
-          </span>
-
-          <span className="inline-flex items-center gap-1 font-bold text-rose-700 group-hover:translate-x-0.5 transition-transform">
-            <span>সাইজ শুরু করুন</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-      </div>
-    </div>
+      <h3 className="text-base sm:text-lg font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors leading-snug">
+        টেলিটক চাকরির ছবি ও স্বাক্ষর
+      </h3>
+    </button>
   );
 };
 
@@ -1249,71 +1063,21 @@ interface OnlineJobsPortalCardProps {
 
 const OnlineJobsPortalCard: React.FC<OnlineJobsPortalCardProps> = ({ onStart, className = '' }) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={onStart}
-      className={`group relative bg-white rounded-3xl border-2 border-indigo-500/80 ring-2 ring-indigo-100 hover:border-indigo-600 transition-all duration-300 cursor-pointer flex flex-col overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 ${className}`}
+      className={`group bg-white rounded-2xl p-5 sm:p-6 border border-indigo-300/90 hover:border-indigo-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${className}`}
     >
-      {/* Active Status Badge in Top-Right */}
-      <div className="absolute top-3.5 right-3.5 z-10">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2.5 py-1 rounded-full shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-yellow-300 animate-pulse" />
-          <span>১৫টি জব পোর্টাল</span>
-        </span>
+      <div className="mb-3.5">
+        <SubToolVisualLogo
+          logoId="online-jobs"
+          className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+        />
       </div>
-
-      {/* Top Number / Indicator */}
-      <div className="absolute top-3.5 left-4 z-10">
-        <span className="text-[11px] font-mono font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md">
-          #৩
-        </span>
-      </div>
-
-      {/* 1. TOP PORTION: PROMINENT BRIEFCASE & JOBS BADGES */}
-      <div className="h-44 sm:h-48 w-full bg-gradient-to-b from-blue-50/90 to-indigo-100/60 flex flex-col items-center justify-center p-6 relative group-hover:from-white group-hover:to-blue-50 transition-colors">
-        <div className="w-18 h-18 rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white flex items-center justify-center shadow-lg transform transition-transform duration-300 group-hover:scale-110">
-          <Briefcase className="w-9 h-9 text-yellow-300" />
-        </div>
-        <div className="mt-3 flex items-center gap-1.5 flex-wrap justify-center">
-          <span className="text-[10px] font-mono font-black bg-white text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-200 shadow-2xs">
-            বিসিএস ও সরকারি চাকরি
-          </span>
-          <span className="text-[10px] font-mono font-black bg-white text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-200 shadow-2xs">
-            ব্যাংক ও নিয়োগ পোর্টাল
-          </span>
-        </div>
-      </div>
-
-      {/* HORIZONTAL DIVIDING BORDER */}
-      <div className="w-full border-t-2 border-slate-200 group-hover:border-slate-300 transition-colors" />
-
-      {/* 2. BOTTOM PORTION: TITLE & DETAILS */}
-      <div className="p-4 sm:p-5 bg-white flex flex-col justify-between flex-1 text-center">
-        <div>
-          <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors tracking-tight">
-            অনলাইন জবস পোর্টাল
-          </h3>
-          <p className="text-xs text-slate-500 font-medium mt-1">
-            Online Jobs Portal • চাকরির সকল ওয়েবসাইট
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-            Bdjobs, Chakri.com, বিপিএসসি (BPSC), AllJobs Teletalk, বাংলাদেশ ব্যাংক ও সকল নির্ভরযোগ্য নিয়োগ পোর্টাল এক ক্লিকে।
-          </p>
-        </div>
-
-        {/* Action button bar */}
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-            <Globe className="w-3.5 h-3.5 text-blue-500" />
-            <span>১৫টি চাকরি ওয়েবসাইট</span>
-          </span>
-
-          <span className="inline-flex items-center gap-1 font-bold text-indigo-700 group-hover:translate-x-0.5 transition-transform">
-            <span>জব পোর্টাল খুলুন</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </span>
-        </div>
-      </div>
-    </div>
+      <h3 className="text-base sm:text-lg font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
+        অনলাইন জবস পোর্টাল
+      </h3>
+    </button>
   );
 };
 

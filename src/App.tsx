@@ -60,45 +60,93 @@ import { DeveloperContactModal } from './components/DeveloperContactModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
 import { ToolsNoticeBanner } from './components/ToolsNoticeBanner';
 import { UserReviewsMarquee } from './components/UserReviewsMarquee';
-import { WaterDropletButton } from './components/WaterDropletButton';
+import { ToolVisualLogo } from './components/ToolVisualLogo';
 import { useAuth } from './context/AuthContext';
 import { isCurrentAdminUser } from './services/adminUserService';
 import { APP_VERSION_CONFIG } from './versionConfig';
 import { trackPageView, trackEvent } from './utils/analytics';
 import { getToolSeoData, HOMEPAGE_SEO, generateSchemaJsonLd } from './data/seoToolsData';
 
-// Lazy-loaded 27 Tools for optimal bundle performance & lightning-fast initial page load
-const LoveTest = React.lazy(() => import('./components/LoveTest').then((m) => ({ default: m.LoveTest })));
-const TypingTest = React.lazy(() => import('./components/TypingTest').then((m) => ({ default: m.TypingTest })));
-const AgeCalculator = React.lazy(() => import('./components/AgeCalculator').then((m) => ({ default: m.AgeCalculator })));
-const BanglaStatusHub = React.lazy(() => import('./components/BanglaStatusHub').then((m) => ({ default: m.BanglaStatusHub })));
+// Resilient React.lazy wrapper that retries transient dynamic import failures
+// (e.g. Vite dep re-optimization when HMR is disabled or stale chunk after deploy)
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>,
+  moduleKey: string
+): React.LazyExoticComponent<T> {
+  return React.lazy(async () => {
+    try {
+      const mod = await factory();
+      try {
+        sessionStorage.removeItem(`mosafa_chunk_retry_${moduleKey}`);
+      } catch {}
+      return mod;
+    } catch (firstErr) {
+      // Wait briefly and retry once in case Vite just finished optimizing a dep
+      await new Promise((r) => setTimeout(r, 350));
+      try {
+        const mod = await factory();
+        try {
+          sessionStorage.removeItem(`mosafa_chunk_retry_${moduleKey}`);
+        } catch {}
+        return mod;
+      } catch (secondErr) {
+        const msg = secondErr instanceof Error ? secondErr.message : String(secondErr);
+        const isChunkFetchError =
+          /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk|Outdated Optimize Dep/i.test(
+            msg
+          );
+        if (isChunkFetchError && typeof window !== 'undefined') {
+          const retryKey = `mosafa_chunk_retry_${moduleKey}`;
+          let alreadyReloaded = false;
+          try {
+            alreadyReloaded = sessionStorage.getItem(retryKey) === '1';
+          } catch {}
+          if (!alreadyReloaded) {
+            try {
+              sessionStorage.setItem(retryKey, '1');
+            } catch {}
+            window.location.reload();
+            return new Promise<{ default: T }>(() => {});
+          }
+        }
+        throw secondErr;
+      }
+    }
+  });
+}
 
-const PosterStudio = React.lazy(() => import('./components/PosterStudio').then((m) => ({ default: m.PosterStudio })));
-const RandomPickerWheel = React.lazy(() => import('./components/RandomPickerWheel').then((m) => ({ default: m.RandomPickerWheel })));
-const BanglaQuiz = React.lazy(() => import('./components/BanglaQuiz').then((m) => ({ default: m.BanglaQuiz })));
-const DailyHishab = React.lazy(() => import('./components/DailyHishab').then((m) => ({ default: m.DailyHishab })));
-const LifeReceipt = React.lazy(() => import('./components/LifeReceipt').then((m) => ({ default: m.LifeReceipt })));
-const NameReveal = React.lazy(() => import('./components/NameReveal').then((m) => ({ default: m.NameReveal })));
-const GolpoGhor = React.lazy(() => import('./components/GolpoGhor').then((m) => ({ default: m.GolpoGhor })));
-const PrepaidMeterHelper = React.lazy(() => import('./components/PrepaidMeterHelper').then((m) => ({ default: m.PrepaidMeterHelper })));
-const BangladeshMap = React.lazy(() => import('./components/BangladeshMap').then((m) => ({ default: m.BangladeshMap })));
-const VoterTransferForm = React.lazy(() => import('./components/VoterTransferForm').then((m) => ({ default: m.VoterTransferForm })));
-const CVMaker = React.lazy(() => import('./components/CVMaker').then((m) => ({ default: m.CVMaker })));
-const StudyMateBD = React.lazy(() => import('./components/StudyMateBD').then((m) => ({ default: m.StudyMateBD })));
-const InvoiceMaker = React.lazy(() => import('./components/InvoiceMaker').then((m) => ({ default: m.InvoiceMaker })));
-const BanglaTextConverter = React.lazy(() => import('./components/bangla-converter/BanglaTextConverter').then((m) => ({ default: m.BanglaTextConverter })));
-const ApplicationWriter = React.lazy(() => import('./components/application-writer/ApplicationWriter').then((m) => ({ default: m.ApplicationWriter })));
-const PDFToolkit = React.lazy(() => import('./components/pdf-toolkit/PDFToolkit').then((m) => ({ default: m.PDFToolkit })));
-const PalmistryAI = React.lazy(() => import('./components/PalmistryAI').then((m) => ({ default: m.PalmistryAI })));
-const BdOnlinePortal = React.lazy(() => import('./components/BdOnlinePortal').then((m) => ({ default: m.BdOnlinePortal })));
-const ContentCreatorStudio = React.lazy(() => import('./components/ContentCreatorStudio').then((m) => ({ default: m.ContentCreatorStudio })));
-const EntrepreneurJourney = React.lazy(() => import('./components/EntrepreneurJourney').then((m) => ({ default: m.EntrepreneurJourney })));
-const AllFormFillup = React.lazy(() => import('./components/all-form-fillup/AllFormFillup').then((m) => ({ default: m.AllFormFillup })));
-const JobPhotoSignatureResizer = React.lazy(() => import('./components/job-resizer/JobPhotoSignatureResizer').then((m) => ({ default: m.JobPhotoSignatureResizer })));
-const UltraDigitalStudio = React.lazy(() => import('./components/ultra-studio/UltraDigitalStudio').then((m) => ({ default: m.UltraDigitalStudio })));
-const LegalPagesModal = React.lazy(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPagesModal })));
-const LegalPageBody = React.lazy(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPageBody })));
-const MyDigitalShopApp = React.lazy(() => import('./shop/MyDigitalShopApp').then((m) => ({ default: m.MyDigitalShopApp })));
+// Lazy-loaded 27 Tools for optimal bundle performance & lightning-fast initial page load
+const LoveTest = lazyWithRetry(() => import('./components/LoveTest').then((m) => ({ default: m.LoveTest })), 'LoveTest');
+const TypingTest = lazyWithRetry(() => import('./components/TypingTest').then((m) => ({ default: m.TypingTest })), 'TypingTest');
+const AgeCalculator = lazyWithRetry(() => import('./components/AgeCalculator').then((m) => ({ default: m.AgeCalculator })), 'AgeCalculator');
+const BanglaStatusHub = lazyWithRetry(() => import('./components/BanglaStatusHub').then((m) => ({ default: m.BanglaStatusHub })), 'BanglaStatusHub');
+
+const PosterStudio = lazyWithRetry(() => import('./components/PosterStudio').then((m) => ({ default: m.PosterStudio })), 'PosterStudio');
+const RandomPickerWheel = lazyWithRetry(() => import('./components/RandomPickerWheel').then((m) => ({ default: m.RandomPickerWheel })), 'RandomPickerWheel');
+const BanglaQuiz = lazyWithRetry(() => import('./components/BanglaQuiz').then((m) => ({ default: m.BanglaQuiz })), 'BanglaQuiz');
+const DailyHishab = lazyWithRetry(() => import('./components/DailyHishab').then((m) => ({ default: m.DailyHishab })), 'DailyHishab');
+const LifeReceipt = lazyWithRetry(() => import('./components/LifeReceipt').then((m) => ({ default: m.LifeReceipt })), 'LifeReceipt');
+const NameReveal = lazyWithRetry(() => import('./components/NameReveal').then((m) => ({ default: m.NameReveal })), 'NameReveal');
+const GolpoGhor = lazyWithRetry(() => import('./components/GolpoGhor').then((m) => ({ default: m.GolpoGhor })), 'GolpoGhor');
+const PrepaidMeterHelper = lazyWithRetry(() => import('./components/PrepaidMeterHelper').then((m) => ({ default: m.PrepaidMeterHelper })), 'PrepaidMeterHelper');
+const BangladeshMap = lazyWithRetry(() => import('./components/BangladeshMap').then((m) => ({ default: m.BangladeshMap })), 'BangladeshMap');
+const VoterTransferForm = lazyWithRetry(() => import('./components/VoterTransferForm').then((m) => ({ default: m.VoterTransferForm })), 'VoterTransferForm');
+const CVMaker = lazyWithRetry(() => import('./components/CVMaker').then((m) => ({ default: m.CVMaker })), 'CVMaker');
+const StudyMateBD = lazyWithRetry(() => import('./components/StudyMateBD').then((m) => ({ default: m.StudyMateBD })), 'StudyMateBD');
+const InvoiceMaker = lazyWithRetry(() => import('./components/InvoiceMaker').then((m) => ({ default: m.InvoiceMaker })), 'InvoiceMaker');
+const BanglaTextConverter = lazyWithRetry(() => import('./components/bangla-converter/BanglaTextConverter').then((m) => ({ default: m.BanglaTextConverter })), 'BanglaTextConverter');
+const ApplicationWriter = lazyWithRetry(() => import('./components/application-writer/ApplicationWriter').then((m) => ({ default: m.ApplicationWriter })), 'ApplicationWriter');
+const PDFToolkit = lazyWithRetry(() => import('./components/pdf-toolkit/PDFToolkit').then((m) => ({ default: m.PDFToolkit })), 'PDFToolkit');
+const PalmistryAI = lazyWithRetry(() => import('./components/PalmistryAI').then((m) => ({ default: m.PalmistryAI })), 'PalmistryAI');
+const BdOnlinePortal = lazyWithRetry(() => import('./components/BdOnlinePortal').then((m) => ({ default: m.BdOnlinePortal })), 'BdOnlinePortal');
+const ContentCreatorStudio = lazyWithRetry(() => import('./components/ContentCreatorStudio').then((m) => ({ default: m.ContentCreatorStudio })), 'ContentCreatorStudio');
+const EntrepreneurJourney = lazyWithRetry(() => import('./components/EntrepreneurJourney').then((m) => ({ default: m.EntrepreneurJourney })), 'EntrepreneurJourney');
+const AllFormFillup = lazyWithRetry(() => import('./components/all-form-fillup/AllFormFillup').then((m) => ({ default: m.AllFormFillup })), 'AllFormFillup');
+const JobPhotoSignatureResizer = lazyWithRetry(() => import('./components/job-resizer/JobPhotoSignatureResizer').then((m) => ({ default: m.JobPhotoSignatureResizer })), 'JobPhotoSignatureResizer');
+const UltraDigitalStudio = lazyWithRetry(() => import('./components/ultra-studio/UltraDigitalStudio').then((m) => ({ default: m.UltraDigitalStudio })), 'UltraDigitalStudio');
+const LegalPagesModal = lazyWithRetry(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPagesModal })), 'LegalPagesModal');
+const LegalPageBody = lazyWithRetry(() => import('./components/legal/LegalPagesModal').then((m) => ({ default: m.LegalPageBody })), 'LegalPageBody');
+const MyDigitalShopApp = lazyWithRetry(() => import('./shop/MyDigitalShopApp').then((m) => ({ default: m.MyDigitalShopApp })), 'MyDigitalShopApp');
 
 export type LegalPageId = 'about' | 'contact' | 'privacy' | 'terms' | null;
 
@@ -1827,7 +1875,7 @@ export default function App() {
 
       {/* Hero Section — শুধু সার্চ অপশন ও টুলসের পাবলিক লিংক রাখা হয়েছে */}
       <section className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-4 sm:pt-6 sm:pb-6 text-center w-full relative z-10">
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight max-w-3xl mx-auto">
+        <h1 className="text-[clamp(0.875rem,3.3vw,2.75rem)] font-extrabold text-slate-900 tracking-tight leading-tight whitespace-nowrap mx-auto">
           আপনার প্রয়োজনীয় সকল{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600">
             অনলাইন টুলস
@@ -2090,62 +2138,29 @@ export default function App() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5">
           {filteredTools.map((tool) => (
-            <div
+            <a
               key={tool.id}
-              onClick={() => navigateToTool(tool.id)}
-              className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-md hover:shadow-xl hover:border-rose-400 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+              href={`/tools/${tool.id}`}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                navigateToTool(tool.id);
+              }}
+              className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center text-center group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 no-underline"
             >
-              <div>
-                <div className="flex items-start justify-between gap-3 mb-3.5">
-                  <div
-                    className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-md bg-gradient-to-tr ${tool.iconBg} group-hover:scale-110 transition shrink-0`}
-                  >
-                    {tool.icon}
-                  </div>
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${tool.badgeColor}`}>
-                    {tool.badge}
-                  </span>
-                </div>
-
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-rose-600 transition">
-                  <a
-                    href={`/tools/${tool.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateToTool(tool.id);
-                    }}
-                    className="hover:underline focus:outline-none text-inherit no-underline block"
-                  >
-                    {tool.title}
-                  </a>
-                </h3>
-                {tool.deviceTag && (
-                  <div
-                    className={`inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
-                      tool.deviceTarget === 'desktop'
-                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                        : tool.deviceTarget === 'mobile'
-                        ? 'bg-rose-50 border-rose-200 text-rose-700'
-                        : 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                    }`}
-                  >
-                    <span>{tool.deviceTag}</span>
-                  </div>
-                )}
-                <p className="text-xs text-slate-600 mt-2 leading-relaxed">{tool.description}</p>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-center">
-                <WaterDropletButton
-                  label="টুল শুরু করুন"
-                  toolTitle={tool.title}
-                  toolSlug={tool.id}
-                  onOpenTool={() => navigateToTool(tool.id)}
+              <div className="mb-3 sm:mb-3.5 flex items-center justify-center">
+                <ToolVisualLogo
+                  toolId={tool.id}
+                  className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
                 />
               </div>
-            </div>
+
+              <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors leading-snug line-clamp-2">
+                {tool.title}
+              </h3>
+            </a>
           ))}
         </div>
 

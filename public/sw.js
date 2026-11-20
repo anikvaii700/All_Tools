@@ -2,7 +2,7 @@
 // Version: 3.3.0 (Master Command: Update ON)
 // Supports full offline usage for mobile APK/PWA + instant cache purging on update release
 
-const CACHE_NAME = 'mosafa-tools-v3.4.2';
+const CACHE_NAME = 'mosafa-tools-v3.4.3';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -60,8 +60,19 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // 1. Bypass ServiceWorker for chrome-extension or non-HTTP(S)
+  // 1. Bypass ServiceWorker for chrome-extension, non-HTTP(S), or Vite dev server module URLs
   if (!url.protocol.startsWith('http')) return;
+  if (
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.pathname.startsWith('/@vite/') ||
+    url.pathname.startsWith('/@fs/') ||
+    url.pathname.startsWith('/@id/') ||
+    url.pathname.startsWith('/@react-refresh') ||
+    url.pathname.startsWith('/mediapipe-wasm/')
+  ) {
+    return;
+  }
 
   // 2. Strict Network-Only / Network-First for API and Version checks
   if (

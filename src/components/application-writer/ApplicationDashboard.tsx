@@ -23,6 +23,21 @@ import {
 } from 'lucide-react';
 import { CATEGORIES, DOCUMENT_TYPES } from './categoriesData';
 import { CategoryId, DocumentTypeInfo } from './types';
+import { SubToolVisualLogo } from '../SubToolVisualLogo';
+
+const APP_CATEGORY_LOGO_MAP: Record<string, string> = {
+  police: 'passport-police',
+  municipal: 'gov-central',
+  education: 'form-education',
+  office: 'form-job',
+  land: 'land-mutation',
+  bank: 'banking-mfs',
+  utility: 'utility-bills',
+  personal: 'nid-birth',
+  business: 'form-business',
+  other: 'form-certificate',
+  custom: 'form-custom',
+};
 
 interface ApplicationDashboardProps {
   onStartNewApplication: () => void;
@@ -179,93 +194,53 @@ export const ApplicationDashboard: React.FC<ApplicationDashboardProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3.5 sm:gap-4">
           {popularPicks.map((pick) => (
-            <div
+            <button
               key={pick.id}
+              type="button"
               onClick={() => onSelectSpecificType(pick)}
-              className="p-4 rounded-2xl border border-slate-200 bg-white hover:border-rose-400 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
+              className="group cursor-pointer bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 hover:border-rose-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center text-center active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
             >
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
-                    {pick.serialNo && (
-                      <span className="text-[10px] font-extrabold text-white bg-slate-900 px-1.5 py-0.5 rounded">
-                        #{toBnNum(pick.serialNo)}
-                      </span>
-                    )}
-                    <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md">
-                      {pick.badge || 'জনপ্রিয়'}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-medium">{pick.nameEn}</span>
-                </div>
-                <h3 className="text-sm font-bold text-slate-900 group-hover:text-rose-600 transition">
-                  {pick.name}
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
-                  {pick.description}
-                </p>
+              <div className="mb-3 flex items-center justify-center">
+                <SubToolVisualLogo
+                  logoId={APP_CATEGORY_LOGO_MAP[pick.categoryId] || 'form-custom'}
+                  className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+                />
               </div>
-
-              <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
-                <span className="text-slate-400 text-[11px] truncate max-w-[170px]">
-                  প্রাপক: {pick.defaultRecipientDesignationBn}
-                </span>
-                <span className="text-rose-600 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition shrink-0">
-                  <span>লিখুন</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
+              <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors leading-snug line-clamp-2">
+                {pick.name}
+              </h3>
+            </button>
           ))}
         </div>
       </div>
 
-      {/* 10 Major Categories */}
+      {/* 11 Major Categories — Large Visual Logo Tiles */}
       <div className="space-y-4">
         <h2 className="text-base sm:text-lg font-bold text-slate-900">
-          ক্যাটাগরি অনুযায়ী দরখাস্ত বেছে নিন (১০টি প্রধান বিভাগ)
+          ক্যাটাগরি অনুযায়ী দরখাস্ত বেছে নিন
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CATEGORIES.map((cat) => {
-            const count = DOCUMENT_TYPES.filter((t) => t.categoryId === cat.id).length;
-            return (
-              <div
-                key={cat.id}
-                onClick={() => onSelectCategory(cat.id)}
-                className="p-5 rounded-2xl border border-slate-200 bg-white hover:border-indigo-400 hover:shadow-lg transition-all cursor-pointer group flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div
-                      className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${cat.accentColor} flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition`}
-                    >
-                      {getCategoryIcon(cat.iconName)}
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md">
-                        {cat.serialRange}
-                      </span>
-                    </div>
-                  </div>
-
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition">
-                    {cat.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    {cat.description}
-                  </p>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
-                  <span>{count}টি আবেদনপত্র দেখুন</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-                </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => onSelectCategory(cat.id)}
+              className="group cursor-pointer bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center text-center active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
+              <div className="mb-3 flex items-center justify-center">
+                <SubToolVisualLogo
+                  logoId={APP_CATEGORY_LOGO_MAP[cat.id] || 'form-custom'}
+                  className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+                />
               </div>
-            );
-          })}
+              <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug line-clamp-2">
+                {cat.name}
+              </h3>
+            </button>
+          ))}
         </div>
       </div>
 
