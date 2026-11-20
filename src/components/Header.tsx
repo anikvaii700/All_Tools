@@ -39,6 +39,7 @@ import {
   LogIn,
   X,
   Store,
+  Camera,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { isCurrentAdminUser } from '../services/adminUserService';
@@ -125,9 +126,11 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'voter-transfer-form', name: 'ভোটার স্থানান্তর ফরম (ফরম-১৩ অটো ফিল)', icon: <FileText className="w-3.5 h-3.5 text-emerald-600" />, category: 'শিক্ষা ও ক্যারিয়ার', badge: 'অফিসিয়াল' },
 
     // 2. কন্টেন্ট, পোস্টার ও বই
+    { id: 'ultra-digital-studio', name: 'Ultra Digital Studio (আল্ট্রা ডিজিটাল স্টুডিও)', icon: <Layers className="w-3.5 h-3.5 text-cyan-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'স্টুডিও' },
+    { id: 'job-photo-signature-resizer', name: 'Job Photo & Signature Resizer (চাকরির ছবি সাইজার)', icon: <Camera className="w-3.5 h-3.5 text-indigo-600" />, category: 'শিক্ষা ও ক্যারিয়ার', badge: '৩০০×৩০০' },
     { id: 'content-creator-studio', name: 'MoSaFa Content Creator Studio (কনটেন্ট স্টুডিও)', icon: <Video className="w-3.5 h-3.5 text-indigo-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ক্রিয়েটর' },
     { id: 'pdf-toolkit', name: 'MoSaFa PDF Toolkit (PDF টুলবক্স)', icon: <FileText className="w-3.5 h-3.5 text-rose-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'PDF টুলস' },
-    { id: 'poster-studio', name: 'MoSaFa Poster Studio (পোস্টার ও স্লোগান)', icon: <Palette className="w-3.5 h-3.5 text-rose-500" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ডিজাইন' },
+    { id: 'poster-studio', name: 'MoSaFa AI Photo Status & Frame Studio', icon: <Palette className="w-3.5 h-3.5 text-rose-500" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ফ্রেম স্টুডিও' },
     { id: 'golpo-ghor', name: 'গল্পের ঘর (জনপ্রিয় সকল বই ও গল্প)', icon: <BookOpen className="w-3.5 h-3.5 text-amber-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'বই ও গল্প' },
     { id: 'bangla-status', name: 'বাংলা স্ট্যাটাস ও ক্যাপশন হাব (১০০০+)', icon: <MessageSquareHeart className="w-3.5 h-3.5 text-violet-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'ক্যাপশন' },
     { id: 'typing-test', name: 'লিপি টাইピング টেস্ট (স্পিড পরীক্ষা)', icon: <Keyboard className="w-3.5 h-3.5 text-blue-600" />, category: 'কন্টেন্ট ও ক্রিয়েটিভ', badge: 'টাইপিং' },
@@ -140,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
 
     // 4. বিনোদন, প্রেম ও কুইজ
     { id: 'palmistry-ai', name: 'MoSaFa Palmistry AI (হস্তরেখা ও ভাগ্যরেখা)', icon: <Hand className="w-3.5 h-3.5 text-amber-600" />, category: 'বিনোদন ও কুইজ', badge: 'এআই হাত' },
-    { id: 'love-test', name: 'প্রেম টেস্ট (বাস্তব পরীক্ষা ও সনদপত্র)', icon: <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-600" />, category: 'বিনোদন ও কুইজ', badge: 'ভাইরাল' },
+    { id: 'love-test', name: 'সম্পর্ক ও সুস্থ ভালোবাসা', icon: <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-600" />, category: 'বিনোদন ও কুইজ', badge: 'গাইড' },
     { id: 'bangla-quiz', name: 'বাংলা সাধারণ জ্ঞান ও মেধা কুইজ', icon: <Brain className="w-3.5 h-3.5 text-indigo-600" />, category: 'বিনোদন ও কুইজ', badge: 'কুইজ' },
     { id: 'random-picker', name: 'র‍্যান্ডম পিকার হুইল (ভাগ্যের চাকা)', icon: <Compass className="w-3.5 h-3.5 text-purple-600" />, category: 'বিনোদন ও কুইজ', badge: 'চাকা' },
     { id: 'name-reveal', name: 'নামের গোপন রহস্য ও বিশ্লেষণ', icon: <Sparkles className="w-3.5 h-3.5 text-rose-500" />, category: 'বিনোদন ও কুইজ', badge: 'রহস্য' },

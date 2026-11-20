@@ -676,6 +676,22 @@ export default function App() {
         'আইডি কার্ড জয়নার',
         'digital photo studio',
         'camscanner online',
+        'job photo signature resizer',
+        'job photo resizer',
+        'signature resizer',
+        'teletalk photo resizer',
+        'টেলিটক ছবি সাইজ',
+        'চাকরির ছবি সাইজ',
+        '৩০০ গুণ ৩০০ ছবি',
+        '৩০০ গুণ ৮০ স্বাক্ষর',
+        'ছবি ও স্বাক্ষর সাইজার',
+        'পোস্টার',
+        'poster studio',
+        'ai photo status',
+        'frame studio',
+        'ফটো স্ট্যাটাস',
+        'ফ্রেম স্টুডিও',
+        'ছবি দিয়ে স্ট্যাটাস',
       ],
     },
     {
@@ -1186,6 +1202,14 @@ export default function App() {
     },
   ];
 
+  // Tools excluded from homepage grid (consolidated into Ultra Digital Studio or transitioned to informative guide; original URLs preserved at HTTP 200)
+  const HIDDEN_FROM_HOMEPAGE_GRID: readonly ToolId[] = [
+    'job-photo-signature-resizer',
+    'poster-studio',
+    'love-test',
+  ];
+  const homepageTools = tools.filter((t) => !HIDDEN_FROM_HOMEPAGE_GRID.includes(t.id));
+
   // Master Short Prompt Flag: 'Random ON' / 'Random OFF'
   // Currently set to: 'Random OFF' (Tools positions fixed in canonical catalog order)
   const IS_RANDOM_MODE = false;
@@ -1200,14 +1224,14 @@ export default function App() {
     return shuffled;
   };
 
-  // Tool list (ordered or shuffled depending on IS_RANDOM_MODE)
+  // Tool list for homepage grid (excludes consolidated sub-tools while preserving all routes & SEO)
   const [activeToolsList, setActiveToolsList] = useState<ToolCardInfo[]>(() =>
-    IS_RANDOM_MODE ? shuffleTools(tools) : tools
+    IS_RANDOM_MODE ? shuffleTools(homepageTools) : homepageTools
   );
 
   // Manual shuffle handler
   const handleShuffle = () => {
-    setActiveToolsList(shuffleTools(tools));
+    setActiveToolsList(shuffleTools(homepageTools));
     showToast('টুলসগুলোর জায়গা পরিবর্তন (Shuffle) করা হয়েছে! 🔀', '🎲');
   };
 
@@ -1565,7 +1589,13 @@ export default function App() {
   // Render standalone view if tool is selected
   // Original 7 tools:
   if (activeTool === 'love-test') {
-    return wrapWithNavbar(<LoveTest onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+    return wrapWithNavbar(
+      <LoveTest
+        onBackToHub={() => navigateToTool(null)}
+        onShowToast={showToast}
+        onNavigateToTool={(toolId) => navigateToTool(toolId as ToolId)}
+      />
+    );
   }
   if (activeTool === 'typing-test') {
     return wrapWithNavbar(<TypingTest onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
@@ -1579,7 +1609,30 @@ export default function App() {
 
   // 8 New tools:
   if (activeTool === 'poster-studio') {
-    return wrapWithNavbar(<PosterStudio onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
+    return wrapWithNavbar(
+      <div className="flex flex-col min-h-screen">
+        <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 text-xs">
+          <a
+            href="/tools/ultra-digital-studio"
+            onClick={(e) => {
+              e.preventDefault();
+              navigateToTool('ultra-digital-studio');
+            }}
+            className="inline-flex items-center gap-1.5 text-indigo-700 hover:text-indigo-900 font-bold no-underline transition-colors"
+          >
+            <Layers className="w-4 h-4 shrink-0" />
+            <span>← আল্ট্রা ডিজিটাল স্টুডিওতে ফিরুন (Ultra Digital Studio)</span>
+          </a>
+          <span className="text-slate-500 hidden sm:inline truncate">
+            Ultra Digital Studio / MoSaFa AI Photo Status &amp; Frame Studio
+          </span>
+        </div>
+        <PosterStudio
+          onBackToHub={() => navigateToTool('ultra-digital-studio')}
+          onShowToast={showToast}
+        />
+      </div>
+    );
   }
   if (activeTool === 'random-picker') {
     return wrapWithNavbar(<RandomPickerWheel onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
@@ -1655,16 +1708,35 @@ export default function App() {
     return wrapWithNavbar(
       <UltraDigitalStudio
         onBackToHub={() => navigateToTool(null)}
+        onNavigateToTool={(toolId) => navigateToTool(toolId)}
         onShowToast={showToast}
       />
     );
   }
   if (activeTool === 'job-photo-signature-resizer') {
     return wrapWithNavbar(
-      <JobPhotoSignatureResizer
-        onBackToHub={() => navigateToTool(null)}
-        onShowToast={showToast}
-      />
+      <div className="flex flex-col min-h-screen">
+        <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 text-xs">
+          <a
+            href="/tools/ultra-digital-studio"
+            onClick={(e) => {
+              e.preventDefault();
+              navigateToTool('ultra-digital-studio');
+            }}
+            className="inline-flex items-center gap-1.5 text-indigo-700 hover:text-indigo-900 font-bold no-underline transition-colors"
+          >
+            <Layers className="w-4 h-4 shrink-0" />
+            <span>← আল্ট্রা ডিজিটাল স্টুডিওতে ফিরুন (Ultra Digital Studio)</span>
+          </a>
+          <span className="text-slate-500 hidden sm:inline truncate">
+            Ultra Digital Studio / Job Photo &amp; Signature Resizer
+          </span>
+        </div>
+        <JobPhotoSignatureResizer
+          onBackToHub={() => navigateToTool('ultra-digital-studio')}
+          onShowToast={showToast}
+        />
+      </div>
     );
   }
   if (activeTool === 'all-form-fillup') {
@@ -1925,7 +1997,10 @@ export default function App() {
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1">
             {TOOL_CATEGORIES.map((cat) => {
               const isActive = activeCategory === cat.id;
-              const count = cat.id === 'all' ? tools.length : tools.filter((t) => t.category === cat.id).length;
+              const count =
+                cat.id === 'all'
+                  ? homepageTools.length
+                  : homepageTools.filter((t) => t.category === cat.id).length;
               return (
                 <button
                   key={cat.id}
@@ -2003,7 +2078,7 @@ export default function App() {
                   <Globe className="w-4 h-4 text-slate-700" />
                   <span>
                     {activeCategory === 'all' && !searchQuery.trim()
-                      ? `সকল অনলাইন টুলস (${tools.length}টি)`
+                      ? `সকল অনলাইন টুলস (${homepageTools.length}টি)`
                       : `প্রদর্শিত টুলস (${filteredTools.length}টি)`}
                   </span>
                 </>
@@ -2056,10 +2131,10 @@ export default function App() {
                     ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title={`সকল ${tools.length}টি টুলস একসাথে দেখুন`}
+                title={`সকল ${homepageTools.length}টি টুলস একসাথে দেখুন`}
               >
                 <Globe className="w-3.5 h-3.5" />
-                <span>সবগুলো ({tools.length})</span>
+                <span>সবগুলো ({homepageTools.length})</span>
               </button>
               <button
                 type="button"

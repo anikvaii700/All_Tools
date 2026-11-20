@@ -356,7 +356,7 @@ export const TOOLS_RICH_CONTENT: Record<string, ToolArticleContent> = {
         a: 'না, ফটো প্রসেসিং সম্পূর্ণ আপনার ব্রাউজারে ক্লায়েন্ট সাইডে সম্পন্ন হয়, তাই আপনার ছবি শতভাগ সুরক্ষিত।',
       },
     ],
-    relatedSlugs: ['bangla-status', 'job-photo-signature-resizer', 'content-creator-studio', 'cv-maker'],
+    relatedSlugs: ['ultra-digital-studio', 'job-photo-signature-resizer', 'bangla-status', 'content-creator-studio'],
   },
 
   'random-picker': {
@@ -1088,7 +1088,7 @@ export const TOOLS_RICH_CONTENT: Record<string, ToolArticleContent> = {
         a: 'অবশ্যই, যেকোনো বড় মেগাপিক্সেলের ছবি মুহূর্তেই নির্দিষ্ট মাপে ও ফাইল সাইজে চলে আসবে।',
       },
     ],
-    relatedSlugs: ['cv-maker', 'voter-transfer-form', 'all-form-fillup', 'application-writer'],
+    relatedSlugs: ['ultra-digital-studio', 'poster-studio', 'cv-maker', 'all-form-fillup'],
   },
 
   'content-creator-studio': {
@@ -1226,6 +1226,6 @@ export const TOOLS_RICH_CONTENT: Record<string, ToolArticleContent> = {
         a: 'হ্যাঁ, "ক্যামেরা তুলুন" বাটনে ক্লিক করে সরাসরি মোবাইল ক্যামেরা দিয়ে আইডি কার্ডের ছবি তুলে সাজানো সম্ভব।',
       },
     ],
-    relatedSlugs: ['job-photo-signature-resizer', 'cv-maker', 'all-form-fillup', 'pdf-toolkit'],
+    relatedSlugs: ['job-photo-signature-resizer', 'poster-studio', 'cv-maker', 'pdf-toolkit'],
   },
 };

@@ -20,6 +20,7 @@ import {
 import { PhotoSizePreset } from './photoStudioTypes';
 import { PassportPresetId, StudioWorkspaceTab } from './ai-photo-studio/types';
 import { SubToolVisualLogo } from '../SubToolVisualLogo';
+import { ToolVisualLogo } from '../ToolVisualLogo';
 
 export type StudioSection =
   | 'dashboard'
@@ -42,11 +43,13 @@ interface StudioDashboardProps {
     initialPreset?: PhotoSizePreset,
     launchOptions?: StudioLaunchOptions
   ) => void;
+  onOpenStandaloneTool?: (toolId: 'job-photo-signature-resizer' | 'poster-studio') => void;
   onBackToHome?: () => void;
 }
 
 export const StudioDashboard: React.FC<StudioDashboardProps> = ({
   onSelectSection,
+  onOpenStandaloneTool,
   onBackToHome,
 }) => {
   const tools = [
@@ -198,8 +201,8 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
           )}
         </div>
 
-        {/* 4 Dedicated Visual Logo Sub-Tool Buttons */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* 6 Dedicated Visual Logo Sub-Tool Buttons (4 Studio Sections + 2 SEO-Preserved Independent Sub-Tools) */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {tools.map((tool) => (
             <button
               key={tool.id}
@@ -219,6 +222,52 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
               </h3>
             </button>
           ))}
+
+          {/* Sub-Tool 5: Job Photo & Signature Resizer (Opens original canonical URL /tools/job-photo-signature-resizer) */}
+          <a
+            href="/tools/job-photo-signature-resizer"
+            onClick={(e) => {
+              if (onOpenStandaloneTool) {
+                e.preventDefault();
+                onOpenStandaloneTool('job-photo-signature-resizer');
+              }
+            }}
+            className="bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-400 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center text-center group cursor-pointer no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            <div className="mb-3.5 flex items-center justify-center">
+              <ToolVisualLogo
+                toolId="job-photo-signature-resizer"
+                className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+              />
+            </div>
+
+            <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors">
+              চাকরির ছবি ও স্বাক্ষর সাইজার (Job Photo &amp; Signature Resizer)
+            </h3>
+          </a>
+
+          {/* Sub-Tool 6: MoSaFa AI Photo Status & Frame Studio (Opens original canonical URL /tools/poster-studio) */}
+          <a
+            href="/tools/poster-studio"
+            onClick={(e) => {
+              if (onOpenStandaloneTool) {
+                e.preventDefault();
+                onOpenStandaloneTool('poster-studio');
+              }
+            }}
+            className="bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-400 p-5 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center text-center group cursor-pointer no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            <div className="mb-3.5 flex items-center justify-center">
+              <ToolVisualLogo
+                toolId="poster-studio"
+                className="w-24 h-24 sm:w-28 sm:h-28 drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+              />
+            </div>
+
+            <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 leading-snug group-hover:text-indigo-600 transition-colors">
+              MoSaFa AI Photo Status &amp; Frame Studio
+            </h3>
+          </a>
         </div>
       </div>
     </div>

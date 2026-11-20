@@ -1136,21 +1136,18 @@ export const GolpoGhor: React.FC<GolpoGhorProps> = ({ onBackToHub, onShowToast }
 
       {/* Hero Banner Section */}
       <section className="bg-gradient-to-b from-amber-50/70 via-rose-50/30 to-slate-50 border-b border-slate-200/80 px-4 pt-8 pb-10">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-100/80 border border-rose-200 text-rose-800 text-xs font-bold mb-3 shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-rose-600" />
             <span>বিনামূল্যে উন্মুক্ত বাংলা সাহিত্য ও গল্প পাঠাগার</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          <h2 className="text-[clamp(0.95rem,3.1vw,2.65rem)] font-black text-slate-900 tracking-tight leading-snug whitespace-nowrap">
             আপনার পছন্দের গল্প,{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-rose-600 to-indigo-600">
               আপনার নিজের পড়ার জগৎ
             </span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 mt-2.5 max-w-xl mx-auto leading-relaxed">
-            রবীন্দ্রনাথ ও শরৎচন্দ্রের অমর ক্লাসিক সাহিত্য থেকে শুরু করে আধুনিক রহস্য, রোমাঞ্চ, ভৌতিক ও পারিবারিক গল্পের এক সমৃদ্ধ ডিজিটাল সংগ্রহশালা।
-          </p>
 
           {/* Prominent Search Bar */}
           <div className="mt-6 max-w-xl mx-auto relative">

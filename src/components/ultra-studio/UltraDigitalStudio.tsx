@@ -26,6 +26,7 @@ import { PassportPresetId, StudioWorkspaceTab } from './ai-photo-studio/types';
 
 interface UltraDigitalStudioProps {
   onBackToHub?: () => void;
+  onNavigateToTool?: (toolId: 'job-photo-signature-resizer' | 'poster-studio') => void;
   onShowToast: (msg: string, icon?: string) => void;
 }
 
@@ -56,6 +57,7 @@ function mapLegacyPresetToPassportId(preset?: PhotoSizePreset): PassportPresetId
 
 export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
   onBackToHub,
+  onNavigateToTool,
   onShowToast,
 }) => {
   // Navigation state inside Ultra Digital Studio
@@ -102,6 +104,7 @@ export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
       {activeSection === 'dashboard' && (
         <StudioDashboard
           onSelectSection={handleSelectSection}
+          onOpenStandaloneTool={onNavigateToTool}
           onBackToHome={onBackToHub}
         />
       )}
