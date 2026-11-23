@@ -91,7 +91,7 @@ export const TOOLS_SEO_REGISTRY: Record<string, ToolSeoInfo> = {
     title: 'Love Test – প্রেম ও সম্পর্কের মজার পরীক্ষা',
     h1: 'Love Test – প্রেম ও সম্পর্কের মজার পরীক্ষা',
     description:
-      'দুজনের নাম ও বিভিন্ন প্রশ্নের মাধ্যমে মজার Love Test খেলুন। আকর্ষণীয় ফলাফল কার্ড তৈরি করে বন্ধুদের সঙ্গে শেয়ার করুন।',
+      'সম্পর্কের সামঞ্জস্যতা, পারস্পরিক বিশ্বাস, সম্মান ও সুস্থ ভালোবাসার বাস্তব নির্দেশিকা পড়ুন। সুস্থ সম্পর্কের লক্ষণ, দৈনন্দিন অভ্যাস ও জরুরি পরামর্শ জানুন।',
     path: '/tools/love-test',
     canonicalUrl: 'https://tools.mosafabd.com/tools/love-test',
     ogImage: DEFAULT_OG_IMAGE,
