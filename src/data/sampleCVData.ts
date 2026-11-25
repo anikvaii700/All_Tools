@@ -29,22 +29,22 @@ export const INITIAL_EMPTY_CV_DATA: CVData = {
 
 export const SAMPLE_CV_DATA: CVData = {
   personal: {
-    fullName: 'মোফাচ্ছির আহমেদ (Mofassir Ahmed)',
-    jobTitle: 'Senior Software Engineer & Product Specialist',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
-    email: 'mofassir••••@gmail.com',
-    phone: '+880 1700-000000 (Example)',
-    city: 'হবিগঞ্জ (Habiganj)',
-    country: 'সিলেট, বাংলাদেশ (Sylhet, Bangladesh)',
-    address: 'হবিগঞ্জ, সিলেট, বাংলাদেশ।',
-    linkedin: 'linkedin.com/in/example',
-    portfolio: 'example.com/portfolio',
-    github: 'github.com/example',
+    fullName: 'রহিম আহমেদ (Rahim Ahmed)',
+    jobTitle: 'Senior Software Engineer',
+    photoUrl: '',
+    email: 'rahim.ahmed@example.com',
+    phone: '+880 1711-000000',
+    city: 'ঢাকা (Dhaka)',
+    country: 'বাংলাদেশ (Bangladesh)',
+    address: 'ধানমন্ডি, ঢাকা-১২০৫, বাংলাদেশ',
+    linkedin: 'linkedin.com/in/rahim-ahmed',
+    portfolio: 'rahimahmed.dev',
+    github: 'github.com/rahim-ahmed',
     nationality: 'Bangladeshi',
     workAuth: 'Citizen / Full Work Rights',
   },
   summary:
-    'দক্ষ ও অভিজ্ঞ সফটওয়্যার ইঞ্জিনিয়ার, যার আধুনিক ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট, ক্লাউড আর্কিটেকচার এবং স্কেলেবল ডিজিটাল প্রোডাক্ট ডিজাইনে ৭+ বছরের অভিজ্ঞতা রয়েছে। ইউজার-ফ্রেন্ডলি অ্যাপস তৈরি এবং ব্যবসায়িক লক্ষ্যার্জনে দক্ষ। আন্তর্জাতিক টিমে কাজ করার গভীর অভিজ্ঞতা সম্পন্ন।',
+    'দক্ষ ও অভিজ্ঞ সফটওয়্যার ইঞ্জিনিয়ার, যার আধুনিক ফুলস্ট্যাক ওয়েব ডেভেলপমেন্ট, ক্লাউড আর্কিটেকচার এবং স্কেলেবল ডিজিটাল প্রোডাক্ট ডিজাইনে ৭+ বছরের অভিজ্ঞতা রয়েছে। ইউজার-ফ্রেন্ডলি অ্যাপ্লিকেশন তৈরি এবং ব্যবসায়িক লক্ষ্যার্জনে দক্ষ। ক্রস-ফাংশনাল টিমে কাজ করার বাস্তব অভিজ্ঞতা সম্পন্ন।',
   experience: [
     {
       id: 'exp-1',
@@ -55,20 +55,20 @@ export const SAMPLE_CV_DATA: CVData = {
       endDate: 'বর্তমান',
       current: true,
       description:
-        '• ৫০+ সদস্যের ইঞ্জিনিয়ারিং টিমে কোর ফ্রন্টএন্ড আর্কিটেকচার পরিচালনা ও ২০+ মাইক্রো-সার্ভিসেস ওয়েব অ্যাপ ডেলিভারি।\n• React, TypeScript ও Tailwind CSS ব্যবহারে পারফরম্যান্স ৬০% বৃদ্ধি এবং লোডিং টাইম ১.২ সেকেন্ডে নামিয়ে আনা।\n• হাই-সিকিউরিটি পেমেন্ট গেটওয়ে (bKash, Nagad, Stripe) সফল ইন্টিগ্রেশন।',
+        '• ৫০+ সদস্যের ইঞ্জিনিয়ারিং টিমে কোর ফ্রন্টএন্ড আর্কিটেকচার পরিচালনা ও ২০+ ওয়েব অ্যাপ্লিকেশন ডেলিভারি।\n• React, TypeScript ও Tailwind CSS ব্যবহারে পারফরম্যান্স ৬০% বৃদ্ধি এবং লোডিং টাইম ১.২ সেকেন্ডে নামিয়ে আনা।\n• পেমেন্ট গেটওয়ে (bKash, Nagad, Stripe) সফল ইন্টিগ্রেশন।',
       achievements: 'বছরের সেরা পারফরম্যান্স পুরস্কার ও প্রজেক্ট স্পিড-আপ অ্যাওয়ার্ড অর্জন।',
     },
     {
       id: 'exp-2',
       jobTitle: 'Senior Web Developer',
       employer: 'Global Digital Agency',
-      location: 'রিমোট (Remote / Singapore)',
+      location: 'রিমোট (Singapore)',
       startDate: '২০১৯-০৭',
       endDate: '২০২২-০২',
       current: false,
       description:
         '• আন্তর্জাতিক ক্লায়েন্টদের জন্য ১০০% রেসপনসিভ ও ক্রস-প্ল্যাটফর্ম সিঙ্গেল পেজ অ্যাপ্লিকেশন (SPA) নির্মাণ।\n• স্টেট ম্যানেজমেন্ট ও এন্টারপ্রাইজ API আর্কিটেকচার অপ্টিমাইজেশন।',
-      achievements: 'সফলভাবে ১২টি গ্লোবাল এন্টারপ্রাইজ প্রজেক্ট নির্ধারিত সময়ের পূর্বে সম্পন্ন।',
+      achievements: 'সফলভাবে ১২টি এন্টারপ্রাইজ প্রজেক্ট নির্ধারিত সময়ের পূর্বে সম্পন্ন।',
     },
     {
       id: 'exp-3',
@@ -86,13 +86,13 @@ export const SAMPLE_CV_DATA: CVData = {
     {
       id: 'edu-1',
       degree: 'B.Sc. in Computer Science & Engineering (CSE)',
-      institution: 'বাংলাদেশ প্রকৌশল বিশ্ববিদ্যালয় (BUET) / স্বনামধন্য বিশ্ববিদ্যালয়',
+      institution: 'বাংলাদেশ প্রকৌশল বিশ্ববিদ্যালয় (BUET)',
       fieldOfStudy: 'Computer Science and Engineering',
       location: 'ঢাকা, বাংলাদেশ',
       startDate: '২০১২',
       endDate: '২০১৬',
-      gpa: '৩.৮৫ (৪.০০ এর স্কেলে)',
-      details: 'ডিনস লিস্ট অ্যাওয়ার্ড, মেধা তালিকা ও জাতীয় প্রোগ্রামিং প্রতিযোগিতায় ফাইনালিস্ট।',
+      gpa: '৩.৮৫ / ৪.০০',
+      details: 'ডিনস লিস্ট অ্যাওয়ার্ড ও জাতীয় প্রোগ্রামিং প্রতিযোগিতায় ফাইনালিস্ট।',
     },
     {
       id: 'edu-2',
@@ -102,7 +102,7 @@ export const SAMPLE_CV_DATA: CVData = {
       location: 'ঢাকা',
       startDate: '২০১০',
       endDate: '২০১২',
-      gpa: 'জিপিএ ৫.০০ (গোল্ডেন এ+)',
+      gpa: '৫.০০ (গোল্ডেন এ+)',
     },
   ],
   skills: [
@@ -117,18 +117,18 @@ export const SAMPLE_CV_DATA: CVData = {
     { id: 'sk-9', name: 'অ্যাজাইল ও স্ক্রাম মেথডোলজি', category: 'industry', level: 'Intermediate' },
   ],
   languages: [
-    { id: 'lang-1', language: 'বাংলা (Bengali)', proficiency: 'Native / মাতৃভাষা' },
-    { id: 'lang-2', language: 'English (ইংরেজি)', proficiency: 'Fluent / Professional (C1 Level)' },
+    { id: 'lang-1', language: 'বাংলা (Bengali)', proficiency: 'Native' },
+    { id: 'lang-2', language: 'English', proficiency: 'Fluent (C1)' },
   ],
   projects: [
     {
       id: 'proj-1',
-      name: 'The MoSaFa Tools Portal',
+      name: 'Enterprise E-Commerce Platform',
       role: 'Lead Architect',
-      link: 'the-mosafa-tools.ai.studio',
+      link: 'github.com/rahim-ahmed/commerce-suite',
       startDate: '২০২৩',
       endDate: 'বর্তমান',
-      description: '২১টি ডিজিটাল ইউটিলিটি টুলসের সর্ববৃহৎ বাংলা ওয়েব পোর্টাল। দ্রুতগতি ও অফলাইন সুবিধা সম্পন্ন।',
+      description: 'উচ্চ-গতির ও স্কেলেবল অনলাইন রিটেইল ও ইনভেন্টরি ম্যানেজমেন্ট প্ল্যাটফর্ম।',
     },
     {
       id: 'proj-2',
@@ -164,12 +164,5 @@ export const SAMPLE_CV_DATA: CVData = {
       phone: '+880 1819-000000',
     },
   ],
-  customSections: [
-    {
-      id: 'cust-1',
-      title: 'পেশাদার লক্ষ্য (Career Objective)',
-      content:
-        'উদ্ভাবনী প্রযুক্তি ব্যবহারের মাধ্যমে বৈশ্বিক মানসম্পন্ন ডিজিটাল সমাধান তৈরি এবং শীর্ষস্থানীয় প্রযুক্তি প্রতিষ্ঠানে নেতৃত্ব প্রদান।',
-    },
-  ],
+  customSections: [],
 };

@@ -1,24 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  ChevronLeft,
   Download,
   Printer,
-  Sparkles,
   CheckCircle2,
   FileText,
   Trash2,
   Plus,
-  RefreshCw,
   Search,
-  Lock,
-  Unlock,
-  ShieldCheck,
   Eye,
-  CreditCard,
   ZoomIn,
   ZoomOut,
   AlertTriangle,
-  HelpCircle,
   Upload,
   Save,
   Palette,
@@ -26,11 +18,13 @@ import {
   Pencil,
   Edit3,
   UserCheck,
-  User,
-  FolderOpen,
   FileSpreadsheet,
+  ChevronRight,
+  ChevronDown,
+  RotateCcw,
+  Sparkles,
 } from 'lucide-react';
-import { CVData, CVTemplate, PaymentTransaction, CVQualityIssue } from '../types/cvMaker';
+import { CVData, CVQualityIssue, SkillItem } from '../types/cvMaker';
 import { CV_CATEGORIES, CV_TEMPLATES } from '../data/cvTemplates';
 import { SAMPLE_CV_DATA, INITIAL_EMPTY_CV_DATA } from '../data/sampleCVData';
 import { CVRenderer } from './cv/CVRenderer';
@@ -46,10 +40,36 @@ interface CVMakerProps {
   onShowToast: (message: string, icon?: string) => void;
 }
 
-export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) => {
-  // Active Navigation Tab
-  const [activeTab, setActiveTab] = useState<'editor' | 'templates' | 'preview' | 'quality' | 'payments' | 'job-helper'>('templates');
+const LEGACY_PLACEHOLDER_NAMES = ['মোফাসসিরুল ইসলাম', 'মোফাচ্ছির আহমেদ'];
+
+function sanitizeLoadedCv(raw: any): CVData | null {
+  if (!raw || typeof raw !== 'object' || !raw.personal) return null;
+  const fullName = String(raw.personal.fullName || '').trim();
+  if (LEGACY_PLACEHOLDER_NAMES.some((n) => fullName.includes(n))) {
+    return null;
+  }
+  return {
+    ...INITIAL_EMPTY_CV_DATA,
+    ...raw,
+    personal: {
+      ...INITIAL_EMPTY_CV_DATA.personal,
+      ...raw.personal,
+    },
+    experience: Array.isArray(raw.experience) ? raw.experience : [],
+    education: Array.isArray(raw.education) ? raw.education : [],
+    skills: Array.isArray(raw.skills) ? raw.skills : [],
+    languages: Array.isArray(raw.languages) ? raw.languages : [],
+    projects: Array.isArray(raw.projects) ? raw.projects : [],
+    certifications: Array.isArray(raw.certifications) ? raw.certifications : [],
+    references: Array.isArray(raw.references) ? raw.references : [],
+  };
+}
+
+export const CVMaker: React.FC<CVMakerProps> = ({ onShowToast }) => {
+  // Guided 3-step workflow + optional AI Job Helper workspace
+  const [activeTab, setActiveTab] = useState<'templates' | 'editor' | 'preview' | 'job-helper'>('templates');
   const [helperInitialView, setHelperInitialView] = useState<'hub' | 'interview' | 'result' | 'saved' | 'profile'>('hub');
+  const [isCvCompleted, setIsCvCompleted] = useState<boolean>(false);
 
   // Selected Template
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('tmpl-01');
@@ -60,71 +80,62 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     try {
       const stored = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = sanitizeLoadedCv(JSON.parse(stored));
         return Boolean(parsed?.personal?.fullName);
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
     return false;
   });
 
-  // CV Data - Auto-fills from Master Profile if saved, otherwise draft or sample
+  // CV Data: loads user's saved master profile or user draft; starts clean otherwise
   const [cvData, setCvData] = useState<CVData>(() => {
     try {
-      // 1. First priority: Saved Master Profile
       const storedMaster = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
       if (storedMaster) {
-        const parsedMaster = JSON.parse(storedMaster);
+        const parsedMaster = sanitizeLoadedCv(JSON.parse(storedMaster));
         if (parsedMaster?.personal?.fullName) {
           return parsedMaster;
         }
       }
-      // 2. Second priority: Draft
       const saved = localStorage.getItem('mosafa_cv_draft_v1');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed?.personal?.fullName?.includes('মোফাসসিরুল ইসলাম')) {
-          return SAMPLE_CV_DATA;
+        const parsedDraft = sanitizeLoadedCv(JSON.parse(saved));
+        if (parsedDraft) {
+          return parsedDraft;
         }
-        return parsed;
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
-    return SAMPLE_CV_DATA;
+    return INITIAL_EMPTY_CV_DATA;
   });
-
-  // Unlocked Premium Template IDs (All templates are 100% free now)
-  const [unlockedTemplates, setUnlockedTemplates] = useState<string[]>(() => {
-    return CV_TEMPLATES.map((t) => t.id);
-  });
-
-  // Transactions History
-  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
 
   // Template Filtering & Search
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [tierFilter, setTierFilter] = useState<'all' | 'free' | 'premium'>('all');
 
-  // Preview Zoom & State
-  const [zoomLevel, setZoomLevel] = useState<number>(0.9);
+  // Preview Zoom & Export State
+  const [zoomLevel, setZoomLevel] = useState<number>(0.88);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
-  // Payment Modal State
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentProvider, setPaymentProvider] = useState<'bkash' | 'nagad'>('bkash');
-  const [paymentPhone, setPaymentPhone] = useState('');
-  const [paymentTrxId, setPaymentTrxId] = useState('');
-  const [paymentPending, setPaymentPending] = useState(false);
-  const [currentOrder, setCurrentOrder] = useState<{ orderId: string; template: CVTemplate } | null>(null);
+  // Editor Inline UI States (no browser dialogs)
+  const [validationError, setValidationError] = useState<string>('');
+  const [confirmingReset, setConfirmingReset] = useState<boolean>(false);
+  const [showQualityPanel, setShowQualityPanel] = useState<boolean>(false);
+  const [showOptionalBio, setShowOptionalBio] = useState<boolean>(false);
+  const [showAdditionalSections, setShowAdditionalSections] = useState<boolean>(false);
+  const [newSkillName, setNewSkillName] = useState<string>('');
+  const [newSkillLevel, setNewSkillLevel] = useState<string>('Intermediate');
+  const [newLangName, setNewLangName] = useState<string>('');
+  const [newLangProficiency, setNewLangProficiency] = useState<string>('Fluent');
 
   // Autosave CV Data to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('mosafa_cv_draft_v1', JSON.stringify(cvData));
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [cvData]);
@@ -132,11 +143,13 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
   // Current active template object
   const currentTemplate = CV_TEMPLATES.find((t) => t.id === selectedTemplateId) || CV_TEMPLATES[0];
 
-  // All 100 templates: full preview freely accessible, 2 BDT paywall required only when downloading
-  const isUnlocked = true;
-  const isWatermarked = false;
+  // Refs so async print/PDF/DOCX actions (including Job Helper callbacks) always see latest state
+  const cvDataRef = useRef(cvData);
+  const currentTemplateRef = useRef(currentTemplate);
+  cvDataRef.current = cvData;
+  currentTemplateRef.current = currentTemplate;
 
-  // 2 BDT & Mandatory Auth Download Paywall
+  // Download Paywall Integration (Preserved)
   const [isPaywallOpen, setIsPaywallOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [isCvUnlockedInSession, setIsCvUnlockedInSession] = useState(false);
@@ -150,76 +163,70 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     setIsPaywallOpen(true);
   };
 
-  // Template selection with automatic auto-fill from saved master profile
-  const handleSelectTemplate = (templateId: string, targetTab?: 'editor' | 'preview') => {
+  // Step 1 -> Step 2: Select a template and move to editor
+  const handleSelectTemplate = (templateId: string) => {
     setSelectedTemplateId(templateId);
-    if (targetTab) {
-      setActiveTab(targetTab);
-    }
     const tmpl = CV_TEMPLATES.find((t) => t.id === templateId);
 
-    // Auto-fill from Master CV Profile if available
-    try {
-      const stored = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
-      if (stored) {
-        const master = JSON.parse(stored);
-        if (master?.personal?.fullName) {
-          setCvData(master);
-          onShowToast(`"${tmpl?.nameBn || 'টেমপ্লেট'}" এ আপনার প্রোফাইল তথ্য স্বয়ংক্রিয়ভাবে অটু-ফিল হয়েছে! ✨`, '✅');
-          return;
+    // Auto-fill from saved master profile only when form has no name yet
+    if (!cvData.personal.fullName.trim()) {
+      try {
+        const stored = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
+        if (stored) {
+          const master = sanitizeLoadedCv(JSON.parse(stored));
+          if (master?.personal?.fullName) {
+            setCvData(master);
+          }
         }
+      } catch {
+        // ignore
       }
-    } catch (e) {
-      // ignore
     }
 
+    setActiveTab('editor');
     if (tmpl) {
-      onShowToast(`"${tmpl.nameBn}" নির্বাচন করা হয়েছে!`, '🎨');
+      onShowToast(`"${tmpl.nameBn}" নির্বাচন করা হয়েছে। এখন আপনার তথ্য লিখুন।`, '📝');
     }
   };
 
-  // Re-apply master profile anytime
+  // Re-apply master profile on demand
   const handleAutoFillFromProfile = () => {
     try {
       const stored = localStorage.getItem(MASTER_PROFILE_STORAGE_KEY);
       if (stored) {
-        const master = JSON.parse(stored);
+        const master = sanitizeLoadedCv(JSON.parse(stored));
         if (master?.personal?.fullName) {
           setCvData(master);
           setHasMasterProfile(true);
-          onShowToast('আপনার প্রোফাইল তথ্য দিয়ে সম্পূর্ণ সিভি অটো-ফিল হয়েছে! ✨', '✅');
+          setValidationError('');
+          onShowToast('প্রোফাইল থেকে তথ্য অটো-ফিল হয়েছে!', '✅');
           return;
         }
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
     setIsMasterProfileModalOpen(true);
-    onShowToast('অনুগ্রহ করে প্রথমে আপনার প্রোফাইল তথ্য পূরণ করে সেভ করুন।', '👤');
   };
 
-  // Filter templates list
+  // Filtered templates list
   const filteredTemplates = CV_TEMPLATES.filter((tmpl) => {
     const matchesCat = categoryFilter === 'all' || tmpl.category === categoryFilter;
-    const matchesTier =
-      tierFilter === 'all' ||
-      (tierFilter === 'free' && !tmpl.isPremium) ||
-      (tierFilter === 'premium' && tmpl.isPremium);
+    const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
-      !searchQuery.trim() ||
-      tmpl.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tmpl.nameBn.includes(searchQuery) ||
-      tmpl.number.toString().includes(searchQuery) ||
-      tmpl.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCat && matchesTier && matchesSearch;
+      !q ||
+      tmpl.nameEn.toLowerCase().includes(q) ||
+      tmpl.nameBn.includes(searchQuery.trim()) ||
+      tmpl.number.toString().includes(q) ||
+      tmpl.tags.some((t) => t.toLowerCase().includes(q));
+    return matchesCat && matchesSearch;
   });
 
-  // Calculate CV Quality Score
+  // Calculate CV Completeness Score
   const computeQualityIssues = (): { score: number; issues: CVQualityIssue[] } => {
     const issues: CVQualityIssue[] = [];
     let score = 0;
 
-    // Personal info (max 30 pts)
     if (cvData.personal.fullName.trim().length > 2) score += 10;
     else issues.push({ type: 'error', field: 'name', messageBn: 'আপনার পূর্ণ নাম প্রদান করুন।', messageEn: 'Add full name' });
 
@@ -232,78 +239,73 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     if (cvData.personal.city || cvData.personal.country) score += 5;
     else issues.push({ type: 'warning', field: 'location', messageBn: 'বর্তমান শহর বা দেশের নাম লিখুন।', messageEn: 'Add location' });
 
-    // Summary (max 15 pts)
     if (cvData.summary.trim().length > 50) score += 15;
     else if (cvData.summary.trim().length > 10) {
       score += 8;
-      issues.push({ type: 'tip', field: 'summary', messageBn: 'পেশাদার সারাংশটি আরও তথ্যবহুল ও আকর্ষণীয় করুন।', messageEn: 'Expand summary' });
+      issues.push({ type: 'tip', field: 'summary', messageBn: 'পেশাদার সারাংশটি আরও তথ্যবহুল করুন।', messageEn: 'Expand summary' });
     } else {
-      issues.push({ type: 'error', field: 'summary', messageBn: 'একটি পেশাদার সারাংশ (Summary) যুক্ত করুন।', messageEn: 'Add summary' });
+      issues.push({ type: 'warning', field: 'summary', messageBn: 'একটি পেশাদার সারাংশ (Summary) যুক্ত করুন।', messageEn: 'Add summary' });
     }
 
-    // Experience (max 25 pts)
     if (cvData.experience.length >= 2) score += 25;
     else if (cvData.experience.length === 1) score += 18;
-    else issues.push({ type: 'warning', field: 'exp', messageBn: 'অন্তত একটি কাজের অভিজ্ঞতা বা ইন্টার্নশিপ যুক্ত করুন।', messageEn: 'Add experience' });
+    else issues.push({ type: 'warning', field: 'exp', messageBn: 'কাজের অভিজ্ঞতা বা ইন্টার্নশিপ যুক্ত করুন (প্রযোজ্য হলে)।', messageEn: 'Add experience' });
 
-    // Education (max 15 pts)
     if (cvData.education.length >= 1) score += 15;
     else issues.push({ type: 'error', field: 'edu', messageBn: 'শিক্ষাগত যোগ্যতার বিবরণ দিন।', messageEn: 'Add education' });
 
-    // Skills (max 10 pts)
     if (cvData.skills.length >= 5) score += 10;
     else if (cvData.skills.length >= 2) score += 6;
     else issues.push({ type: 'warning', field: 'skills', messageBn: 'কমপক্ষে ৫টি প্রাসঙ্গিক স্কিল যুক্ত করুন।', messageEn: 'Add at least 5 skills' });
 
-    // Languages (max 5 pts)
     if (cvData.languages.length >= 1) score += 5;
-    else issues.push({ type: 'tip', field: 'lang', messageBn: 'ভাষাগত দক্ষতা (বাংলা, ইংরেজি) উল্লেখ করুন।', messageEn: 'Add languages' });
+    else issues.push({ type: 'tip', field: 'lang', messageBn: 'ভাষাগত দক্ষতা উল্লেখ করুন।', messageEn: 'Add languages' });
 
     return { score: Math.min(100, score), issues };
   };
 
   const qualityResult = computeQualityIssues();
 
-  // Reset to Empty
   const handleReset = () => {
-    if (window.confirm('আপনি কি সব তথ্য মুছে নতুন করে শুরু করতে চান?')) {
-      setCvData(INITIAL_EMPTY_CV_DATA);
-      onShowToast('সব তথ্য মুছে ফাঁকা ফরম তৈরি করা হয়েছে।', '🔄');
-    }
+    setCvData(INITIAL_EMPTY_CV_DATA);
+    setIsCvCompleted(false);
+    setConfirmingReset(false);
+    setValidationError('');
+    onShowToast('সব তথ্য মুছে ফাঁকা ফরম তৈরি করা হয়েছে।', '🔄');
   };
 
-  // Load Sample Data
   const handleLoadSample = () => {
     setCvData(SAMPLE_CV_DATA);
-    onShowToast('নমুনা তথ্য সফলভাবে লোড হয়েছে!', '✨');
+    setValidationError('');
+    onShowToast('নমুনা তথ্য লোড হয়েছে। প্রয়োজনে পরিবর্তন করে "CV তৈরি করুন" চাপুন।', '📝');
   };
 
-  // Export JSON backup
   const handleExportJSON = () => {
+    const safeName = cvData.personal.fullName.trim().replace(/[^a-zA-Z0-9_\u0980-\u09FF]+/g, '_') || 'Draft';
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(cvData, null, 2));
     const dl = document.createElement('a');
     dl.setAttribute('href', dataStr);
-    dl.setAttribute('download', `MoSaFa-CV-${cvData.personal.fullName.replace(/\s+/g, '_') || 'Draft'}.json`);
+    dl.setAttribute('download', `${safeName}_CV_Backup.json`);
     dl.click();
     dl.remove();
     onShowToast('CV ব্যাকআপ ফাইল ডাউনলোড হয়েছে!', '💾');
   };
 
-  // Import JSON backup
   const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const parsed = JSON.parse(event.target?.result as string);
-        if (parsed.personal && Array.isArray(parsed.experience)) {
+        const parsed = sanitizeLoadedCv(JSON.parse(event.target?.result as string));
+        if (parsed) {
           setCvData(parsed);
+          setValidationError('');
           onShowToast('CV ফাইল সফলভাবে লোড হয়েছে!', '📂');
         } else {
           onShowToast('ফাইল ফরম্যাট সঠিক নয়।', '⚠️');
         }
-      } catch (err) {
+      } catch {
         onShowToast('ফাইল পড়তে ব্যর্থ হয়েছে।', '❌');
       }
     };
@@ -311,59 +313,56 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     e.target.value = '';
   };
 
-  // Initiate Payment Flow for Premium Template
-  const handleInitiatePayment = (template: CVTemplate) => {
-    const orderId = `MSF-${Date.now().toString().slice(-6)}`;
-    setCurrentOrder({ orderId, template });
-    setPaymentTrxId('');
-    setPaymentPhone(cvData.personal.phone || '');
-    setIsPaymentModalOpen(true);
+  const handleAddSkill = () => {
+    const trimmed = newSkillName.trim();
+    if (!trimmed) return;
+    const newSk: SkillItem = {
+      id: `sk-${Date.now()}`,
+      name: trimmed,
+      category: 'technical',
+      level: newSkillLevel,
+    };
+    setCvData((prev) => ({ ...prev, skills: [...prev.skills, newSk] }));
+    setNewSkillName('');
   };
 
-  // Complete Payment Verification (Sandbox / Real API verification flow)
-  const handleVerifyPayment = () => {
-    if (!currentOrder) return;
-    if (paymentTrxId.trim().length < 6) {
-      alert('সঠিক ট্রানজেকশন আইডি (TrxID) প্রদান করুন (যেমন: 9J87KLM45)');
+  const handleAddLanguage = () => {
+    const trimmed = newLangName.trim();
+    if (!trimmed) return;
+    const newLang = {
+      id: `lang-${Date.now()}`,
+      language: trimmed,
+      proficiency: newLangProficiency,
+    };
+    setCvData((prev) => ({ ...prev, languages: [...prev.languages, newLang] }));
+    setNewLangName('');
+  };
+
+  // Step 2 -> Step 3: Validate and generate final CV preview
+  const handleCompleteCV = () => {
+    if (!cvData.personal.fullName.trim()) {
+      setValidationError('অনুগ্রহ করে অন্তত আপনার পূর্ণ নাম (Full Name) লিখুন।');
+      onShowToast('CV তৈরি করতে আপনার পূর্ণ নাম লিখুন।', '⚠️');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    setPaymentPending(true);
-
-    // Secure verification simulation (ready to hit server `/api/payment/verify`)
-    setTimeout(() => {
-      const newTx: PaymentTransaction = {
-        orderId: currentOrder.orderId,
-        templateId: currentOrder.template.id,
-        templateNumber: currentOrder.template.number,
-        templateName: currentOrder.template.nameBn,
-        amount: currentOrder.template.price,
-        provider: paymentProvider,
-        trxId: paymentTrxId.trim().toUpperCase(),
-        customerPhone: paymentPhone.trim(),
-        status: 'verified',
-        timestamp: new Date().toLocaleString('bn-BD'),
-      };
-
-      setTransactions((prev) => [newTx, ...prev]);
-      setUnlockedTemplates((prev) => (prev.includes(currentOrder.template.id) ? prev : [...prev, currentOrder.template.id]));
-      setPaymentPending(false);
-      setIsPaymentModalOpen(false);
-      onShowToast(`🎉 সফল! "${currentOrder.template.nameBn}" ওয়াটারমার্ক ছাড়া আনলক হয়েছে!`, '✅');
-    }, 1200);
+    setValidationError('');
+    setIsCvCompleted(true);
+    setActiveTab('preview');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    onShowToast('আপনার CV প্রস্তুত! এখন প্রিভিউ, প্রিন্ট বা ডাউনলোড করতে পারেন।', '✅');
   };
 
-  // Print CV Cleanly & Reliably (Supports printing from any active tab & iframe environments)
+  // Clean, reliable A4 print matching preview exactly with zero branding
   const performPrintCV = () => {
     try {
       window.focus();
-      onShowToast('প্রিন্ট প্রস্তুত হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...', '🖨️');
+      onShowToast('প্রিন্ট প্রস্তুত হচ্ছে...', '🖨️');
 
       const sourceEl =
-        document.getElementById('cv-export-canvas-target') ||
         document.getElementById('cv-export-document') ||
         document.getElementById('cv-render-document');
 
-      // Method 1: Use isolated hidden print iframe for bulletproof cross-browser printing
       let printIframe = document.getElementById('cv-hidden-print-frame') as HTMLIFrameElement | null;
       if (!printIframe) {
         printIframe = document.createElement('iframe');
@@ -379,92 +378,101 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
         document.body.appendChild(printIframe);
       }
 
+      const activeCv = cvDataRef.current;
+      const activeTemplate = currentTemplateRef.current;
+
       const iframeDoc = printIframe.contentDocument || printIframe.contentWindow?.document;
       if (iframeDoc && sourceEl) {
+        const cloned = sourceEl.cloneNode(true) as HTMLElement;
+        cloned.style.transform = 'none';
+        cloned.style.width = '210mm';
+        cloned.style.minHeight = 'auto';
+        cloned.style.boxShadow = 'none';
+        cloned.style.margin = '0 auto';
+
         const styleTags = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
           .map((s) => s.outerHTML)
           .join('\n');
 
+        const docTitle = activeCv.personal.fullName.trim()
+          ? `${activeCv.personal.fullName.trim()} - CV`
+          : 'Curriculum Vitae';
+
         iframeDoc.open();
-        iframeDoc.write(`
-          <!DOCTYPE html>
-          <html lang="bn">
-            <head>
-              <meta charset="utf-8" />
-              <title>The MoSaFa CV - ${cvData.personal.fullName || 'CV'}</title>
-              <link rel="preconnect" href="https://fonts.googleapis.com">
-              <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-              <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-              ${styleTags}
-              <style>
-                @page {
-                  size: A4 portrait;
-                  margin: 0;
-                }
-                html, body {
-                  margin: 0 !important;
-                  padding: 0 !important;
-                  background: #ffffff !important;
-                  color: #000000 !important;
-                  font-family: 'Hind Siliguri', system-ui, -apple-system, sans-serif !important;
-                  -webkit-print-color-adjust: exact !important;
-                  print-color-adjust: exact !important;
-                }
-                .cv-print-isolated {
-                  width: 100% !important;
-                  max-width: 210mm !important;
-                  margin: 0 auto !important;
-                  background: #ffffff !important;
-                }
-                * {
-                  -webkit-print-color-adjust: exact !important;
-                  print-color-adjust: exact !important;
-                  box-sizing: border-box;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="cv-print-isolated">
-                ${sourceEl.innerHTML}
-              </div>
-            </body>
-          </html>
-        `);
+        iframeDoc.write(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>${docTitle.replace(/[<>]/g, '')}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    ${styleTags}
+    <style>
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: ${activeTemplate.bgColor || '#ffffff'} !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .cv-print-isolated {
+        width: 210mm !important;
+        margin: 0 auto !important;
+        background: ${activeTemplate.bgColor || '#ffffff'} !important;
+      }
+      .cv-avoid-break {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cv-print-isolated">
+      ${cloned.outerHTML}
+    </div>
+  </body>
+</html>`);
         iframeDoc.close();
 
-        setTimeout(() => {
+        const triggerIframePrint = () => {
           try {
             printIframe?.contentWindow?.focus();
             printIframe?.contentWindow?.print();
-            onShowToast('প্রিন্ট ডায়ালগ ওপেন হয়েছে! সরাসরি প্রিন্ট বা "Save as PDF" করুন।', '🖨️');
-          } catch (err) {
-            console.warn('Iframe print failed, falling back to window.print():', err);
+          } catch {
             document.body.classList.add('printing-cv');
             window.focus();
             window.print();
-            setTimeout(() => {
-              document.body.classList.remove('printing-cv');
-            }, 1500);
+            setTimeout(() => document.body.classList.remove('printing-cv'), 1500);
           }
-        }, 450);
+        };
+
+        if (iframeDoc.fonts?.ready) {
+          iframeDoc.fonts.ready.then(() => setTimeout(triggerIframePrint, 250));
+        } else {
+          setTimeout(triggerIframePrint, 450);
+        }
         return;
       }
 
-      // Fallback direct window print
       document.body.classList.add('printing-cv');
       window.focus();
       window.print();
-      setTimeout(() => {
-        document.body.classList.remove('printing-cv');
-      }, 1500);
-    } catch (err) {
-      console.error('Print failed:', err);
+      setTimeout(() => document.body.classList.remove('printing-cv'), 1500);
+    } catch {
       document.body.classList.add('printing-cv');
       window.focus();
       window.print();
-      setTimeout(() => {
-        document.body.classList.remove('printing-cv');
-      }, 1500);
+      setTimeout(() => document.body.classList.remove('printing-cv'), 1500);
     }
   };
 
@@ -472,30 +480,42 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     executeWithPaywall(performPrintCV);
   };
 
-  // High-Quality Crisp Multi-Page & Single-Page PDF Download (Captures all sections including References)
+  // High-Quality Multi-Page & Single-Page A4 PDF Download with smart break snapping
   const performDownloadPDF = async () => {
     try {
       setIsDownloadingPdf(true);
-      onShowToast('PDF ফাইল তৈরি হচ্ছে, অনুগ্রহ করে একটু অপেক্ষা করুন...', '⏳');
+      onShowToast('PDF ফাইল তৈরি হচ্ছে...', '⏳');
 
-      // Brief tick to ensure DOM is settled
       await new Promise((r) => setTimeout(r, 150));
 
       const target =
         document.getElementById('cv-export-document') ||
-        document.getElementById('cv-export-canvas-target') ||
         document.getElementById('cv-render-document');
 
       if (!target) {
-        throw new Error('CV export DOM element not found');
+        throw new Error('CV export element not found');
       }
+
+      // Measure unbreakable entry blocks relative to target before rendering
+      const targetRect = target.getBoundingClientRect();
+      const domTotalHeight = Math.max(1, target.scrollHeight);
+      const breakBlocks = Array.from(target.querySelectorAll('.cv-avoid-break')).map((el) => {
+        const r = el.getBoundingClientRect();
+        return {
+          top: Math.max(0, r.top - targetRect.top),
+          bottom: Math.max(0, r.bottom - targetRect.top),
+        };
+      });
+
+      const activeCv = cvDataRef.current;
+      const activeTemplate = currentTemplateRef.current;
 
       const canvas = await html2canvas(target, {
         scale: 2,
         useCORS: true,
         allowTaint: false,
         logging: false,
-        backgroundColor: currentTemplate.bgColor || '#ffffff',
+        backgroundColor: activeTemplate.bgColor || '#ffffff',
         windowWidth: 794,
         imageTimeout: 10000,
       });
@@ -509,55 +529,75 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
 
       const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
-
-      // Exact A4 page height in pixels on this canvas width: (297 / 210) * canvas.width
+      const canvasScale = canvas.height / domTotalHeight;
       const pageCanvasHeight = Math.floor((canvas.width * 297) / 210);
 
-      // If the content fits within 1 page (allow a 30px buffer)
-      if (canvas.height <= pageCanvasHeight + 30) {
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // Single page if within tolerance (avoids unwanted blank 2nd page)
+      if (canvas.height <= pageCanvasHeight + 28) {
+        const imgData = canvas.toDataURL('image/jpeg', 0.96);
         const actualImgHeightMm = (canvas.height * pdfWidth) / canvas.width;
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, Math.min(actualImgHeightMm, pdfHeight), undefined, 'FAST');
       } else {
-        // Multi-page export: slice canvas page-by-page so NO content or references get cut off!
-        const totalPages = Math.ceil(canvas.height / pageCanvasHeight);
+        const scaledBlocks = breakBlocks.map((b) => ({
+          top: Math.floor(b.top * canvasScale),
+          bottom: Math.ceil(b.bottom * canvasScale),
+        }));
 
-        for (let i = 0; i < totalPages; i++) {
-          if (i > 0) {
+        let cursorY = 0;
+        let pageIndex = 0;
+
+        while (cursorY < canvas.height - 24 && pageIndex < 10) {
+          let nextCut = Math.min(canvas.height, cursorY + pageCanvasHeight);
+
+          if (nextCut < canvas.height - 24) {
+            // Find any unbreakable entry straddling the raw page cut
+            const straddling = scaledBlocks.find(
+              (b) =>
+                b.top < nextCut &&
+                b.bottom > nextCut &&
+                b.bottom - b.top <= pageCanvasHeight * 0.85 &&
+                b.top > cursorY + 80
+            );
+            if (straddling) {
+              nextCut = straddling.top - 10;
+            }
+          }
+
+          const sliceHeight = Math.max(1, nextCut - cursorY);
+          if (sliceHeight <= 24 && pageIndex > 0) {
+            break;
+          }
+
+          if (pageIndex > 0) {
             pdf.addPage();
           }
 
-          const sourceY = i * pageCanvasHeight;
-          const chunkHeight = Math.min(pageCanvasHeight, canvas.height - sourceY);
-
-          // Render this page slice onto a dedicated canvas
           const pageCanvas = document.createElement('canvas');
           pageCanvas.width = canvas.width;
           pageCanvas.height = pageCanvasHeight;
           const ctx = pageCanvas.getContext('2d');
 
           if (ctx) {
-            ctx.fillStyle = currentTemplate.bgColor || '#ffffff';
+            ctx.fillStyle = activeTemplate.bgColor || '#ffffff';
             ctx.fillRect(0, 0, pageCanvas.width, pageCanvasHeight);
-            ctx.drawImage(
-              canvas,
-              0, sourceY, canvas.width, chunkHeight,
-              0, 0, canvas.width, chunkHeight
-            );
+            ctx.drawImage(canvas, 0, cursorY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
           }
 
-          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.96);
           pdf.addImage(pageImgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+
+          cursorY = nextCut;
+          pageIndex++;
         }
       }
 
-      const safeName = (cvData.personal.fullName || 'Resume').replace(/[^a-zA-Z0-9_\u0980-\u09FF]/g, '_');
-      pdf.save(`The_MoSaFa_CV_${safeName}.pdf`);
-
-      onShowToast('সম্পূর্ণ তথ্য সহ PDF সফলভাবে ডাউনলোড হয়েছে! 🎉', '✅');
-    } catch (err) {
-      console.error('PDF export error:', err);
-      onShowToast('PDF তৈরিতে সমস্যা হয়েছে। সরাসরি প্রিন্ট ডায়ালগ থেকে "Save as PDF" করুন।', '🖨️');
+      const safeName = (activeCv.personal.fullName || 'Resume')
+        .trim()
+        .replace(/[^a-zA-Z0-9_\u0980-\u09FF]+/g, '_');
+      pdf.save(`${safeName}_CV.pdf`);
+      onShowToast('PDF সফলভাবে ডাউনলোড হয়েছে!', '✅');
+    } catch {
+      onShowToast('PDF তৈরিতে সমস্যা হয়েছে। প্রিন্ট ডায়ালগ থেকে "Save as PDF" চেষ্টা করুন।', '🖨️');
       performPrintCV();
     } finally {
       setIsDownloadingPdf(false);
@@ -570,10 +610,9 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
 
   const performDownloadDOCX = async () => {
     try {
-      await exportCvToDocx(cvData, 'en', currentTemplate.primaryColor);
-      onShowToast('Word (.docx) ফাইল সফলভাবে ডাউনলোড হয়েছে!', '📄');
-    } catch (err) {
-      console.error('DOCX export error:', err);
+      await exportCvToDocx(cvDataRef.current, 'en', currentTemplateRef.current.primaryColor);
+      onShowToast('Word (.docx) ফাইল ডাউনলোড হয়েছে!', '📄');
+    } catch {
       onShowToast('DOCX তৈরি করতে সমস্যা হয়েছে।', '⚠️');
     }
   };
@@ -584,1446 +623,1702 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
     });
   };
 
+  const canShowPreviewExports = isCvCompleted && Boolean(cvData.personal.fullName.trim());
+
   return (
     <div className="relative">
-      {/* Screen-only UI Container (Hidden completely when printing) */}
-      <div className="cv-screen-only print:hidden min-h-screen bg-slate-100/90 text-slate-800 pb-20 font-sans">
-      {/* ================= TOP APPLICATION HEADER ================= */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs print:hidden">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-200">
-                <FileText className="w-5 h-5" />
+      {/* Screen UI Container */}
+      <div className="cv-screen-only print:hidden min-h-screen bg-slate-50 text-slate-800 pb-20 font-sans">
+        {/* ================= CLEAN WORKSPACE HEADER (NO EXPORT CLUTTER) ================= */}
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-30 print:hidden">
+          <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                    The MoSaFa CV Maker
-                  </h1>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider border border-emerald-200">
-                    প্রফেশনাল
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 font-bold">
-                  (প্রফেশনাল CV ও রেজিউম বিল্ডার) • ১০০টি আধুনিক প্রফেশনাল টেমপ্লেট
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-base font-bold text-slate-900 leading-tight truncate">
+                  CV বিল্ডার
+                </h1>
+                <p className="text-[11px] text-slate-500 truncate">
+                  নির্বাচিত: #{currentTemplate.number.toString().padStart(2, '0')} · {currentTemplate.nameBn}
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Quick Action Buttons */}
-          <div className="flex items-center flex-wrap gap-2">
-            {/* নিজের প্রোফাইল (Auto-Fill Profile) বাটন */}
-            <button
-              type="button"
-              onClick={() => setIsMasterProfileModalOpen(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-200 active:scale-95"
-              title="নিজের তথ্য একবার সেভ রাখুন, যে কোনো সিভিতে অটো-ফিল হবে"
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>নিজের প্রোফাইল</span>
-              <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-full font-bold">
-                {hasMasterProfile ? 'অটো-ফিল অন ✅' : 'সেটআপ'}
-              </span>
-            </button>
+            {/* Linear 3-Step Workflow + Secondary Helper */}
+            <nav className="flex items-center gap-1.5 overflow-x-auto text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setActiveTab('templates')}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'templates'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Palette className="w-3.5 h-3.5" />
+                <span>১. টেমপ্লেট</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={handleLoadSample}
-              className="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>নমুনা ডাটা</span>
-            </button>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
 
-            <label className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
-              <Upload className="w-3.5 h-3.5" />
-              <span>ইম্পোর্ট</span>
-              <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
-            </label>
+              <button
+                type="button"
+                onClick={() => setActiveTab('editor')}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'editor'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>২. তথ্য লিখুন</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={handleExportJSON}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
-              title="JSON ব্যাকআপ ফাইল সংরক্ষণ করুন"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>এক্সপোর্ট</span>
-            </button>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
 
-            <button
-              type="button"
-              onClick={handlePrintCV}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>প্রিন্ট</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('preview')}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+                  activeTab === 'preview'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>৩. চূড়ান্ত প্রিভিউ</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={handleDownloadDOCX}
-              className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="Word (.docx) হিসেবে ডাউনলোড করুন"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>DOCX</span>
-            </button>
+              <span className="h-4 w-px bg-slate-200 mx-1 shrink-0" />
 
-            <button
-              type="button"
-              onClick={handleDownloadPDF}
-              disabled={isDownloadingPdf}
-              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-200 disabled:opacity-50"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{isDownloadingPdf ? 'তৈরি হচ্ছে...' : 'PDF ডাউনলোড'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Tab Navigation Navigation Bar */}
-        <div className="max-w-7xl mx-auto px-4 flex gap-1 border-t border-slate-100 overflow-x-auto text-xs font-bold py-1">
-          <button
-            onClick={() => setActiveTab('templates')}
-            className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
-              activeTab === 'templates'
-                ? 'bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Palette className="w-4 h-4" />
-            <span>১০০টি টেমপ্লেট গ্যালারি</span>
-            <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded-full font-bold">১০০টি ফ্রি</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setHelperInitialView('hub');
-              setActiveTab('job-helper');
-            }}
-            className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
-              activeTab === 'job-helper'
-                ? 'bg-indigo-600 text-white border border-indigo-600 shadow-sm'
-                : 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Job CV Making Helper</span>
-            <span className="text-[10px] bg-rose-500 text-white px-1.5 py-0.2 rounded-full font-extrabold">AI</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsMasterProfileModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 font-bold"
-            title="নিজের সিভি প্রোফাইল এডিট ও অটো-ফিল করুন"
-          >
-            <UserCheck className="w-4 h-4 text-emerald-600" />
-            <span>👤 নিজের প্রোফাইল (Auto-Fill)</span>
-            <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded-full font-bold">
-              {hasMasterProfile ? 'সংরক্ষিত ✅' : 'সেটআপ'}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('editor')}
-            className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
-              activeTab === 'editor'
-                ? 'bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Edit3 className="w-4 h-4" />
-            <span>CV তথ্য এডিটর (Wizard)</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('preview')}
-            className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
-              activeTab === 'preview'
-                ? 'bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Eye className="w-4 h-4" />
-            <span>লাইভ ফুল প্রিভিউ</span>
-            <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded-full">ফ্রি</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('quality')}
-            className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
-              activeTab === 'quality'
-                ? 'bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            <span>CV কোয়ালিটি স্কোর ({qualityResult.score}%)</span>
-          </button>
-        </div>
-      </header>
-
-      {/* ================= TAB 1: 100 TEMPLATES GALLERY ================= */}
-      {activeTab === 'templates' && (
-        <main className="max-w-7xl mx-auto px-4 py-6">
-          {/* Header & Stats Banner */}
-          <div className="bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-rose-200/50 mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2 text-center md:text-left">
-              <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold uppercase tracking-wider backdrop-blur-md">
-                দ্য মোফাচ্ছির সিভি বিল্ডার
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black">১০০টি প্রফেশনাল CV ও রেজিউম টেমপ্লেট</h2>
-              <p className="text-xs sm:text-sm text-rose-100 max-w-2xl leading-relaxed">
-                পছন্দের যেকোনো টেমপ্লেট নির্বাচন করুন এবং সরাসরি লাইভ এডিট করুন। সকল ১০০টি আধুনিক টেমপ্লেট—কোনো ওয়াটারমার্ক ছাড়াই প্রফেশনাল A4 ফরম্যাটে আনলিমিটেড প্রিভিউ, এডিট ও PDF ডাউনলোড করুন!
-              </p>
-            </div>
-
-            <div className="flex gap-3 shrink-0">
-              <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-4 text-center min-w-[100px]">
-                <div className="text-2xl font-black">১০০</div>
-                <div className="text-[11px] text-rose-100">মোট টেমপ্লেট</div>
-              </div>
-              <div className="bg-emerald-500/30 backdrop-blur-md border border-emerald-300/40 rounded-2xl p-4 text-center min-w-[110px]">
-                <div className="text-2xl font-black text-emerald-200">প্রফেশনাল</div>
-                <div className="text-[11px] text-emerald-100 font-bold">লাইভ প্রিভিউ</div>
-              </div>
-              <div className="bg-white/15 backdrop-blur-md border border-white/25 rounded-2xl p-4 text-center min-w-[100px]">
-                <div className="text-2xl font-black text-white">A4</div>
-                <div className="text-[11px] text-rose-100 font-bold">অফিসিয়াল সাইজ</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Dedicated Independent Feature Section: Job CV Making Helper */}
-          <section className="mb-8 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 sm:p-7 text-white shadow-xl border border-indigo-400/30 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/25 border border-indigo-300/30 text-[11px] font-bold text-indigo-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setHelperInitialView('hub');
+                  setActiveTab('job-helper');
+                }}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 border ${
+                  activeTab === 'job-helper'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>AI-Powered Career Consultant</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight">Job CV Making Helper</h2>
-              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
-                আপনার পছন্দের চাকরির জন্য AI দিয়ে তৈরি করুন প্রফেশনাল ও চাকরিভিত্তিক CV।
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  setHelperInitialView('saved');
-                  setActiveTab('job-helper');
-                }}
-                className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
-              >
-                <FolderOpen className="w-4 h-4" />
-                <span>আমার তৈরি CV</span>
+                <span>AI CV সহায়তা</span>
               </button>
+            </nav>
+          </div>
+        </header>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setHelperInitialView('profile');
-                  setActiveTab('job-helper');
-                }}
-                className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
-              >
-                <User className="w-4 h-4" />
-                <span>আমার প্রোফাইল</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setHelperInitialView('interview');
-                  setActiveTab('job-helper');
-                }}
-                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-indigo-500 hover:from-rose-600 hover:to-indigo-600 text-white text-xs sm:text-sm font-black flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>AI দিয়ে CV তৈরি করুন</span>
-              </button>
-            </div>
-          </section>
-
-          {/* Search & Category Filter Controls */}
-          <div className="space-y-4 mb-8">
-            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-              {/* Search input */}
-              <div className="relative w-full sm:max-w-md">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="টেমপ্লেট খুঁজুন... (নাম, ক্যাটাগরি, ট্যাগ বা নম্বর)"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-2xs"
-                />
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+        {/* ================= STEP 1: CLEAN TEMPLATE GALLERY ================= */}
+        {activeTab === 'templates' && (
+          <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+            {/* Simple, clean gallery header & search */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-5">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  টেমপ্লেট নির্বাচন করুন
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                  আপনার পছন্দের প্রফেশনাল ফরম্যাট বেছে নিন, তারপর আপনার তথ্য পূরণ করে CV তৈরি করুন।
+                </p>
               </div>
 
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white px-3.5 py-2 rounded-2xl border border-slate-200 shadow-2xs">
-                <Check className="w-4 h-4 text-emerald-600" />
-                <span>সকল ১০০টি প্রিমিয়াম ও আধুনিক টেমপ্লেট</span>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto">
+                <div className="relative flex-1 sm:w-72">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="টেমপ্লেট খুঁজুন (নাম বা নম্বর)..."
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsMasterProfileModalOpen(true)}
+                  className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{hasMasterProfile ? 'সংরক্ষিত প্রোফাইল' : 'প্রোফাইল সেটআপ'}</span>
+                </button>
               </div>
             </div>
 
-            {/* 10 Categories Grid: Exactly 5 lines, 2 categories per line */}
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <span className="text-xs font-bold text-slate-700">
-                  সিভি ক্যাটাগরি ফিল্টার (মোট ১০টি বিভাগ):
-                </span>
-                {categoryFilter !== 'all' && (
+            {/* Clean Category Filter Bar */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() => setCategoryFilter('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 border ${
+                  categoryFilter === 'all'
+                    ? 'bg-slate-900 text-white border-slate-900'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                সবগুলো ({CV_TEMPLATES.length})
+              </button>
+              {CV_CATEGORIES.map((cat) => {
+                const isActive = categoryFilter === cat.id;
+                return (
                   <button
+                    key={cat.id}
                     type="button"
-                    onClick={() => setCategoryFilter('all')}
-                    className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 transition"
+                    onClick={() => setCategoryFilter(isActive ? 'all' : cat.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 border ${
+                      isActive
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
                   >
-                    <span>সকল ১০০টি টেমপ্লেট দেখুন</span>
+                    {cat.nameBn}
                   </button>
-                )}
+                );
+              })}
+            </div>
+
+            {/* Clean Template Grid */}
+            {filteredTemplates.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-2">
+                <p className="text-sm font-semibold text-slate-700">কোনো টেমপ্লেট পাওয়া যায়নি।</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setCategoryFilter('all');
+                  }}
+                  className="text-xs font-semibold text-indigo-600 hover:underline cursor-pointer"
+                >
+                  সব টেমপ্লেট দেখুন
+                </button>
               </div>
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                {CV_CATEGORIES.map((cat) => {
-                  const isActive = categoryFilter === cat.id;
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                {filteredTemplates.map((tmpl) => {
+                  const isSelected = tmpl.id === selectedTemplateId;
+
                   return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setCategoryFilter(isActive ? 'all' : cat.id)}
-                      className={`p-3 sm:p-3.5 rounded-2xl transition flex items-center justify-between border cursor-pointer text-left ${
-                        isActive
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-rose-400'
-                          : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50 shadow-2xs'
+                    <div
+                      key={tmpl.id}
+                      onClick={() => handleSelectTemplate(tmpl.id)}
+                      className={`bg-white rounded-2xl p-4 border transition-all duration-150 flex flex-col justify-between group cursor-pointer ${
+                        isSelected
+                          ? 'border-slate-900 ring-1 ring-slate-900 shadow-md'
+                          : 'border-slate-200 hover:border-slate-400 hover:shadow-sm'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                        <span className="text-xl sm:text-2xl p-1.5 sm:p-2 rounded-xl bg-slate-100/90 shrink-0">
-                          {cat.icon}
+                      {/* Unboxed Metadata Row */}
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-2.5">
+                        <span>
+                          #{tmpl.number.toString().padStart(2, '0')} · ATS {tmpl.atsScore}%
                         </span>
-                        <div className="min-w-0">
-                          <div className="text-xs sm:text-sm font-bold truncate">{cat.nameBn}</div>
-                          <div className={`text-[10px] font-medium truncate ${isActive ? 'text-slate-300' : 'text-slate-400'}`}>
-                            {cat.nameEn} (১০টি)
-                          </div>
-                        </div>
+                        {isSelected && (
+                          <span className="text-slate-900 font-bold flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            নির্বাচিত
+                          </span>
+                        )}
                       </div>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 shrink-0 border border-emerald-200">
-                        ফ্রি
-                      </span>
-                    </button>
+
+                      {/* Clean Mini Layout Preview */}
+                      <div
+                        className="h-44 rounded-xl p-2.5 border border-slate-200/80 flex flex-col justify-between mb-3 overflow-hidden"
+                        style={{ backgroundColor: tmpl.bgColor }}
+                      >
+                        {tmpl.layoutStyle === 'sidebar-left' ? (
+                          <div className="flex gap-1.5 h-full">
+                            <div
+                              className="w-1/3 rounded p-1.5 flex flex-col gap-1 shrink-0"
+                              style={{ backgroundColor: tmpl.sidebarBg || '#f1f5f9' }}
+                            >
+                              <div className="w-5 h-5 rounded-full mx-auto" style={{ backgroundColor: tmpl.primaryColor }} />
+                              <div className="w-full h-1 bg-slate-300 rounded mt-1" />
+                              <div className="w-4/5 h-1 bg-slate-300 rounded" />
+                              <div className="w-2/3 h-1 bg-slate-300 rounded" />
+                            </div>
+                            <div className="flex-1 p-1.5 flex flex-col gap-1.5 bg-slate-50 rounded border border-slate-100">
+                              <div className="w-3/4 h-2 rounded" style={{ backgroundColor: tmpl.primaryColor }} />
+                              <div className="w-1/2 h-1 bg-slate-300 rounded" />
+                              <div className="w-full h-1 bg-slate-200 rounded mt-1" />
+                              <div className="w-5/6 h-1 bg-slate-200 rounded" />
+                              <div className="w-full h-1 bg-slate-200 rounded" />
+                            </div>
+                          </div>
+                        ) : tmpl.layoutStyle === 'sidebar-right' ? (
+                          <div className="flex gap-1.5 h-full">
+                            <div className="flex-1 p-1.5 flex flex-col gap-1.5 bg-slate-50 rounded border border-slate-100">
+                              <div className="w-3/4 h-2 rounded" style={{ backgroundColor: tmpl.primaryColor }} />
+                              <div className="w-1/2 h-1 bg-slate-300 rounded" />
+                              <div className="w-full h-1 bg-slate-200 rounded mt-1" />
+                              <div className="w-5/6 h-1 bg-slate-200 rounded" />
+                            </div>
+                            <div
+                              className="w-1/3 rounded p-1.5 flex flex-col gap-1 shrink-0"
+                              style={{ backgroundColor: tmpl.sidebarBg || '#f1f5f9' }}
+                            >
+                              <div className="w-5 h-5 rounded-full mx-auto" style={{ backgroundColor: tmpl.primaryColor }} />
+                              <div className="w-full h-1 bg-slate-300 rounded mt-1" />
+                              <div className="w-4/5 h-1 bg-slate-300 rounded" />
+                            </div>
+                          </div>
+                        ) : tmpl.layoutStyle === 'header-accent' ? (
+                          <div className="flex flex-col gap-1.5 h-full">
+                            <div className="p-2 rounded flex items-center justify-between" style={{ backgroundColor: tmpl.primaryColor }}>
+                              <div className="w-16 h-2 bg-white/85 rounded-sm" />
+                              <div className="w-4 h-4 rounded-sm bg-white/40" />
+                            </div>
+                            <div className="flex-1 grid grid-cols-3 gap-1.5">
+                              <div className="col-span-2 p-1.5 rounded bg-slate-50 border border-slate-100 flex flex-col gap-1">
+                                <div className="w-full h-1 bg-slate-300 rounded" />
+                                <div className="w-5/6 h-1 bg-slate-200 rounded" />
+                                <div className="w-4/6 h-1 bg-slate-200 rounded" />
+                              </div>
+                              <div className="p-1.5 rounded bg-slate-100 flex flex-col gap-1">
+                                <div className="w-full h-1 bg-slate-300 rounded" />
+                                <div className="w-2/3 h-1 bg-slate-300 rounded" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : tmpl.layoutStyle === 'creative-banner' ? (
+                          <div className="flex flex-col gap-1.5 h-full">
+                            <div className="p-2 rounded flex items-center justify-between" style={{ backgroundColor: tmpl.primaryColor }}>
+                              <div className="w-14 h-2 bg-white/90 rounded-sm" />
+                              <div className="w-5 h-5 rounded-full border border-white/80" style={{ backgroundColor: tmpl.secondaryColor }} />
+                            </div>
+                            <div className="flex-1 p-2 rounded bg-slate-50 border border-slate-100 flex flex-col gap-1.5 relative pl-3.5">
+                              <div className="absolute left-1.5 top-2 bottom-2 w-0.5 rounded" style={{ backgroundColor: tmpl.primaryColor }} />
+                              <div className="w-3/4 h-1.5 bg-slate-400 rounded" />
+                              <div className="w-full h-1 bg-slate-200 rounded" />
+                              <div className="w-5/6 h-1 bg-slate-200 rounded" />
+                            </div>
+                          </div>
+                        ) : tmpl.layoutStyle === 'europass' ? (
+                          <div className="flex flex-col gap-1 h-full border border-blue-200 rounded p-1.5">
+                            <div className="flex justify-between items-center pb-1 border-b border-blue-200">
+                              <span className="text-[8px] font-bold tracking-wider text-blue-800">EUROPASS</span>
+                              <div className="w-3 h-3 rounded-sm bg-blue-800" />
+                            </div>
+                            <div className="flex-1 flex gap-1.5 pt-1">
+                              <div className="w-1/4 flex flex-col gap-1">
+                                <div className="w-full h-1 bg-blue-400 rounded" />
+                                <div className="w-3/4 h-1 bg-slate-200 rounded" />
+                              </div>
+                              <div className="w-3/4 flex flex-col gap-1">
+                                <div className="w-3/4 h-1 bg-slate-800 rounded" />
+                                <div className="w-full h-1 bg-slate-200 rounded" />
+                                <div className="w-5/6 h-1 bg-slate-200 rounded" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : tmpl.layoutStyle === 'modern-grid' ? (
+                          <div className="flex flex-col gap-1.5 h-full">
+                            <div className="p-1.5 rounded border border-slate-200 bg-slate-50 flex items-center justify-between">
+                              <div className="w-16 h-1.5 rounded" style={{ backgroundColor: tmpl.primaryColor }} />
+                              <div className="w-4 h-4 rounded-full bg-slate-300" />
+                            </div>
+                            <div className="flex-1 grid grid-cols-2 gap-1.5">
+                              <div className="p-1.5 rounded border border-slate-100 bg-white flex flex-col gap-1">
+                                <div className="w-full h-1 bg-slate-300 rounded" />
+                                <div className="w-4/5 h-1 bg-slate-200 rounded" />
+                              </div>
+                              <div className="p-1.5 rounded border border-slate-100 bg-slate-50 flex flex-col gap-1">
+                                <div className="w-full h-1 bg-slate-300 rounded" />
+                                <div className="w-3/5 h-1 bg-slate-200 rounded" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col justify-between h-full p-2 bg-slate-50/70 rounded border border-slate-200/80">
+                            <div className="text-center space-y-1 pb-1.5 border-b" style={{ borderColor: tmpl.primaryColor }}>
+                              <div className="w-20 h-1.5 mx-auto rounded" style={{ backgroundColor: tmpl.primaryColor }} />
+                              <div className="w-12 h-1 bg-slate-300 mx-auto rounded" />
+                            </div>
+                            <div className="space-y-1.5 my-1">
+                              <div className="w-full h-1 bg-slate-200 rounded" />
+                              <div className="w-5/6 h-1 bg-slate-200 rounded" />
+                              <div className="w-4/6 h-1 bg-slate-200 rounded" />
+                            </div>
+                            <div className="pt-1 border-t border-slate-200 flex justify-between">
+                              <div className="w-1/3 h-1 bg-slate-300 rounded" />
+                              <div className="w-1/3 h-1 bg-slate-300 rounded" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Title & Info */}
+                      <div className="space-y-1">
+                        <h3 className="font-bold text-sm text-slate-900 leading-snug">
+                          {tmpl.nameBn}
+                        </h3>
+                        <div className="text-[11px] text-slate-500 font-medium truncate">
+                          {tmpl.nameEn}
+                        </div>
+                        <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
+                          {tmpl.descriptionBn}
+                        </p>
+                      </div>
+
+                      {/* Single Clean Select Action (Advances to Step 2) */}
+                      <div className="mt-4 pt-3 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectTemplate(tmpl.id);
+                          }}
+                          className={`w-full py-2 px-3 rounded-xl font-semibold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                            isSelected
+                              ? 'bg-slate-900 text-white hover:bg-slate-800'
+                              : 'bg-slate-100 text-slate-800 hover:bg-slate-900 hover:text-white'
+                          }`}
+                        >
+                          <span>{isSelected ? 'তথ্য লিখুন' : 'নির্বাচন করুন'}</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-            </div>
-          </div>
+            )}
+          </main>
+        )}
 
-          {/* Template Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {filteredTemplates.map((tmpl) => {
-              const isSelected = tmpl.id === selectedTemplateId;
-              const isPaid = unlockedTemplates.includes(tmpl.id);
-
-              return (
-                <div
-                  key={tmpl.id}
-                  onClick={() => {
-                    handleSelectTemplate(tmpl.id);
-                  }}
-                  className={`bg-white rounded-3xl p-4 border transition-all duration-200 flex flex-col justify-between group cursor-pointer relative ${
-                    isSelected
-                      ? 'border-rose-500 ring-2 ring-rose-300 shadow-xl'
-                      : 'border-slate-200 hover:border-slate-400 hover:shadow-lg'
-                  }`}
-                >
-                  {/* Top Badge Row */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700">
-                      #{tmpl.number.toString().padStart(2, '0')}
-                    </span>
-
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                      <Check className="w-3 h-3 text-emerald-600" />
-                      <span>প্রফেশনাল</span>
-                    </span>
+        {/* ================= STEP 2: FOCUSED CV EDITOR ================= */}
+        {activeTab === 'editor' && (
+          <main className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+            {/* Compact Editor Utility Bar */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <span
+                  className="w-3 h-3 rounded-full shrink-0"
+                  style={{ backgroundColor: currentTemplate.primaryColor }}
+                />
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-slate-900 truncate">
+                    #{currentTemplate.number.toString().padStart(2, '0')} · {currentTemplate.nameBn}
                   </div>
-
-                  {/* Thumbnail / Layout Representation */}
-                  <div
-                    className="h-44 rounded-2xl p-2.5 border border-slate-100 flex flex-col justify-between mb-3 relative overflow-hidden transition-transform group-hover:scale-[1.02]"
-                    style={{ backgroundColor: tmpl.bgColor }}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('templates')}
+                    className="text-[11px] font-semibold text-indigo-600 hover:underline cursor-pointer"
                   >
-                    {/* Simulated Dynamic Mini Layouts */}
-                    {tmpl.layoutStyle === 'sidebar-left' ? (
-                      <div className="flex gap-1.5 h-full">
-                        <div
-                          className="w-1/3 rounded-lg p-1.5 flex flex-col gap-1 shrink-0"
-                          style={{ backgroundColor: tmpl.sidebarBg || '#f1f5f9' }}
-                        >
-                          <div className="w-6 h-6 rounded-full mx-auto" style={{ backgroundColor: tmpl.primaryColor }}></div>
-                          <div className="w-full h-1 bg-slate-300 rounded mt-1"></div>
-                          <div className="w-4/5 h-1 bg-slate-300 rounded"></div>
-                          <div className="w-2/3 h-1 bg-slate-300 rounded"></div>
-                          <div className="mt-auto w-full h-2 rounded" style={{ backgroundColor: `${tmpl.primaryColor}30` }}></div>
-                        </div>
-                        <div className="flex-1 p-1.5 flex flex-col gap-1.5 bg-slate-50 rounded-lg border border-slate-100">
-                          <div className="w-3/4 h-2 rounded" style={{ backgroundColor: tmpl.primaryColor }}></div>
-                          <div className="w-1/2 h-1 bg-slate-300 rounded"></div>
-                          <div className="w-full h-1 bg-slate-200 rounded mt-1"></div>
-                          <div className="w-5/6 h-1 bg-slate-200 rounded"></div>
-                          <div className="w-full h-1 bg-slate-200 rounded"></div>
-                          <div className="w-2/3 h-1 bg-slate-200 rounded"></div>
-                        </div>
-                      </div>
-                    ) : tmpl.layoutStyle === 'sidebar-right' ? (
-                      <div className="flex gap-1.5 h-full">
-                        <div className="flex-1 p-1.5 flex flex-col gap-1.5 bg-slate-50 rounded-lg border border-slate-100">
-                          <div className="w-3/4 h-2 rounded" style={{ backgroundColor: tmpl.primaryColor }}></div>
-                          <div className="w-1/2 h-1 bg-slate-300 rounded"></div>
-                          <div className="w-full h-1 bg-slate-200 rounded mt-1"></div>
-                          <div className="w-5/6 h-1 bg-slate-200 rounded"></div>
-                          <div className="w-full h-1 bg-slate-200 rounded"></div>
-                        </div>
-                        <div
-                          className="w-1/3 rounded-lg p-1.5 flex flex-col gap-1 shrink-0"
-                          style={{ backgroundColor: tmpl.sidebarBg || '#f1f5f9' }}
-                        >
-                          <div className="w-6 h-6 rounded-full mx-auto" style={{ backgroundColor: tmpl.primaryColor }}></div>
-                          <div className="w-full h-1 bg-slate-300 rounded mt-1"></div>
-                          <div className="w-4/5 h-1 bg-slate-300 rounded"></div>
-                          <div className="w-2/3 h-1 bg-slate-300 rounded"></div>
-                        </div>
-                      </div>
-                    ) : tmpl.layoutStyle === 'header-accent' ? (
-                      <div className="flex flex-col gap-1.5 h-full">
-                        <div className="p-2 rounded-lg text-white flex items-center justify-between" style={{ backgroundColor: tmpl.primaryColor }}>
-                          <div className="w-16 h-2 bg-white/80 rounded-full"></div>
-                          <div className="w-5 h-5 rounded-lg bg-white/40"></div>
-                        </div>
-                        <div className="flex-1 grid grid-cols-3 gap-1.5">
-                          <div className="col-span-2 p-1.5 rounded-lg bg-slate-50 border border-slate-100 flex flex-col gap-1">
-                            <div className="w-full h-1 bg-slate-300 rounded"></div>
-                            <div className="w-5/6 h-1 bg-slate-200 rounded"></div>
-                            <div className="w-4/6 h-1 bg-slate-200 rounded"></div>
-                          </div>
-                          <div className="p-1.5 rounded-lg bg-slate-100 flex flex-col gap-1">
-                            <div className="w-full h-1 bg-slate-300 rounded"></div>
-                            <div className="w-2/3 h-1 bg-slate-300 rounded"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : tmpl.layoutStyle === 'creative-banner' ? (
-                      <div className="flex flex-col gap-1.5 h-full">
-                        <div className="p-2.5 rounded-xl text-white relative overflow-hidden" style={{ backgroundColor: tmpl.primaryColor }}>
-                          <div className="w-14 h-2 bg-white/90 rounded-full"></div>
-                          <div className="w-6 h-6 rounded-full border-2 border-white absolute right-2 top-1.5" style={{ backgroundColor: tmpl.secondaryColor }}></div>
-                        </div>
-                        <div className="flex-1 p-2 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-1.5 relative pl-4">
-                          <div className="absolute left-2 top-2 bottom-2 w-0.5 rounded" style={{ backgroundColor: tmpl.primaryColor }}></div>
-                          <div className="w-3/4 h-1.5 bg-slate-400 rounded"></div>
-                          <div className="w-full h-1 bg-slate-200 rounded"></div>
-                          <div className="w-5/6 h-1 bg-slate-200 rounded"></div>
-                        </div>
-                      </div>
-                    ) : tmpl.layoutStyle === 'europass' ? (
-                      <div className="flex flex-col gap-1 h-full border border-blue-200 rounded-lg p-1.5">
-                        <div className="flex justify-between items-center pb-1 border-b border-blue-200">
-                          <span className="text-[7px] font-black text-blue-800">🇪🇺 EUROPASS</span>
-                          <div className="w-3 h-3 rounded bg-blue-800"></div>
-                        </div>
-                        <div className="flex-1 flex gap-1.5 pt-1">
-                          <div className="w-1/4 flex flex-col gap-1">
-                            <div className="w-full h-1 bg-blue-400 rounded"></div>
-                            <div className="w-3/4 h-1 bg-slate-200 rounded"></div>
-                          </div>
-                          <div className="w-3/4 flex flex-col gap-1">
-                            <div className="w-3/4 h-1 bg-slate-800 rounded"></div>
-                            <div className="w-full h-1 bg-slate-200 rounded"></div>
-                            <div className="w-5/6 h-1 bg-slate-200 rounded"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : tmpl.layoutStyle === 'modern-grid' ? (
-                      <div className="flex flex-col gap-1.5 h-full">
-                        <div className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between">
-                          <div className="w-16 h-1.5 rounded" style={{ backgroundColor: tmpl.primaryColor }}></div>
-                          <div className="w-4 h-4 rounded-full bg-slate-300"></div>
-                        </div>
-                        <div className="flex-1 grid grid-cols-2 gap-1.5">
-                          <div className="p-1.5 rounded-lg border border-slate-100 bg-white flex flex-col gap-1">
-                            <div className="w-full h-1 bg-slate-300 rounded"></div>
-                            <div className="w-4/5 h-1 bg-slate-200 rounded"></div>
-                          </div>
-                          <div className="p-1.5 rounded-lg border border-slate-100 bg-slate-50 flex flex-col gap-1">
-                            <div className="w-full h-1 bg-slate-300 rounded"></div>
-                            <div className="w-3/5 h-1 bg-slate-200 rounded"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      /* One-column or compact ATS */
-                      <div className="flex flex-col justify-between h-full p-2 bg-slate-50/60 rounded-lg border border-slate-200/80">
-                        <div className="text-center space-y-1 pb-1.5 border-b" style={{ borderColor: tmpl.primaryColor }}>
-                          <div className="w-20 h-1.5 mx-auto rounded" style={{ backgroundColor: tmpl.primaryColor }}></div>
-                          <div className="w-12 h-1 bg-slate-300 mx-auto rounded"></div>
-                        </div>
-                        <div className="space-y-1.5 my-1">
-                          <div className="w-full h-1 bg-slate-200 rounded"></div>
-                          <div className="w-5/6 h-1 bg-slate-200 rounded"></div>
-                          <div className="w-4/6 h-1 bg-slate-200 rounded"></div>
-                        </div>
-                        <div className="pt-1 border-t border-slate-200 flex justify-between">
-                          <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                          <div className="w-1/3 h-1 bg-slate-300 rounded"></div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Watermark badge indicator if unpaid premium (subtle & soft) */}
-                    {tmpl.isPremium && !isPaid && (
-                      <div className="absolute inset-0 bg-slate-900/[0.03] backdrop-blur-[0.2px] flex items-center justify-center pointer-events-none">
-                        <span className="text-[9px] font-bold tracking-widest text-slate-400 bg-white/80 px-2 py-0.5 rounded shadow-2xs border border-slate-200/40">
-                          THE MoSaFa
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Title & Info */}
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-sm text-slate-900 group-hover:text-rose-600 transition">
-                      {tmpl.nameBn}
-                    </h3>
-                    <div className="text-[11px] text-slate-500 font-medium flex justify-between">
-                      <span>{tmpl.nameEn}</span>
-                      <span className="text-emerald-700 font-bold">ATS: {tmpl.atsScore}%</span>
-                    </div>
-                    <p className="text-[11px] text-slate-600 line-clamp-2 mt-1 leading-relaxed">
-                      {tmpl.descriptionBn}
-                    </p>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectTemplate(tmpl.id, 'preview');
-                      }}
-                      className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs text-center transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>প্রিভিউ দেখুন</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectTemplate(tmpl.id, 'editor');
-                      }}
-                      className="py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs text-center transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-                      title="এই টেমপ্লেট নির্বাচন করে সরাসরি এডিট করুন"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 text-rose-600" />
-                      <span>এডিট</span>
-                    </button>
-                  </div>
+                    টেমপ্লেট পরিবর্তন করুন
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-        </main>
-      )}
-
-      {/* ================= TAB 2: CV DATA INPUT WIZARD ================= */}
-      {activeTab === 'editor' && (
-        <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-          {/* Quick Profile Auto-Fill Banner */}
-          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 border border-emerald-200 rounded-3xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <UserCheck className="w-5 h-5" />
               </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-black text-slate-900">
-                  নিজের সিভি প্রোফাইল {hasMasterProfile ? '(তথ্য সংরক্ষিত রয়েছে ✅)' : '(এখনই সেটআপ করুন)'}
-                </h3>
-                <p className="text-[11px] text-slate-600">
-                  একবার তথ্য সেভ রাখলে যে কোনো ফরম্যাট পছন্দ করলেই আপনার সব তথ্য স্বয়ংক্রিয়ভাবে অটু-ফিল হবে।
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              {hasMasterProfile && (
+              <div className="flex flex-wrap items-center gap-2 text-xs">
                 <button
                   type="button"
                   onClick={handleAutoFillFromProfile}
-                  className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-300 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+                  className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>প্রোফাইল থেকে অটো-ফিল করুন</span>
+                  <UserCheck className="w-3.5 h-3.5" />
+                  <span>{hasMasterProfile ? 'প্রোফাইল অটো-ফিল' : 'প্রোফাইল সেটআপ'}</span>
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsMasterProfileModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>{hasMasterProfile ? 'প্রোফাইল এডিট' : 'নিজের প্রোফাইল পূরণ করুন'}</span>
-              </button>
-            </div>
-          </div>
 
-          {/* Personal Information Card */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-2 border-b">
-              <span>👤 ১. ব্যক্তিগত তথ্য (Personal Details)</span>
-            </h2>
+                <button
+                  type="button"
+                  onClick={handleLoadSample}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition cursor-pointer"
+                >
+                  নমুনা তথ্য
+                </button>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">পূর্ণ নাম *</label>
-                <input
-                  type="text"
-                  value={cvData.personal.fullName}
-                  onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, fullName: e.target.value } })}
-                  placeholder="যেমন: মোফাসসিরুল ইসলাম"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
+                <label className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition flex items-center gap-1 cursor-pointer">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>ইম্পোর্ট</span>
+                  <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
+                </label>
 
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">পদবী / পেশা *</label>
-                <input
-                  type="text"
-                  value={cvData.personal.jobTitle}
-                  onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, jobTitle: e.target.value } })}
-                  placeholder="যেমন: Senior Software Engineer"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
+                <button
+                  type="button"
+                  onClick={handleExportJSON}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>ব্যাকআপ</span>
+                </button>
 
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">ইমেইল এড্রেস *</label>
-                <input
-                  type="email"
-                  value={cvData.personal.email}
-                  onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, email: e.target.value } })}
-                  placeholder="example@gmail.com"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
+                <button
+                  type="button"
+                  onClick={() => setShowQualityPanel((v) => !v)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>পূর্ণতা: {qualityResult.score}%</span>
+                </button>
 
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">মোবাইল নম্বর *</label>
-                <input
-                  type="text"
-                  value={cvData.personal.phone}
-                  onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, phone: e.target.value } })}
-                  placeholder="+880 1712-345678"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">শহর ও দেশ</label>
-                <input
-                  type="text"
-                  value={cvData.personal.city}
-                  onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, city: e.target.value } })}
-                  placeholder="ঢাকা, বাংলাদেশ"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">প্রোফাইল ছবি (URL অথবা ফাইল আপলোড)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={cvData.personal.photoUrl}
-                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, photoUrl: e.target.value } })}
-                    placeholder="https://example.com/photo.jpg"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500 text-xs"
-                  />
-                  <label className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>ছবি দিন</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const base64 = event.target?.result as string;
-                          setCvData((prev) => ({
-                            ...prev,
-                            personal: {
-                              ...prev.personal,
-                              photoUrl: base64,
-                            },
-                          }));
-                          onShowToast('ছবি সফলভাবে যুক্ত হয়েছে!', '🖼️');
-                        };
-                        reader.readAsDataURL(file);
-                        e.target.value = '';
-                      }}
-                      className="hidden"
-                    />
-                  </label>
-                  {cvData.personal.photoUrl && (
+                {confirmingReset ? (
+                  <div className="flex items-center gap-1 bg-rose-50 px-2 py-1 rounded-lg border border-rose-200">
+                    <span className="text-[11px] font-semibold text-rose-800">মুছবেন?</span>
                     <button
                       type="button"
-                      onClick={() => setCvData((prev) => ({ ...prev, personal: { ...prev.personal, photoUrl: '' } }))}
-                      className="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 text-xs font-bold transition cursor-pointer"
-                      title="ছবি মুছুন"
+                      onClick={handleReset}
+                      className="px-2 py-0.5 rounded bg-rose-600 text-white text-[11px] font-bold cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      হ্যাঁ
                     </button>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">LinkedIn লিংক</label>
-                <input
-                  type="text"
-                  value={cvData.personal.linkedin}
-                  onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, linkedin: e.target.value } })}
-                  placeholder="linkedin.com/in/username"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">GitHub / পোর্টফোলিও লিংক</label>
-                <input
-                  type="text"
-                  value={cvData.personal.github}
-                  onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, github: e.target.value } })}
-                  placeholder="github.com/username"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Professional Summary */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
-            <h2 className="text-base font-bold text-slate-900 flex items-center justify-between pb-2 border-b">
-              <span>📝 ২. প্রফেশনাল সারাংশ (Professional Summary)</span>
-              <span className="text-xs text-slate-500 font-normal">{cvData.summary.length} অক্ষর</span>
-            </h2>
-            <textarea
-              rows={4}
-              value={cvData.summary}
-              onChange={(e) => setCvData({ ...cvData, summary: e.target.value })}
-              placeholder="আপনার অভিজ্ঞতা, মূল দক্ষতা এবং ক্যারিয়ারের লক্ষ্য ৩-৫ বাক্যে সংক্ষেপে লিখুন..."
-              className="w-full p-3 rounded-2xl border border-slate-300 text-xs text-slate-800 leading-relaxed focus:ring-2 focus:ring-rose-500"
-            />
-          </div>
-
-          {/* Work Experience */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b">
-              <h2 className="text-base font-bold text-slate-900">💼 ৩. কাজের অভিজ্ঞতা (Work Experience)</h2>
-              <button
-                type="button"
-                onClick={() => {
-                  const newExp = {
-                    id: `exp-${Date.now()}`,
-                    jobTitle: '',
-                    employer: '',
-                    location: '',
-                    startDate: '',
-                    endDate: '',
-                    current: false,
-                    description: '',
-                  };
-                  setCvData({ ...cvData, experience: [...cvData.experience, newExp] });
-                }}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>অভিজ্ঞতা যোগ করুন</span>
-              </button>
-            </div>
-
-            {cvData.experience.map((exp, index) => (
-              <div key={exp.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 relative">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-xs text-slate-700">অভিজ্ঞতা #{index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingReset(false)}
+                      className="px-2 py-0.5 rounded bg-white text-slate-700 text-[11px] font-semibold border border-slate-200 cursor-pointer"
+                    >
+                      না
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={() => {
-                      setCvData({ ...cvData, experience: cvData.experience.filter((item) => item.id !== exp.id) });
-                    }}
-                    className="p-1 rounded-lg text-rose-600 hover:bg-rose-50 cursor-pointer"
-                    title="মুছে ফেলুন"
+                    onClick={() => setConfirmingReset(true)}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                    title="সব তথ্য মুছুন"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Optional Expandable Quality Checklist */}
+            {showQualityPanel && (
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between font-bold text-slate-800">
+                  <span>সিভি সম্পূর্ণতা নির্দেশিকা ({qualityResult.score}%)</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowQualityPanel(false)}
+                    className="text-slate-400 hover:text-slate-700 cursor-pointer"
+                  >
+                    ✕
                   </button>
                 </div>
+                {qualityResult.issues.length === 0 ? (
+                  <p className="text-emerald-700 font-semibold">সকল গুরুত্বপূর্ণ তথ্য সঠিকভাবে যুক্ত আছে।</p>
+                ) : (
+                  <ul className="space-y-1 text-slate-600 list-disc list-inside">
+                    {qualityResult.issues.map((iss, idx) => (
+                      <li key={idx}>{iss.messageBn}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">পদের নাম / Job Title</label>
-                    <input
-                      type="text"
-                      value={exp.jobTitle}
-                      onChange={(e) => {
-                        const updated = cvData.experience.map((item) =>
-                          item.id === exp.id ? { ...item, jobTitle: e.target.value } : item
-                        );
-                        setCvData({ ...cvData, experience: updated });
-                      }}
-                      placeholder="যেমন: Software Developer"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
-                    />
-                  </div>
+            {/* Inline Validation Message */}
+            {validationError && (
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{validationError}</span>
+              </div>
+            )}
 
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">কোম্পানির নাম / Employer</label>
-                    <input
-                      type="text"
-                      value={exp.employer}
-                      onChange={(e) => {
-                        const updated = cvData.experience.map((item) =>
-                          item.id === exp.id ? { ...item, employer: e.target.value } : item
-                        );
-                        setCvData({ ...cvData, experience: updated });
-                      }}
-                      placeholder="যেমন: টেক ইনোভেট লিমিটেড"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
-                    />
-                  </div>
+            {/* 1. Personal Information */}
+            <section className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 space-y-4">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 pb-2 border-b border-slate-100">
+                ১. ব্যক্তিগত তথ্য (Personal Details)
+              </h2>
 
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">শুরুর তারিখ</label>
-                    <input
-                      type="text"
-                      value={exp.startDate}
-                      onChange={(e) => {
-                        const updated = cvData.experience.map((item) =>
-                          item.id === exp.id ? { ...item, startDate: e.target.value } : item
-                        );
-                        setCvData({ ...cvData, experience: updated });
-                      }}
-                      placeholder="যেমন: জানুয়ারি ২০২১"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">শেষের তারিখ / বর্তমান</label>
-                    <div className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        disabled={exp.current}
-                        value={exp.current ? 'বর্তমান (Present)' : exp.endDate}
-                        onChange={(e) => {
-                          const updated = cvData.experience.map((item) =>
-                            item.id === exp.id ? { ...item, endDate: e.target.value } : item
-                          );
-                          setCvData({ ...cvData, experience: updated });
-                        }}
-                        placeholder="যেমন: ডিসেম্বর ২০২৩"
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 disabled:bg-slate-100"
-                      />
-                      <label className="flex items-center gap-1 font-bold text-slate-700 shrink-0 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={exp.current}
-                          onChange={(e) => {
-                            const updated = cvData.experience.map((item) =>
-                              item.id === exp.id ? { ...item, current: e.target.checked } : item
-                            );
-                            setCvData({ ...cvData, experience: updated });
-                          }}
-                          className="rounded text-rose-600"
-                        />
-                        <span>চলমান</span>
-                      </label>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">পূর্ণ নাম *</label>
+                  <input
+                    type="text"
+                    value={cvData.personal.fullName}
+                    onChange={(e) => {
+                      setValidationError('');
+                      setCvData({ ...cvData, personal: { ...cvData.personal, fullName: e.target.value } });
+                    }}
+                    placeholder="যেমন: রহিম আহমেদ"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1 text-xs">দায়িত্ব ও অর্জনসমূহ (বুলেট আকারে)</label>
-                  <textarea
-                    rows={3}
-                    value={exp.description}
-                    onChange={(e) => {
-                      const updated = cvData.experience.map((item) =>
-                        item.id === exp.id ? { ...item, description: e.target.value } : item
-                      );
-                      setCvData({ ...cvData, experience: updated });
-                    }}
-                    placeholder="• মূল দায়িত্ব এবং সাফল্য পয়েন্ট আকারে লিখুন..."
-                    className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-xs leading-relaxed"
+                  <label className="font-semibold text-slate-700 block mb-1">পদবী / পেশা *</label>
+                  <input
+                    type="text"
+                    value={cvData.personal.jobTitle}
+                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, jobTitle: e.target.value } })}
+                    placeholder="যেমন: Senior Software Engineer"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
                   />
                 </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">ইমেইল এড্রেস *</label>
+                  <input
+                    type="email"
+                    value={cvData.personal.email}
+                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, email: e.target.value } })}
+                    placeholder="example@email.com"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">মোবাইল নম্বর *</label>
+                  <input
+                    type="text"
+                    value={cvData.personal.phone}
+                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, phone: e.target.value } })}
+                    placeholder="+880 1712-345678"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">শহর</label>
+                  <input
+                    type="text"
+                    value={cvData.personal.city}
+                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, city: e.target.value } })}
+                    placeholder="ঢাকা"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">দেশ</label>
+                  <input
+                    type="text"
+                    value={cvData.personal.country}
+                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, country: e.target.value } })}
+                    placeholder="বাংলাদেশ"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="font-semibold text-slate-700 block mb-1">ঠিকানা (ঐচ্ছিক)</label>
+                  <input
+                    type="text"
+                    value={cvData.personal.address}
+                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, address: e.target.value } })}
+                    placeholder="বাড়ি নং, রোড, এলাকা"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">LinkedIn লিংক</label>
+                  <input
+                    type="text"
+                    value={cvData.personal.linkedin}
+                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, linkedin: e.target.value } })}
+                    placeholder="linkedin.com/in/username"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">GitHub / পোর্টফোলিও লিংক</label>
+                  <input
+                    type="text"
+                    value={cvData.personal.github}
+                    onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, github: e.target.value } })}
+                    placeholder="github.com/username"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="font-semibold text-slate-700 block mb-1">প্রোফাইল ছবি (ঐচ্ছিক)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={cvData.personal.photoUrl}
+                      onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, photoUrl: e.target.value } })}
+                      placeholder="ছবির URL দিন অথবা ডানদিকের বাটন থেকে আপলোড করুন"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900 text-xs"
+                    />
+                    <label className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shrink-0">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>আপলোড</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const base64 = event.target?.result as string;
+                            setCvData((prev) => ({
+                              ...prev,
+                              personal: { ...prev.personal, photoUrl: base64 },
+                            }));
+                            onShowToast('ছবি যুক্ত হয়েছে!', '🖼️');
+                          };
+                          reader.readAsDataURL(file);
+                          e.target.value = '';
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                    {cvData.personal.photoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setCvData((prev) => ({ ...prev, personal: { ...prev.personal, photoUrl: '' } }))}
+                        className="px-2.5 py-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 text-xs font-semibold transition cursor-pointer"
+                        title="ছবি মুছুন"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
 
-          {/* Education */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b">
-              <h2 className="text-base font-bold text-slate-900">🎓 ৪. শিক্ষাগত যোগ্যতা (Education)</h2>
-              <button
-                type="button"
-                onClick={() => {
-                  const newEdu = {
-                    id: `edu-${Date.now()}`,
-                    degree: '',
-                    institution: '',
-                    fieldOfStudy: '',
-                    location: '',
-                    startDate: '',
-                    endDate: '',
-                    gpa: '',
-                  };
-                  setCvData({ ...cvData, education: [...cvData.education, newEdu] });
-                }}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>ডিগ্রি যোগ করুন</span>
-              </button>
-            </div>
+              {/* Optional Personal Bio & Signature Toggle */}
+              <div className="pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowOptionalBio((v) => !v)}
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showOptionalBio ? 'rotate-180' : ''}`} />
+                  <span>অতিরিক্ত ব্যক্তিগত তথ্য ও স্বাক্ষর (জাতীয়তা, জন্ম তারিখ, পিতা/মাতা — ঐচ্ছিক)</span>
+                </button>
 
-            {cvData.education.map((edu) => (
-              <div key={edu.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 relative text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-700">ডিগ্রি বিবরণ</span>
+                {showOptionalBio && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 space-y-3 text-xs">
+                    <label className="flex items-center gap-2 font-semibold text-slate-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(cvData.personal.includePersonalDetailsBlock)}
+                        onChange={(e) =>
+                          setCvData({
+                            ...cvData,
+                            personal: { ...cvData.personal, includePersonalDetailsBlock: e.target.checked },
+                          })
+                        }
+                        className="rounded"
+                      />
+                      <span>CV-তে ব্যক্তিগত তথ্য (Personal Information) সেকশন দেখান</span>
+                    </label>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">পিতার নাম</label>
+                        <input
+                          type="text"
+                          value={cvData.personal.fatherName || ''}
+                          onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, fatherName: e.target.value } })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">মাতার নাম</label>
+                        <input
+                          type="text"
+                          value={cvData.personal.motherName || ''}
+                          onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, motherName: e.target.value } })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">জন্ম তারিখ</label>
+                        <input
+                          type="text"
+                          value={cvData.personal.dateOfBirth || ''}
+                          onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, dateOfBirth: e.target.value } })}
+                          placeholder="যেমন: 15 Jan 1998"
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">জাতীয়তা</label>
+                        <input
+                          type="text"
+                          value={cvData.personal.nationality || ''}
+                          onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, nationality: e.target.value } })}
+                          placeholder="Bangladeshi"
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-700 block mb-1">স্থায়ী ঠিকানা</label>
+                        <input
+                          type="text"
+                          value={cvData.personal.permanentAddress || ''}
+                          onChange={(e) => setCvData({ ...cvData, personal: { ...cvData.personal, permanentAddress: e.target.value } })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-700 block mb-1">স্বাক্ষর (Signature Image — ঐচ্ছিক)</label>
+                        <div className="flex items-center gap-2">
+                          <label className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold cursor-pointer flex items-center gap-1.5">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>স্বাক্ষর আপলোড</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  setCvData((prev) => ({
+                                    ...prev,
+                                    personal: { ...prev.personal, signatureUrl: String(event.target?.result || '') },
+                                  }));
+                                };
+                                reader.readAsDataURL(file);
+                                e.target.value = '';
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                          {cvData.personal.signatureUrl && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setCvData((prev) => ({
+                                  ...prev,
+                                  personal: { ...prev.personal, signatureUrl: '' },
+                                }))
+                              }
+                              className="text-rose-600 font-semibold hover:underline cursor-pointer"
+                            >
+                              স্বাক্ষর মুছুন
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* 2. Professional Summary */}
+            <section className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                  ২. পেশাদার সারাংশ (Professional Summary)
+                </h2>
+                <span className="text-xs text-slate-500">{cvData.summary.length} অক্ষর</span>
+              </div>
+              <textarea
+                rows={4}
+                value={cvData.summary}
+                onChange={(e) => setCvData({ ...cvData, summary: e.target.value })}
+                placeholder="আপনার অভিজ্ঞতা, মূল দক্ষতা এবং ক্যারিয়ারের লক্ষ্য ৩-৪ বাক্যে লিখুন..."
+                className="w-full p-3 rounded-xl border border-slate-300 text-xs text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-slate-900"
+              />
+            </section>
+
+            {/* 3. Work Experience */}
+            <section className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                  ৩. কাজের অভিজ্ঞতা (Work Experience)
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newExp = {
+                      id: `exp-${Date.now()}`,
+                      jobTitle: '',
+                      employer: '',
+                      location: '',
+                      startDate: '',
+                      endDate: '',
+                      current: false,
+                      description: '',
+                    };
+                    setCvData({ ...cvData, experience: [...cvData.experience, newExp] });
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>অভিজ্ঞতা যোগ করুন</span>
+                </button>
+              </div>
+
+              {cvData.experience.length === 0 && (
+                <p className="text-xs text-slate-500 py-2">
+                  কোনো অভিজ্ঞতা যুক্ত করা হয়নি। ফ্রেশার হলে এটি খালি রাখতে পারেন অথবা ইন্টার্নশিপ/প্রজেক্ট যুক্ত করতে পারেন।
+                </p>
+              )}
+
+              {cvData.experience.map((exp, index) => (
+                <div key={exp.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-xs text-slate-700">অভিজ্ঞতা #{index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCvData({ ...cvData, experience: cvData.experience.filter((item) => item.id !== exp.id) });
+                      }}
+                      className="p-1 rounded-lg text-rose-600 hover:bg-rose-50 cursor-pointer"
+                      title="মুছে ফেলুন"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">পদের নাম / Job Title</label>
+                      <input
+                        type="text"
+                        value={exp.jobTitle}
+                        onChange={(e) => {
+                          const updated = cvData.experience.map((item) =>
+                            item.id === exp.id ? { ...item, jobTitle: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, experience: updated });
+                        }}
+                        placeholder="যেমন: Software Developer"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">কোম্পানির নাম / Employer</label>
+                      <input
+                        type="text"
+                        value={exp.employer}
+                        onChange={(e) => {
+                          const updated = cvData.experience.map((item) =>
+                            item.id === exp.id ? { ...item, employer: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, experience: updated });
+                        }}
+                        placeholder="যেমন: Tech Solutions Ltd."
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">শুরুর তারিখ</label>
+                      <input
+                        type="text"
+                        value={exp.startDate}
+                        onChange={(e) => {
+                          const updated = cvData.experience.map((item) =>
+                            item.id === exp.id ? { ...item, startDate: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, experience: updated });
+                        }}
+                        placeholder="যেমন: Jan 2022"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">শেষের তারিখ / বর্তমান</label>
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          disabled={exp.current}
+                          value={exp.current ? 'Present' : exp.endDate}
+                          onChange={(e) => {
+                            const updated = cvData.experience.map((item) =>
+                              item.id === exp.id ? { ...item, endDate: e.target.value } : item
+                            );
+                            setCvData({ ...cvData, experience: updated });
+                          }}
+                          placeholder="যেমন: Dec 2024"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 disabled:bg-slate-100"
+                        />
+                        <label className="flex items-center gap-1 font-semibold text-slate-700 shrink-0 text-xs cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={exp.current}
+                            onChange={(e) => {
+                              const updated = cvData.experience.map((item) =>
+                                item.id === exp.id ? { ...item, current: e.target.checked } : item
+                              );
+                              setCvData({ ...cvData, experience: updated });
+                            }}
+                            className="rounded"
+                          />
+                          <span>চলমান</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="font-semibold text-slate-700 block mb-1">অবস্থান (Location — ঐচ্ছিক)</label>
+                      <input
+                        type="text"
+                        value={exp.location}
+                        onChange={(e) => {
+                          const updated = cvData.experience.map((item) =>
+                            item.id === exp.id ? { ...item, location: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, experience: updated });
+                        }}
+                        placeholder="যেমন: Dhaka, Bangladesh"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1 text-xs">দায়িত্ব ও অর্জনসমূহ (প্রতি লাইনে একটি পয়েন্ট)</label>
+                    <textarea
+                      rows={3}
+                      value={exp.description}
+                      onChange={(e) => {
+                        const updated = cvData.experience.map((item) =>
+                          item.id === exp.id ? { ...item, description: e.target.value } : item
+                        );
+                        setCvData({ ...cvData, experience: updated });
+                      }}
+                      placeholder="• মূল দায়িত্ব এবং অর্জিত ফলাফল লিখুন..."
+                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-xs leading-relaxed"
+                    />
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            {/* 4. Education */}
+            <section className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                  ৪. শিক্ষাগত যোগ্যতা (Education)
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newEdu = {
+                      id: `edu-${Date.now()}`,
+                      degree: '',
+                      institution: '',
+                      fieldOfStudy: '',
+                      location: '',
+                      startDate: '',
+                      endDate: '',
+                      gpa: '',
+                    };
+                    setCvData({ ...cvData, education: [...cvData.education, newEdu] });
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>ডিগ্রি যোগ করুন</span>
+                </button>
+              </div>
+
+              {cvData.education.length === 0 && (
+                <p className="text-xs text-slate-500 py-2">
+                  আপনার সাম্প্রতিক ডিগ্রি বা শিক্ষাগত যোগ্যতা যোগ করুন।
+                </p>
+              )}
+
+              {cvData.education.map((edu, index) => (
+                <div key={edu.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-700">শিক্ষাগত যোগ্যতা #{index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCvData({ ...cvData, education: cvData.education.filter((item) => item.id !== edu.id) });
+                      }}
+                      className="p-1 rounded-lg text-rose-600 hover:bg-rose-50 cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">ডিগ্রির নাম</label>
+                      <input
+                        type="text"
+                        value={edu.degree}
+                        onChange={(e) => {
+                          const updated = cvData.education.map((item) =>
+                            item.id === edu.id ? { ...item, degree: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, education: updated });
+                        }}
+                        placeholder="যেমন: B.Sc. in Computer Science"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">বিভাগ / বিষয় (Field of Study)</label>
+                      <input
+                        type="text"
+                        value={edu.fieldOfStudy}
+                        onChange={(e) => {
+                          const updated = cvData.education.map((item) =>
+                            item.id === edu.id ? { ...item, fieldOfStudy: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, education: updated });
+                        }}
+                        placeholder="যেমন: Computer Science & Engineering"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">শিক্ষা প্রতিষ্ঠানের নাম</label>
+                      <input
+                        type="text"
+                        value={edu.institution}
+                        onChange={(e) => {
+                          const updated = cvData.education.map((item) =>
+                            item.id === edu.id ? { ...item, institution: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, education: updated });
+                        }}
+                        placeholder="যেমন: University of Dhaka"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">শুরুর বছর</label>
+                        <input
+                          type="text"
+                          value={edu.startDate}
+                          onChange={(e) => {
+                            const updated = cvData.education.map((item) =>
+                              item.id === edu.id ? { ...item, startDate: e.target.value } : item
+                            );
+                            setCvData({ ...cvData, education: updated });
+                          }}
+                          placeholder="2018"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-semibold text-slate-700 block mb-1">পাসের বছর</label>
+                        <input
+                          type="text"
+                          value={edu.endDate}
+                          onChange={(e) => {
+                            const updated = cvData.education.map((item) =>
+                              item.id === edu.id ? { ...item, endDate: e.target.value } : item
+                            );
+                            setCvData({ ...cvData, education: updated });
+                          }}
+                          placeholder="2022"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">GPA / CGPA (ঐচ্ছিক)</label>
+                      <input
+                        type="text"
+                        value={edu.gpa || ''}
+                        onChange={(e) => {
+                          const updated = cvData.education.map((item) =>
+                            item.id === edu.id ? { ...item, gpa: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, education: updated });
+                        }}
+                        placeholder="যেমন: 3.85 / 4.00"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-semibold text-slate-700 block mb-1">অবস্থান (ঐচ্ছিক)</label>
+                      <input
+                        type="text"
+                        value={edu.location}
+                        onChange={(e) => {
+                          const updated = cvData.education.map((item) =>
+                            item.id === edu.id ? { ...item, location: e.target.value } : item
+                          );
+                          setCvData({ ...cvData, education: updated });
+                        }}
+                        placeholder="যেমন: Dhaka"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            {/* 5. Skills & Languages (Inline inputs, zero prompt()) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Skills */}
+              <section className="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
+                <h3 className="font-bold text-slate-900 text-sm pb-2 border-b border-slate-100">
+                  ৫. দক্ষতাসমূহ (Skills)
+                </h3>
+
+                <div className="flex gap-2 text-xs">
+                  <input
+                    type="text"
+                    value={newSkillName}
+                    onChange={(e) => setNewSkillName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddSkill();
+                      }
+                    }}
+                    placeholder="যেমন: React, Excel, Project Management"
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                  <select
+                    value={newSkillLevel}
+                    onChange={(e) => setNewSkillLevel(e.target.value)}
+                    className="px-2 py-2 rounded-xl border border-slate-300 bg-white text-xs"
+                  >
+                    <option value="Expert">Expert</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Beginner">Beginner</option>
+                  </select>
                   <button
                     type="button"
-                    onClick={() => {
-                      setCvData({ ...cvData, education: cvData.education.filter((item) => item.id !== edu.id) });
-                    }}
-                    className="p-1 rounded-lg text-rose-600 hover:bg-rose-50 cursor-pointer"
+                    onClick={handleAddSkill}
+                    className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold cursor-pointer shrink-0"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    যোগ
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">ডিগ্রির নাম</label>
-                    <input
-                      type="text"
-                      value={edu.degree}
-                      onChange={(e) => {
-                        const updated = cvData.education.map((item) =>
-                          item.id === edu.id ? { ...item, degree: e.target.value } : item
-                        );
-                        setCvData({ ...cvData, education: updated });
-                      }}
-                      placeholder="যেমন: B.Sc. in CSE"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">শিক্ষা প্রতিষ্ঠানের নাম</label>
-                    <input
-                      type="text"
-                      value={edu.institution}
-                      onChange={(e) => {
-                        const updated = cvData.education.map((item) =>
-                          item.id === edu.id ? { ...item, institution: e.target.value } : item
-                        );
-                        setCvData({ ...cvData, education: updated });
-                      }}
-                      placeholder="যেমন: ঢাকা বিশ্ববিদ্যালয়"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">পাসের বছর / সময়কাল</label>
-                    <input
-                      type="text"
-                      value={edu.endDate}
-                      onChange={(e) => {
-                        const updated = cvData.education.map((item) =>
-                          item.id === edu.id ? { ...item, endDate: e.target.value } : item
-                        );
-                        setCvData({ ...cvData, education: updated });
-                      }}
-                      placeholder="যেমন: ২০১৬ - ২০২০"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">সিজিপিএ / গ্রেড (ঐচ্ছিক)</label>
-                    <input
-                      type="text"
-                      value={edu.gpa || ''}
-                      onChange={(e) => {
-                        const updated = cvData.education.map((item) =>
-                          item.id === edu.id ? { ...item, gpa: e.target.value } : item
-                        );
-                        setCvData({ ...cvData, education: updated });
-                      }}
-                      placeholder="যেমন: ৩.৮৫"
-                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Skills & Languages */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Skills */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
-              <div className="flex justify-between items-center pb-2 border-b">
-                <h3 className="font-bold text-slate-900 text-sm">💡 ৫. দক্ষতাসমূহ (Skills)</h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const skName = prompt('নতুন স্কিল লিখুন:');
-                    if (skName && skName.trim()) {
-                      const newSk = { id: `sk-${Date.now()}`, name: skName.trim(), category: 'technical' as const };
-                      setCvData({ ...cvData, skills: [...cvData.skills, newSk] });
-                    }
-                  }}
-                  className="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-bold cursor-pointer"
-                >
-                  + যোগ করুন
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2 pt-1">
-                {cvData.skills.map((sk) => (
-                  <span
-                    key={sk.id}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800 text-xs font-semibold border border-slate-200"
-                  >
-                    <span>{sk.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => setCvData({ ...cvData, skills: cvData.skills.filter((s) => s.id !== sk.id) })}
-                      className="text-slate-400 hover:text-rose-600"
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {cvData.skills.map((sk) => (
+                    <span
+                      key={sk.id}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-xs font-medium border border-slate-200"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Languages */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
-              <div className="flex justify-between items-center pb-2 border-b">
-                <h3 className="font-bold text-slate-900 text-sm">🌐 ৬. ভাষা (Languages)</h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const lName = prompt('ভাষার নাম ও দক্ষতা লিখুন (যেমন: English - Fluent):');
-                    if (lName && lName.trim()) {
-                      const newL = { id: `lang-${Date.now()}`, language: lName.trim(), proficiency: 'Fluent' };
-                      setCvData({ ...cvData, languages: [...cvData.languages, newL] });
-                    }
-                  }}
-                  className="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-bold cursor-pointer"
-                >
-                  + যোগ করুন
-                </button>
-              </div>
-
-              <div className="space-y-1.5 pt-1 text-xs">
-                {cvData.languages.map((lg) => (
-                  <div key={lg.id} className="flex justify-between items-center p-2 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="font-semibold text-slate-800">{lg.language}</span>
-                    <button
-                      type="button"
-                      onClick={() => setCvData({ ...cvData, languages: cvData.languages.filter((l) => l.id !== lg.id) })}
-                      className="text-rose-500 hover:text-rose-700 font-bold"
-                    >
-                      মুছুন
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </main>
-      )}
-
-      {/* ================= TAB 3: LIVE PREVIEW & CONTROLS ================= */}
-      {activeTab === 'preview' && (
-        <main className="max-w-6xl mx-auto px-4 py-6 space-y-4">
-          {/* Preview Controls Bar */}
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs font-bold print:hidden">
-            <div className="flex items-center flex-wrap gap-2.5">
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500">বর্তমান টেমপ্লেট:</span>
-                <span className="text-slate-900 font-black">
-                  #{currentTemplate.number}. {currentTemplate.nameBn}
-                </span>
-              </div>
-
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black border border-emerald-200">
-                প্রফেশনাল টেমপ্লেট
-              </span>
-            </div>
-
-            {/* Direct Edit Button, Zoom & Actions */}
-            <div className="flex items-center flex-wrap gap-2">
-              {/* Prominent Pencil Edit Button */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('editor')}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-rose-200 active:scale-95"
-                title="সিভির যেকোনো তথ্য বা সেকশন এডিট করতে এখানে ক্লিক করুন"
-              >
-                <Pencil className="w-4 h-4 text-white" />
-                <span>✏️ এই সিভি এডিট করুন</span>
-              </button>
-
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setZoomLevel((z) => Math.max(0.6, z - 0.1))}
-                  className="p-1 rounded-lg hover:bg-white text-slate-700 cursor-pointer"
-                  title="জুম আউট"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </button>
-                <span className="px-2 text-slate-600 font-mono text-[11px]">{Math.round(zoomLevel * 100)}%</span>
-                <button
-                  type="button"
-                  onClick={() => setZoomLevel((z) => Math.min(1.4, z + 0.1))}
-                  className="p-1 rounded-lg hover:bg-white text-slate-700 cursor-pointer"
-                  title="জুম ইন"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={handlePrintCV}
-                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-                title="A4 সাইজে প্রিন্ট করুন"
-              >
-                <Printer className="w-4 h-4" />
-                <span>প্রিন্ট</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDownloadDOCX}
-                className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-                title="Word (.docx) ফাইল হিসেবে ডাউনলোড করুন"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>DOCX ডাউনলোড</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDownloadPDF}
-                disabled={isDownloadingPdf}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-200 disabled:opacity-50"
-                title="হাই-কোয়ালিটি PDF ফাইল হিসেবে নামান"
-              >
-                <Download className="w-4 h-4" />
-                <span>{isDownloadingPdf ? 'তৈরি হচ্ছে...' : 'PDF ডাউনলোড'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* CV Document Container with Floating Pencil Button */}
-          <div className="relative overflow-auto py-8 bg-slate-200/80 rounded-3xl border border-slate-300 flex justify-center p-4">
-            {/* Floating Quick Edit Pencil Button */}
-            <div className="absolute top-4 right-6 z-20 print:hidden">
-              <button
-                type="button"
-                onClick={() => setActiveTab('editor')}
-                className="px-4 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-900 text-white font-bold text-xs shadow-2xl backdrop-blur-md flex items-center gap-2 cursor-pointer transition hover:scale-105 border border-white/20 active:scale-95"
-                title="সিভির যেকোনো তথ্য বা সেকশন এডিট করতে এখানে ক্লিক করুন"
-              >
-                <Pencil className="w-4 h-4 text-rose-400 animate-pulse" />
-                <span>✏️ তথ্য এডিট করুন</span>
-              </button>
-            </div>
-
-            <CVRenderer data={cvData} template={currentTemplate} isWatermarked={false} scale={zoomLevel} />
-          </div>
-        </main>
-      )}
-
-      {/* ================= TAB 4: QUALITY SCORE & ATS CHECKER ================= */}
-      {activeTab === 'quality' && (
-        <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center gap-6">
-            <div className="w-32 h-32 rounded-full border-8 border-rose-500 flex flex-col items-center justify-center shrink-0 shadow-inner">
-              <span className="text-3xl font-black text-slate-900">{qualityResult.score}%</span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">সিভি স্কোর</span>
-            </div>
-
-            <div className="space-y-2 text-center sm:text-left">
-              <h2 className="text-xl font-bold text-slate-900">
-                {qualityResult.score >= 85
-                  ? '🌟 চমৎকার! আপনার সিভি চাকরির আবেদনের জন্য প্রস্তুত।'
-                  : qualityResult.score >= 60
-                  ? '👍 মোটামুটি ভালো, তবে আরও কিছু তথ্য যোগ করলে ইন্টারভিউ কল পাওয়ার সম্ভাবনা বাড়বে।'
-                  : '⚠️ সিভি এখনও অসম্পূর্ণ, অনুগ্রহ করে চিহ্নিত ক্ষেত্রগুলো পূরণ করুন।'}
-              </h2>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                এই স্কোরটি একটি এডিটরিয়াল চেকলিস্ট এবং আন্তর্জাতিক রিক্রুটারদের সেরা প্র্যাকটিস অনুকরণে প্রস্তুত করা হয়েছে।
-              </p>
-            </div>
-          </div>
-
-          {/* Issues and Improvement Suggestions */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <h3 className="text-base font-bold text-slate-900 pb-2 border-b">
-              উন্নতির জন্য চেকলিস্ট ({qualityResult.issues.length}টি পরামর্শ)
-            </h3>
-
-            {qualityResult.issues.length === 0 ? (
-              <div className="p-4 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-bold flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <span>সবগুলো গুরুত্বপূর্ণ তথ্য সঠিকভাবে পূরণ করা হয়েছে!</span>
-              </div>
-            ) : (
-              <div className="space-y-2 text-xs">
-                {qualityResult.issues.map((iss, i) => (
-                  <div
-                    key={i}
-                    className={`p-3 rounded-xl border flex items-center gap-3 ${
-                      iss.type === 'error'
-                        ? 'bg-rose-50/70 border-rose-200 text-rose-900'
-                        : iss.type === 'warning'
-                        ? 'bg-amber-50/70 border-amber-200 text-amber-900'
-                        : 'bg-sky-50/70 border-sky-200 text-sky-900'
-                    }`}
-                  >
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                    <span>{iss.messageBn}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </main>
-      )}
-
-      {/* ================= TAB 5: PAYMENTS & UNLOCKED TEMPLATES ================= */}
-      {activeTab === 'payments' && (
-        <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 pb-2 border-b">
-              <ShieldCheck className="w-5 h-5 text-emerald-600" />
-              <span>আপনার ক্রয়কৃত ও আনলকড প্রিমিয়াম টেমপ্লেটসমূহ ({unlockedTemplates.length}টি)</span>
-            </h2>
-
-            {unlockedTemplates.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-xs">
-                আপনি এখনও কোনো প্রিমিয়াম টেমপ্লেট আনলক করেননি। ৮০টি এক্সক্লুসিভ টেমপ্লেটের যেকোনোটি মাত্র ৳১০-এ আনলক করতে পারেন।
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                {unlockedTemplates.map((tid) => {
-                  const t = CV_TEMPLATES.find((x) => x.id === tid);
-                  if (!t) return null;
-                  return (
-                    <div key={tid} className="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-slate-900">#{t.number}. {t.nameBn}</div>
-                        <div className="text-[11px] text-slate-600">{t.nameEn} • ওয়াটারমার্ক মুক্ত</div>
-                      </div>
+                      <span>{sk.name}</span>
                       <button
                         type="button"
-                        onClick={() => {
-                          handleSelectTemplate(t.id, 'preview');
-                        }}
-                        className="px-3 py-1 rounded-xl bg-slate-900 text-white font-bold text-[11px] cursor-pointer"
+                        onClick={() => setCvData({ ...cvData, skills: cvData.skills.filter((s) => s.id !== sk.id) })}
+                        className="text-slate-400 hover:text-rose-600 font-bold cursor-pointer"
+                        aria-label={`Remove ${sk.name}`}
                       >
-                        ব্যবহার করুন
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              {/* Languages */}
+              <section className="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
+                <h3 className="font-bold text-slate-900 text-sm pb-2 border-b border-slate-100">
+                  ৬. ভাষা (Languages)
+                </h3>
+
+                <div className="flex gap-2 text-xs">
+                  <input
+                    type="text"
+                    value={newLangName}
+                    onChange={(e) => setNewLangName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddLanguage();
+                      }
+                    }}
+                    placeholder="যেমন: Bangla, English"
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                  <select
+                    value={newLangProficiency}
+                    onChange={(e) => setNewLangProficiency(e.target.value)}
+                    className="px-2 py-2 rounded-xl border border-slate-300 bg-white text-xs"
+                  >
+                    <option value="Native">Native</option>
+                    <option value="Fluent">Fluent</option>
+                    <option value="Professional">Professional</option>
+                    <option value="Intermediate">Intermediate</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleAddLanguage}
+                    className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold cursor-pointer shrink-0"
+                  >
+                    যোগ
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 pt-1 text-xs">
+                  {cvData.languages.map((lg) => (
+                    <div key={lg.id} className="flex justify-between items-center p-2 rounded-xl bg-slate-50 border border-slate-200">
+                      <span className="font-semibold text-slate-800">
+                        {lg.language} {lg.proficiency ? `(${lg.proficiency})` : ''}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCvData({ ...cvData, languages: cvData.languages.filter((l) => l.id !== lg.id) })}
+                        className="text-rose-600 hover:underline font-semibold cursor-pointer"
+                      >
+                        মুছুন
                       </button>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              </section>
+            </div>
 
-          {/* Transactions Record */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <h3 className="text-base font-bold text-slate-900 pb-2 border-b">পেমেন্ট হিস্ট্রি ও রশিদ</h3>
-            {transactions.length === 0 ? (
-              <div className="text-center py-6 text-slate-400 text-xs">কোনো পেমেন্ট রেকর্ড নেই।</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b text-slate-500 font-bold">
-                      <th className="pb-2">অর্ডার আইডি</th>
-                      <th className="pb-2">টেমপ্লেট</th>
-                      <th className="pb-2">মাধ্যম</th>
-                      <th className="pb-2">TrxID</th>
-                      <th className="pb-2">টাকা</th>
-                      <th className="pb-2">স্ট্যাটাস</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {transactions.map((tx, idx) => (
-                      <tr key={idx} className="text-slate-700">
-                        <td className="py-2.5 font-mono font-bold text-slate-900">{tx.orderId}</td>
-                        <td className="py-2.5">{tx.templateName}</td>
-                        <td className="py-2.5 uppercase font-bold">{tx.provider}</td>
-                        <td className="py-2.5 font-mono">{tx.trxId}</td>
-                        <td className="py-2.5 font-bold text-emerald-700">৳{tx.amount}</td>
-                        <td className="py-2.5">
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                            যাচাইকৃত
-                          </span>
-                        </td>
-                      </tr>
+            {/* 7. Optional Additional Sections: Projects, Certifications, References */}
+            <section className="bg-white rounded-2xl p-5 border border-slate-200 space-y-4">
+              <button
+                type="button"
+                onClick={() => setShowAdditionalSections((v) => !v)}
+                className="w-full flex items-center justify-between text-sm font-bold text-slate-900 cursor-pointer"
+              >
+                <span>৭. প্রজেক্ট, সার্টিফিকেশন ও রেফারেন্স (ঐচ্ছিক)</span>
+                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${showAdditionalSections ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showAdditionalSections && (
+                <div className="pt-3 border-t border-slate-100 space-y-6 text-xs">
+                  {/* Projects */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-slate-800">প্রজেক্টসমূহ (Projects)</h4>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCvData({
+                            ...cvData,
+                            projects: [
+                              ...cvData.projects,
+                              { id: `prj-${Date.now()}`, name: '', role: '', link: '', description: '' },
+                            ],
+                          })
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-semibold cursor-pointer"
+                      >
+                        + প্রজেক্ট যোগ করুন
+                      </button>
+                    </div>
+                    {cvData.projects.map((prj) => (
+                      <div key={prj.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-slate-700">প্রজেক্ট বিবরণ</span>
+                          <button
+                            type="button"
+                            onClick={() => setCvData({ ...cvData, projects: cvData.projects.filter((p) => p.id !== prj.id) })}
+                            className="text-rose-600 font-semibold cursor-pointer"
+                          >
+                            মুছুন
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={prj.name}
+                            onChange={(e) =>
+                              setCvData({
+                                ...cvData,
+                                projects: cvData.projects.map((p) => (p.id === prj.id ? { ...p, name: e.target.value } : p)),
+                              })
+                            }
+                            placeholder="প্রজেক্টের নাম"
+                            className="px-3 py-2 rounded-lg bg-white border border-slate-300"
+                          />
+                          <input
+                            type="text"
+                            value={prj.role}
+                            onChange={(e) =>
+                              setCvData({
+                                ...cvData,
+                                projects: cvData.projects.map((p) => (p.id === prj.id ? { ...p, role: e.target.value } : p)),
+                              })
+                            }
+                            placeholder="আপনার ভূমিকা (Role)"
+                            className="px-3 py-2 rounded-lg bg-white border border-slate-300"
+                          />
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={prj.description}
+                          onChange={(e) =>
+                            setCvData({
+                              ...cvData,
+                              projects: cvData.projects.map((p) => (p.id === prj.id ? { ...p, description: e.target.value } : p)),
+                            })
+                          }
+                          placeholder="সংক্ষিপ্ত বিবরণ..."
+                          className="w-full p-2 rounded-lg bg-white border border-slate-300"
+                        />
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+
+                  {/* Certifications */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-slate-800">সার্টিফিকেশন ও প্রশিক্ষণ (Certifications)</h4>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCvData({
+                            ...cvData,
+                            certifications: [
+                              ...cvData.certifications,
+                              { id: `cert-${Date.now()}`, name: '', issuer: '', date: '' },
+                            ],
+                          })
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-semibold cursor-pointer"
+                      >
+                        + সার্টিফিকেট যোগ করুন
+                      </button>
+                    </div>
+                    {cvData.certifications.map((cert) => (
+                      <div key={cert.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                        <input
+                          type="text"
+                          value={cert.name}
+                          onChange={(e) =>
+                            setCvData({
+                              ...cvData,
+                              certifications: cvData.certifications.map((c) => (c.id === cert.id ? { ...c, name: e.target.value } : c)),
+                            })
+                          }
+                          placeholder="কোর্স বা সার্টিফিকেটের নাম"
+                          className="sm:col-span-2 px-3 py-2 rounded-lg bg-white border border-slate-300"
+                        />
+                        <input
+                          type="text"
+                          value={cert.issuer}
+                          onChange={(e) =>
+                            setCvData({
+                              ...cvData,
+                              certifications: cvData.certifications.map((c) => (c.id === cert.id ? { ...c, issuer: e.target.value } : c)),
+                            })
+                          }
+                          placeholder="প্রতিষ্ঠান"
+                          className="px-3 py-2 rounded-lg bg-white border border-slate-300"
+                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={cert.date}
+                            onChange={(e) =>
+                              setCvData({
+                                ...cvData,
+                                certifications: cvData.certifications.map((c) => (c.id === cert.id ? { ...c, date: e.target.value } : c)),
+                              })
+                            }
+                            placeholder="সাল"
+                            className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCvData({
+                                ...cvData,
+                                certifications: cvData.certifications.filter((c) => c.id !== cert.id),
+                              })
+                            }
+                            className="text-rose-600 font-semibold cursor-pointer shrink-0"
+                          >
+                            মুছুন
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* References */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-slate-800">রেফারেন্স (References)</h4>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCvData({
+                            ...cvData,
+                            references: [
+                              ...cvData.references,
+                              { id: `ref-${Date.now()}`, name: '', jobTitle: '', company: '', email: '', phone: '' },
+                            ],
+                          })
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-semibold cursor-pointer"
+                      >
+                        + রেফারেন্স যোগ করুন
+                      </button>
+                    </div>
+                    {cvData.references.map((ref) => (
+                      <div key={ref.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-slate-700">রেফারেন্স বিবরণ</span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCvData({ ...cvData, references: cvData.references.filter((r) => r.id !== ref.id) })
+                            }
+                            className="text-rose-600 font-semibold cursor-pointer"
+                          >
+                            মুছুন
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            value={ref.name}
+                            onChange={(e) =>
+                              setCvData({
+                                ...cvData,
+                                references: cvData.references.map((r) => (r.id === ref.id ? { ...r, name: e.target.value } : r)),
+                              })
+                            }
+                            placeholder="নাম"
+                            className="px-3 py-2 rounded-lg bg-white border border-slate-300"
+                          />
+                          <input
+                            type="text"
+                            value={ref.jobTitle}
+                            onChange={(e) =>
+                              setCvData({
+                                ...cvData,
+                                references: cvData.references.map((r) => (r.id === ref.id ? { ...r, jobTitle: e.target.value } : r)),
+                              })
+                            }
+                            placeholder="পদবী"
+                            className="px-3 py-2 rounded-lg bg-white border border-slate-300"
+                          />
+                          <input
+                            type="text"
+                            value={ref.company}
+                            onChange={(e) =>
+                              setCvData({
+                                ...cvData,
+                                references: cvData.references.map((r) => (r.id === ref.id ? { ...r, company: e.target.value } : r)),
+                              })
+                            }
+                            placeholder="প্রতিষ্ঠান"
+                            className="px-3 py-2 rounded-lg bg-white border border-slate-300"
+                          />
+                          <input
+                            type="email"
+                            value={ref.email}
+                            onChange={(e) =>
+                              setCvData({
+                                ...cvData,
+                                references: cvData.references.map((r) => (r.id === ref.id ? { ...r, email: e.target.value } : r)),
+                              })
+                            }
+                            placeholder="ইমেইল"
+                            className="px-3 py-2 rounded-lg bg-white border border-slate-300"
+                          />
+                          <input
+                            type="text"
+                            value={ref.phone}
+                            onChange={(e) =>
+                              setCvData({
+                                ...cvData,
+                                references: cvData.references.map((r) => (r.id === ref.id ? { ...r, phone: e.target.value } : r)),
+                              })
+                            }
+                            placeholder="ফোন"
+                            className="px-3 py-2 rounded-lg bg-white border border-slate-300"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* Primary Generate & Preview CTA */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-xs text-slate-600">
+                <div className="font-bold text-slate-900">সব তথ্য পূরণ হলে চূড়ান্ত প্রিভিউ দেখুন</div>
+                <div>প্রিভিউ পেজ থেকেই PDF, প্রিন্ট ও DOCX ডাউনলোড করতে পারবেন।</div>
               </div>
+
+              <button
+                type="button"
+                onClick={handleCompleteCV}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Eye className="w-4 h-4" />
+                <span>CV তৈরি করুন ও প্রিভিউ দেখুন</span>
+              </button>
+            </div>
+          </main>
+        )}
+
+        {/* ================= STEP 3: FINAL CV PREVIEW & EXPORTS (ONLY AFTER CREATION) ================= */}
+        {activeTab === 'preview' && (
+          <main className="max-w-6xl mx-auto px-4 py-6 space-y-4">
+            {!canShowPreviewExports ? (
+              <div className="max-w-xl mx-auto bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-4">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mx-auto">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div className="space-y-1.5">
+                  <h2 className="text-lg font-bold text-slate-900">এখনও কোনো CV সম্পন্ন হয়নি</h2>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    PDF ডাউনলোড ও প্রিন্ট করতে প্রথমে একটি টেমপ্লেট বেছে নিয়ে আপনার ব্যক্তিগত, শিক্ষাগত ও পেশাদার তথ্য পূরণ করুন।
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('templates')}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold cursor-pointer"
+                  >
+                    ১. টেমপ্লেট দেখুন
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('editor')}
+                    className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold cursor-pointer"
+                  >
+                    ২. তথ্য লিখুন
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Final Action Toolbar — Visible ONLY after CV is created */}
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-semibold print:hidden">
+                  <div className="flex items-center flex-wrap gap-2.5">
+                    <select
+                      value={selectedTemplateId}
+                      onChange={(e) => setSelectedTemplateId(e.target.value)}
+                      className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 max-w-[230px]"
+                      aria-label="টেমপ্লেট পরিবর্তন"
+                    >
+                      {CV_TEMPLATES.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          #{t.number.toString().padStart(2, '0')} · {t.nameBn}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.max(0.6, Number((z - 0.1).toFixed(2))))}
+                        className="p-1 rounded-lg hover:bg-white text-slate-700 cursor-pointer"
+                        title="জুম আউট"
+                      >
+                        <ZoomOut className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="px-2 text-slate-600 font-mono text-[11px]">{Math.round(zoomLevel * 100)}%</span>
+                      <button
+                        type="button"
+                        onClick={() => setZoomLevel((z) => Math.min(1.3, Number((z + 0.1).toFixed(2))))}
+                        className="p-1 rounded-lg hover:bg-white text-slate-700 cursor-pointer"
+                        title="জুম ইন"
+                      >
+                        <ZoomIn className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Relevant Post-Creation Actions Only: Edit CV, DOCX, Print, PDF Download */}
+                  <div className="flex items-center flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('editor')}
+                      className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>এডিট করুন</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadDOCX}
+                      className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <span>DOCX ডাউনলোড</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handlePrintCV}
+                      className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>প্রিন্ট</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadPDF}
+                      disabled={isDownloadingPdf}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{isDownloadingPdf ? 'তৈরি হচ্ছে...' : 'PDF ডাউনলোড'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Clean Final A4 Document Preview */}
+                <div className="overflow-auto py-8 bg-slate-200/80 rounded-2xl border border-slate-300 flex justify-center p-4">
+                  <CVRenderer data={cvData} template={currentTemplate} isWatermarked={false} scale={zoomLevel} />
+                </div>
+              </>
             )}
-          </div>
-        </main>
-      )}
+          </main>
+        )}
 
-      {/* ================= TAB 6: JOB CV MAKING HELPER ================= */}
-      {activeTab === 'job-helper' && (
-        <main className="max-w-7xl mx-auto px-4 py-6">
-          <JobCVHelperWorkspace
-            initialView={helperInitialView}
-            onApplyToMainEditor={(nextData, tmplId, targetTab) => {
-              setCvData(nextData);
-              setSelectedTemplateId(tmplId);
-              setActiveTab(targetTab || 'editor');
-              onShowToast('CV তথ্য মূল এডিটরে লোড হয়েছে!', '✏️');
-            }}
-            onTriggerPdfDownload={(nextData, tmplId) => {
-              setCvData(nextData);
-              setSelectedTemplateId(tmplId);
-              setTimeout(() => {
-                handleDownloadPDF();
-              }, 160);
-            }}
-            onTriggerPrint={(nextData, tmplId) => {
-              setCvData(nextData);
-              setSelectedTemplateId(tmplId);
-              setTimeout(() => {
-                handlePrintCV();
-              }, 160);
-            }}
-            onShowToast={onShowToast}
-          />
-        </main>
-      )}
-
-      {/* ================= BKASH & NAGAD PAYMENT MODAL (৳10) ================= */}
-      {isPaymentModalOpen && currentOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
-                  নিরাপদ পেমেন্ট গেটওয়ে
-                </span>
-                <h3 className="text-lg font-black text-slate-900 mt-1">
-                  {currentOrder.template.nameBn} আনলক করুন
-                </h3>
-                <p className="text-xs text-slate-500">মূল্য: মাত্র ৳৫ (পাঁচ টাকা) • অফিশিয়াল A4 ডাউনলোড</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsPaymentModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Provider Tabs (Only bKash Merchant) */}
-            <div className="text-xs font-bold">
-              <div className="py-2.5 px-4 rounded-xl border border-pink-500 bg-pink-50 text-pink-700 ring-2 ring-pink-200 flex items-center justify-center gap-2">
-                <span>বিকাশ মার্চেন্ট পেমেন্ট (bKash Payment)</span>
-              </div>
-            </div>
-
-            {/* Instructions Box */}
-            <div className="p-3.5 rounded-2xl bg-pink-50/50 border border-pink-200 space-y-2 text-xs">
-              <div className="font-bold text-pink-900">মার্চেন্ট পেমেন্ট করার নিয়ম:</div>
-              <ol className="list-decimal list-inside space-y-1 text-slate-700 leading-relaxed text-[11px]">
-                <li>আপনার বিকাশ অ্যাপে প্রবেশ করে <strong>Payment (পেমেন্ট)</strong> অপশন নির্বাচন করুন (Send Money হবে না)।</li>
-                <li>
-                  মার্চেন্ট নম্বর: <strong>01868775577</strong> এ <strong>৳৫</strong> পেমেন্ট করুন।
-                </li>
-                <li>পেমেন্ট শেষে পাওয়া <strong>TrxID</strong> নিচে দিয়ে যাচাই করুন।</li>
-              </ol>
-            </div>
-
-            {/* TrxID Form */}
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">প্রেরকের মোবাইল নম্বর</label>
-                <input
-                  type="text"
-                  value={paymentPhone}
-                  onChange={(e) => setPaymentPhone(e.target.value)}
-                  placeholder="01XXXXXXXXX"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">ট্রানজেকশন আইডি (TrxID) *</label>
-                <input
-                  type="text"
-                  value={paymentTrxId}
-                  onChange={(e) => setPaymentTrxId(e.target.value)}
-                  placeholder="যেমন: 9J87KLM45"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono uppercase font-bold"
-                />
-              </div>
-            </div>
-
-            {/* Confirm & Verify Button */}
-            <div className="pt-2">
-              <button
-                type="button"
-                disabled={paymentPending}
-                onClick={handleVerifyPayment}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-200 disabled:opacity-50"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span>{paymentPending ? 'পেমেন্ট যাচাই করা হচ্ছে...' : 'পেমেন্ট সম্পন্ন করুন ও আনলক করুন'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        {/* ================= AI JOB CV HELPER WORKSPACE ================= */}
+        {activeTab === 'job-helper' && (
+          <main className="max-w-7xl mx-auto px-4 py-6">
+            <JobCVHelperWorkspace
+              initialView={helperInitialView}
+              onApplyToMainEditor={(nextData, tmplId, targetTab) => {
+                setCvData(nextData);
+                setSelectedTemplateId(tmplId);
+                if (targetTab === 'preview' && nextData.personal.fullName.trim()) {
+                  setIsCvCompleted(true);
+                  setActiveTab('preview');
+                } else {
+                  setActiveTab('editor');
+                }
+                onShowToast('CV তথ্য মূল এডিটরে লোড হয়েছে!', '✏️');
+              }}
+              onTriggerPdfDownload={(nextData, tmplId) => {
+                const matchedTmpl = CV_TEMPLATES.find((t) => t.id === tmplId) || CV_TEMPLATES[0];
+                cvDataRef.current = nextData;
+                currentTemplateRef.current = matchedTmpl;
+                setCvData(nextData);
+                setSelectedTemplateId(tmplId);
+                setIsCvCompleted(true);
+                setTimeout(() => {
+                  handleDownloadPDF();
+                }, 180);
+              }}
+              onTriggerPrint={(nextData, tmplId) => {
+                const matchedTmpl = CV_TEMPLATES.find((t) => t.id === tmplId) || CV_TEMPLATES[0];
+                cvDataRef.current = nextData;
+                currentTemplateRef.current = matchedTmpl;
+                setCvData(nextData);
+                setSelectedTemplateId(tmplId);
+                setIsCvCompleted(true);
+                setTimeout(() => {
+                  handlePrintCV();
+                }, 180);
+              }}
+              onShowToast={onShowToast}
+            />
+          </main>
+        )}
       </div>
 
-      {/* ================= DEDICATED PRINT CONTAINER (ALWAYS IN DOM, PRINT MEDIA ONLY) ================= */}
+      {/* ================= DEDICATED PRINT CONTAINER (PRINT MEDIA ONLY) ================= */}
       <div id="cv-print-isolated-root" className="hidden print:block w-full">
         <CVRenderer
           data={cvData}
@@ -2035,11 +2330,11 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
         />
       </div>
 
-      {/* ================= OFF-SCREEN PDF EXPORT TARGET (ALWAYS IN DOM, EXACT 794px A4) ================= */}
+      {/* ================= OFF-SCREEN PDF EXPORT TARGET (EXACT 794px A4) ================= */}
       <div
         id="cv-export-canvas-target"
         className="fixed -left-[9999px] top-0 pointer-events-none opacity-100 z-[-100] print:hidden"
-        style={{ width: '794px', minHeight: '1123px', backgroundColor: currentTemplate.bgColor || '#ffffff' }}
+        style={{ width: '794px', backgroundColor: currentTemplate.bgColor || '#ffffff' }}
         aria-hidden="true"
       >
         <CVRenderer
@@ -2052,11 +2347,11 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
         />
       </div>
 
-      {/* 5 BDT & Mandatory Auth Download Paywall */}
+      {/* Download Paywall (Preserved) */}
       <DownloadPaywallModal
         isOpen={isPaywallOpen}
         onClose={() => setIsPaywallOpen(false)}
-        documentTitle={`The MoSaFa CV - ${cvData.personal.fullName || 'প্রফেশনাল জীবনবৃত্তান্ত'}`}
+        documentTitle={`CV - ${cvData.personal.fullName || 'Resume'}`}
         documentTypeTag={`টেমপ্লেট: ${currentTemplate.nameBn}`}
         priceBDT={5}
         onConfirmDownload={() => {
@@ -2068,13 +2363,14 @@ export const CVMaker: React.FC<CVMakerProps> = ({ onBackToHub, onShowToast }) =>
         }}
       />
 
-      {/* Master CV Profile Modal */}
+      {/* Master CV Profile Modal (Preserved) */}
       <CVMasterProfileModal
         isOpen={isMasterProfileModalOpen}
         onClose={() => setIsMasterProfileModalOpen(false)}
         onSaveAndApply={(profileData) => {
           setCvData(profileData);
           setHasMasterProfile(true);
+          setValidationError('');
         }}
         onShowToast={onShowToast}
       />

@@ -43,6 +43,7 @@ export const CVMasterProfileModal: React.FC<CVMasterProfileModalProps> = ({
   const [activeTab, setActiveTab] = useState<'personal' | 'summary' | 'experience' | 'education' | 'skills'>('personal');
   const [profile, setProfile] = useState<CVData>(INITIAL_EMPTY_CV_DATA);
   const [isSaved, setIsSaved] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
 
   // Load existing master profile or default with user credentials
   useEffect(() => {
@@ -239,12 +240,11 @@ export const CVMasterProfileModal: React.FC<CVMasterProfileModalProps> = ({
   };
 
   const handleReset = () => {
-    if (window.confirm('আপনি কি সব তথ্য মুছে খালি করতে চান?')) {
-      setProfile(INITIAL_EMPTY_CV_DATA);
-      localStorage.removeItem(MASTER_PROFILE_STORAGE_KEY);
-      setIsSaved(false);
-      onShowToast('প্রোফাইল তথ্য মুছে ফেলা হয়েছে।', '🗑️');
-    }
+    setProfile(INITIAL_EMPTY_CV_DATA);
+    localStorage.removeItem(MASTER_PROFILE_STORAGE_KEY);
+    setIsSaved(false);
+    setConfirmingReset(false);
+    onShowToast('প্রোফাইল তথ্য মুছে ফেলা হয়েছে।', '🗑️');
   };
 
   return (
@@ -814,14 +814,34 @@ export const CVMasterProfileModal: React.FC<CVMasterProfileModalProps> = ({
             >
               নমুনা ডাটা দিন
             </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="p-1.5 rounded-xl hover:bg-rose-100 text-rose-600 transition cursor-pointer"
-              title="সব তথ্য মুছুন"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
+            {confirmingReset ? (
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="text-rose-700 font-semibold">সব তথ্য মুছবেন?</span>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold cursor-pointer"
+                >
+                  হ্যাঁ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingReset(false)}
+                  className="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 font-bold cursor-pointer"
+                >
+                  না
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingReset(true)}
+                className="p-1.5 rounded-xl hover:bg-rose-100 text-rose-600 transition cursor-pointer"
+                title="সব তথ্য মুছুন"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

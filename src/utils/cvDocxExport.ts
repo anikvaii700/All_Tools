@@ -498,7 +498,7 @@ export async function exportCvToDocx(
   const a = document.createElement('a');
   const safeName = (personal.fullName || 'Resume').replace(/[^a-zA-Z0-9_\u0980-\u09FF]/g, '_');
   a.href = url;
-  a.download = `The_MoSaFa_CV_${safeName}.docx`;
+  a.download = `${safeName}_CV.docx`;
   document.body.appendChild(a);
   a.click();
   a.remove();

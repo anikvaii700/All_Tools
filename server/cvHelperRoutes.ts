@@ -821,7 +821,7 @@ STRICT GROUNDING RULES:
           ? 'Respond warmly in clear, professional English.'
           : 'Respond warmly and respectfully in natural, polite Bengali (আপনি সম্বোধন করে)। Keep technical/job terms bilingual where helpful.';
 
-      const systemInstruction = `You are an expert Career Consultant & CV Interviewer for "Job CV Making Helper" on tools.mosafabd.com.
+      const systemInstruction = `You are an expert Career Consultant & CV Interviewer.
 ${langPrompt}
 
 CRITICAL INTERVIEW RULES:

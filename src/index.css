@@ -131,7 +131,7 @@
     display: none !important;
   }
 
-  /* The MoSaFa CV Maker Dedicated Print Container */
+  /* CV Maker Dedicated Print Container */
   #cv-print-isolated-root {
     display: block !important;
     position: relative !important;
@@ -152,7 +152,7 @@
     padding: 0 !important;
     width: 100% !important;
     max-width: 210mm !important;
-    min-height: 297mm !important;
+    min-height: auto !important;
     transform: none !important;
     background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
@@ -164,6 +164,11 @@
     print-color-adjust: exact !important;
   }
 
+  .cv-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
   /* Fallback if user prints directly from live preview */
   #cv-render-document {
     box-shadow: none !important;
@@ -172,7 +177,7 @@
     padding: 0 !important;
     width: 100% !important;
     max-width: 210mm !important;
-    min-height: 297mm !important;
+    min-height: auto !important;
     transform: none !important;
     background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
