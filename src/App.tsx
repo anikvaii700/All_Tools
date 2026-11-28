@@ -1918,21 +1918,29 @@ export default function App() {
         onShowToast={showToast}
       />
 
-      {/* Hero Section — শুধু সার্চ অপশন ও টুলসের পাবলিক লিংক রাখা হয়েছে */}
-      <section className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-4 sm:pt-6 sm:pb-6 text-center w-full relative z-10">
-        <h1 className="text-[clamp(0.875rem,3.3vw,2.75rem)] font-extrabold text-slate-900 tracking-tight leading-tight whitespace-nowrap mx-auto">
+      {/* Homepage Hero — clear value proposition, responsive typography and quick access */}
+      <section className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-5 sm:pt-10 sm:pb-7 text-center w-full relative z-10">
+        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-white/90 px-3.5 py-1.5 text-[11px] sm:text-xs font-bold text-indigo-700 shadow-sm mb-4">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          বাংলাদেশের দৈনন্দিন কাজের স্মার্ট অনলাইন টুলস
+        </div>
+        <h1 className="max-w-4xl text-[clamp(1.5rem,4vw,2.75rem)] font-extrabold text-slate-900 tracking-tight leading-[1.25] mx-auto">
           আপনার প্রয়োজনীয় সকল{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600">
             অনলাইন টুলস
           </span>{' '}
           এক জায়গায়
         </h1>
+        <p className="max-w-2xl mx-auto mt-3 text-xs sm:text-sm leading-6 text-slate-600">
+          CV তৈরি, ছবি রিসাইজ, PDF সম্পাদনা, বাংলা টাইপিংসহ প্রয়োজনীয় কাজ করুন সহজে—একটি প্ল্যাটফর্ম থেকেই।
+        </p>
 
         {/* Search Bar */}
-        <div className="max-w-xl mx-auto mt-5 sm:mt-6 relative">
+        <div className="max-w-2xl mx-auto mt-5 sm:mt-6 relative">
           <div className="relative">
             <input
-              type="text"
+              type="search"
+              aria-label="অনলাইন টুলস খুঁজুন"
               value={searchQuery}
               onChange={(e) => {
                 const val = e.target.value;
@@ -1942,20 +1950,38 @@ export default function App() {
                   showToast('🔐 সিক্রেট কোড অ্যাক্টিভেটেড (ALL_OK_15): গল্পের ঘরে আপনাকে সরাসরি নিয়ে আসা হয়েছে!', '📚');
                 }
               }}
-              placeholder="টুল খুঁজুন... যেমন: নাম, পোস্টার, কুইজ, হিসাব, প্রেম, বয়স"
-              className="w-full pl-11 pr-10 py-3.5 rounded-2xl bg-white border border-slate-300 shadow-md shadow-slate-100 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
+              placeholder="কোন টুলটি খুঁজছেন? যেমন: CV Maker, ছবি রিসাইজ, PDF..."
+              className="w-full pl-12 pr-11 py-4 rounded-2xl bg-white border border-slate-200 shadow-lg shadow-slate-200/60 text-sm sm:text-base text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 transition"
             />
-            <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
+            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition cursor-pointer"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold transition cursor-pointer"
                 title="সার্চ লেখা মুছুন"
               >
                 ✕
               </button>
             )}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[11px] sm:text-xs">
+            <span className="font-semibold text-slate-500">জনপ্রিয়:</span>
+            {[
+              { id: 'cv-maker' as ToolId, label: 'CV Maker' },
+              { id: 'ultra-digital-studio' as ToolId, label: 'Photo Tools' },
+              { id: 'pdf-toolkit' as ToolId, label: 'PDF Tools' },
+              { id: 'typing-test' as ToolId, label: 'Bangla Typing Test' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => navigateToTool(item.id)}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 transition"
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -2208,6 +2234,9 @@ export default function App() {
               <h3 className="text-xs sm:text-sm md:text-[15px] font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors leading-snug line-clamp-2">
                 {tool.title}
               </h3>
+              <p className="mt-1.5 text-[10px] sm:text-[11px] leading-relaxed text-slate-500 line-clamp-2">
+                {tool.description}
+              </p>
             </a>
           ))}
         </div>
