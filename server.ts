@@ -1548,6 +1548,18 @@ Return ONLY a valid JSON array of 5 Bengali strings, like:
     return res.status(404).send('Robots not found');
   });
 
+  // Permanently removed tool: return HTTP 410 so search engines can drop the obsolete URL.
+  app.use((req, res, next) => {
+    const isRemovedPath = /^\/tools\/love-test\/?$/i.test(req.path);
+    const isRemovedLegacyQuery = (req.path === '/' || req.path === '/index.html') &&
+      String(req.query.tool || '').toLowerCase().trim() === 'love-test';
+    if (isRemovedPath || isRemovedLegacyQuery) {
+      res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+      return res.status(410).type('text/plain').send('This tool has been permanently removed.');
+    }
+    next();
+  });
+
   // Legacy URL compatibility redirect: /?tool=slug or /index.html?tool=slug -> /tools/slug (HTTP 301)
   app.use((req, res, next) => {
     if (req.method === 'GET' && (req.path === '/' || req.path === '/index.html') && req.query.tool) {
