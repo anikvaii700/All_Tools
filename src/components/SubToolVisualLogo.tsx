@@ -739,6 +739,27 @@ export const SubToolVisualLogo: React.FC<SubToolVisualLogoProps> = ({
         </svg>
       );
 
+    case 'news-card':
+      return (
+        <svg viewBox="0 0 120 120" className={className} aria-hidden="true">
+          <defs>
+            <linearGradient id="stNewsCard" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#0f766e" />
+            </linearGradient>
+          </defs>
+          <rect x="8" y="8" width="104" height="104" rx="26" fill="url(#stNewsCard)" />
+          <rect x="24" y="25" width="72" height="68" rx="8" fill="#ffffff" />
+          <rect x="31" y="33" width="58" height="28" rx="4" fill="#334155" />
+          <circle cx="45" cy="44" r="6" fill="#facc15" />
+          <path d="M35 56l13-10 9 7 8-6 14 9H35Z" fill="#38bdf8" />
+          <rect x="31" y="68" width="48" height="6" rx="3" fill="#dc2626" />
+          <rect x="31" y="79" width="38" height="5" rx="2.5" fill="#cbd5e1" />
+          <circle cx="91" cy="88" r="15" fill="#facc15" stroke="#ffffff" strokeWidth="2.5" />
+          <path d="M84 88h14M91 81v14" stroke="#78350f" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      );
+
     default:
       return (
         <svg viewBox="0 0 120 120" className={className} aria-hidden="true">
