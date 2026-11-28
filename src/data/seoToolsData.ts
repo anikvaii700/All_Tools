@@ -23,7 +23,7 @@ export const HOMEPAGE_SEO: ToolSeoInfo = {
   slug: '',
   title: 'MoSaFa Tools – ফ্রি বাংলা অনলাইন টুলস, CV, ছবি ও PDF Tools',
   h1: 'বাংলা ও ইংরেজি অনলাইন টুলস—এক জায়গায়',
-  description: 'MoSaFa Tools-এ বিনামূল্যে ব্যবহার করুন বাংলা ও ইংরেজি অনলাইন টুলস—CV Maker, ছবি রিসাইজ, PDF, টাইপিং টেস্ট, ক্যালকুলেটর ও দৈনন্দিন কাজের টুল।'
+  description: 'MoSaFa Tools-এ বিনামূল্যে ব্যবহার করুন বাংলা ও ইংরেজি অনলাইন টুলস—CV Maker, ছবি রিসাইজ, PDF, টাইপিং টেস্ট, ক্যালকুলেটর ও দৈনন্দিন কাজের টুল।',
   path: '/',
   canonicalUrl: 'https://tools.mosafabd.com/',
   ogImage: DEFAULT_OG_IMAGE,
