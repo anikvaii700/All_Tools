@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Wrench } from 'lucide-react';
+import { Wrench } from 'lucide-react';
 
 interface FooterProps {
   onNavigateTool?: (tool: any) => void;
@@ -89,7 +89,9 @@ export const Footer: React.FC<FooterProps> = ({
         title="ডেভেলপারকে মেসেজ দিন"
         className="absolute bottom-5 right-5 sm:bottom-6 sm:right-7 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900"
       >
-        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+        <svg viewBox="0 0 32 32" className="w-6 h-6 sm:w-7 sm:h-7" fill="currentColor" aria-hidden="true">
+          <path d="M16 .0C7.18 0 .02 7.13.02 15.92c0 2.81.74 5.56 2.15 7.99L0 32l8.34-2.18a16.1 16.1 0 0 0 7.66 1.94h.01c8.82 0 15.98-7.14 15.99-15.93A15.83 15.83 0 0 0 27.3 4.55 15.9 15.9 0 0 0 16 0Zm0 28.98h-.01a13.2 13.2 0 0 1-6.72-1.83l-.48-.28-4.95 1.29 1.32-4.81-.31-.49a13.08 13.08 0 0 1-2.02-6.94C2.83 8.69 8.74 2.8 16.01 2.8c3.52 0 6.83 1.37 9.32 3.85a13.05 13.05 0 0 1 3.86 9.28c0 7.27-5.92 13.05-13.19 13.05Zm7.23-9.78c-.4-.2-2.35-1.16-2.72-1.29-.36-.13-.63-.2-.9.2-.27.4-1.03 1.29-1.26 1.56-.23.27-.46.3-.86.1-.4-.2-1.69-.62-3.22-1.98-1.19-1.06-1.99-2.37-2.22-2.77-.23-.4-.02-.62.18-.82.18-.18.4-.46.6-.69.2-.23.27-.4.4-.67.13-.27.07-.5-.03-.7-.1-.2-.9-2.16-1.23-2.96-.32-.77-.65-.67-.9-.68h-.77c-.27 0-.7.1-1.06.5-.36.4-1.4 1.36-1.4 3.32 0 1.96 1.43 3.85 1.63 4.12.2.27 2.81 4.29 6.81 6.01.95.41 1.69.66 2.27.84.95.3 1.81.26 2.49.16.76-.11 2.35-.96 2.68-1.89.33-.93.33-1.73.23-1.89-.1-.17-.36-.27-.76-.47Z"/>
+        </svg>
       </button>
     </footer>
   );
