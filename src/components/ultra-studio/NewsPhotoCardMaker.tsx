@@ -9,11 +9,16 @@ interface NewsPhotoCardMakerProps {
 }
 
 const TEMPLATES = [
-  { id: 'classic', name: 'ক্লাসিক ব্যানার', label: 'ব্রেকিং নিউজ', accent: '#b91c1c', dark: '#334155' },
-  { id: 'breaking', name: 'ব্রেকিং নিউজ', label: 'জরুরি সংবাদ', accent: '#dc2626', dark: '#111827' },
-  { id: 'blue', name: 'নিউজ আপডেট', label: 'সর্বশেষ সংবাদ', accent: '#1d4ed8', dark: '#172554' },
-  { id: 'green', name: 'নিরপেক্ষ সংবাদ', label: 'সংবাদ', accent: '#047857', dark: '#1f2937' },
-  { id: 'gold', name: 'প্রিমিয়াম', label: 'বিশেষ প্রতিবেদন', accent: '#a16207', dark: '#292524' },
+  { id: 'classic', name: 'ক্লাসিক ব্রেকিং ব্যানার', layout: 'classic', label: 'ব্রেকিং নিউজ', accent: '#b91c1c', dark: '#334155' },
+  { id: 'full-gradient', name: 'ফুল ইমেজ গ্রেডিয়েন্ট', layout: 'full-gradient', label: 'লিংক কমেন্টে', accent: '#b91c1c', dark: '#111827' },
+  { id: 'clean-white', name: 'মিনিমাল ক্লিন হোয়াইট', layout: 'clean-white', label: 'সর্বশেষ সংবাদ', accent: '#b91c1c', dark: '#334155' },
+  { id: 'high-contrast', name: 'ভাইব্রেন্ট হাই-কনট্রাস্ট', layout: 'high-contrast', label: 'বিশেষ প্রতিবেদন', accent: '#facc15', dark: '#09090b' },
+  { id: 'framed', name: 'ফ্রেমড নিউজ পোর্টাল', layout: 'framed', label: 'লিংক কমেন্টে', accent: '#b91c1c', dark: '#334155' },
+  { id: 'top-headline', name: 'টপ হেডলাইন ও বটম ফটো', layout: 'top-headline', label: 'সর্বশেষ খবর', accent: '#b91c1c', dark: '#334155' },
+  { id: 'breaking-red', name: 'রেড ব্রেকিং নিউজ', layout: 'breaking-red', label: 'বিস্তারিত কমেন্টে', accent: '#b91c1c', dark: '#450a0a' },
+  { id: 'editorial', name: 'এডিটোরিয়াল / কোট কার্ড', layout: 'editorial', label: 'নিজেই জানালেন', accent: '#0f766e', dark: '#e2e8f0' },
+  { id: 'blue-channel', name: 'ব্লু চ্যানেল নিউজ', layout: 'blue-channel', label: 'বিস্তারিত কমেন্টে', accent: '#1d4ed8', dark: '#172554' },
+  { id: 'minimal-photo', name: 'মিনিমাল ফটো স্টোরি', layout: 'minimal-photo', label: 'নিউজ আপডেট', accent: '#047857', dark: '#334155' },
 ];
 
 const PALETTE = ['#b91c1c', '#047857', '#1d4ed8', '#7c3aed', '#d97706', '#111827', '#be185d'];
@@ -46,6 +51,14 @@ export const NewsPhotoCardMaker: React.FC<NewsPhotoCardMakerProps> = ({ onBack, 
     }
     setter(URL.createObjectURL(file));
   };
+
+const Placeholder: React.FC = () => <div className="w-full h-full flex items-center justify-center text-slate-300 text-center text-[clamp(12px,2vw,18px)] font-bold">নিউজের ছবি আপলোড করুন</div>;
+
+  const Footer: React.FC<{ dark?: boolean }> = ({ dark = false }) => (
+    <div className={`mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[clamp(9px,1.6vw,13px)] font-semibold ${dark ? 'text-slate-600' : 'text-white'}`}>
+      <span>{portalName}</span><span>•</span><span>{date}</span><span>•</span><span>{website}</span><span>•</span><span>{tagline}</span>
+    </div>
+  );
 
   const exportCard = async (format: 'png' | 'pdf') => {
     if (!previewRef.current || exporting) return;
@@ -101,7 +114,7 @@ export const NewsPhotoCardMaker: React.FC<NewsPhotoCardMakerProps> = ({ onBack, 
           <section className="rounded-2xl border border-slate-200 bg-white/85 p-4 sm:p-5 shadow-sm space-y-4">
             <h2 className="text-lg font-extrabold">নিউজ ফটো কার্ড ডিজাইনার (1080×1080)</h2>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">কার্ড স্টাইল বাছাই করুন (৫টি স্টাইল)</label>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5">কার্ড ডিজাইন বাছাই করুন (১০টি স্টাইল)</label>
               <select value={templateId} onChange={(e) => { setTemplateId(e.target.value); const selected = TEMPLATES.find((item) => item.id === e.target.value); if (selected) setAccent(selected.accent); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold">
                 {TEMPLATES.map((item, index) => <option key={item.id} value={item.id}>{index + 1}. {item.name}</option>)}
               </select>
@@ -131,22 +144,74 @@ export const NewsPhotoCardMaker: React.FC<NewsPhotoCardMakerProps> = ({ onBack, 
           <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 sm:p-6 shadow-sm">
             <div className="flex items-center justify-between mb-3"><h2 className="font-extrabold text-base">লাইভ প্রিভিউ</h2><span className="text-xs text-slate-500">1080 × 1080 px</span></div>
             <div className="w-full max-w-[560px] mx-auto">
-              <div ref={previewRef} className="relative w-full aspect-square overflow-hidden rounded-xl shadow-lg bg-white" style={{ fontFamily: "'Hind Siliguri', sans-serif" }}>
-                <div className="absolute inset-0" style={{ backgroundColor: template.dark }}>
-                  {photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><div className="text-center"><ImagePlus className="w-12 h-12 mx-auto mb-2 opacity-70" /><span className="text-lg font-bold">নিউজের ছবি আপলোড করুন</span></div></div>}
-                </div>
-                <div className="absolute left-0 right-0 bottom-0 min-h-[34%] px-[5.5%] pt-[5%] pb-[4.5%] text-white flex flex-col justify-between" style={{ backgroundColor: accent }}>
-                  <div>
-                    <div className="inline-flex items-center gap-2 bg-white text-slate-900 px-4 py-1.5 text-[clamp(10px,2.5vw,18px)] font-extrabold -mt-9 mb-3 max-w-[70%]">
-                      {logoUrl && <img src={logoUrl} alt="" className="w-6 h-6 object-contain" />}
-                      <span className="truncate">{portalName || 'নিউজ পোর্টাল'}</span>
-                    </div>
-                    <h3 className="text-[clamp(17px,3.3vw,30px)] font-extrabold leading-[1.25] break-words line-clamp-3">{headline || 'আপনার নিউজের শিরোনাম লিখুন'}</h3>
+              <div ref={previewRef} className={`relative w-full aspect-square overflow-hidden shadow-lg ${template.layout === 'framed' ? 'rounded-2xl p-[2.5%]' : template.layout === 'clean-white' || template.layout === 'editorial' || template.layout === 'minimal-photo' ? 'rounded-xl' : 'rounded-xl'}`} style={{ fontFamily: "'Hind Siliguri', sans-serif", backgroundColor: template.layout === 'framed' ? accent : template.layout === 'clean-white' || template.layout === 'editorial' || template.layout === 'minimal-photo' ? '#f8fafc' : template.dark }}>
+                {template.layout === 'classic' && <>
+                  <div className="absolute inset-0">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImagePlus className="w-12 h-12 mr-2" />নিউজের ছবি আপলোড করুন</div>}</div>
+                  <div className="absolute bottom-0 inset-x-0 min-h-[36%] px-[5.5%] pt-[4%] pb-[4%] text-white flex flex-col justify-between" style={{ backgroundColor: accent }}>
+                    <div><div className="inline-flex items-center gap-2 bg-white text-slate-900 px-4 py-1.5 text-[clamp(10px,2.5vw,18px)] font-extrabold -mt-8 mb-2">{logoUrl && <img src={logoUrl} alt="" className="w-6 h-6 object-contain" />}{portalName}</div><h3 className="text-[clamp(17px,3.3vw,30px)] font-extrabold leading-[1.2]">{headline}</h3></div>
+                    <Footer />
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[clamp(9px,1.6vw,13px)] font-medium opacity-95">
-                    <span>{date}</span><span>•</span><span>{website}</span><span>•</span><span>{tagline}</span>
+                </>}
+                {template.layout === 'full-gradient' && <>
+                  {photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="absolute inset-0 w-full h-full object-cover" /> : <Placeholder />}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-transparent" />
+                  <div className="absolute bottom-0 inset-x-0 p-[6%] text-white">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white text-slate-900 text-[clamp(10px,2.2vw,17px)] font-bold mb-3">{logoUrl && <img src={logoUrl} alt="" className="w-6 h-6 object-contain" />}{tagline || portalName}</div>
+                    <h3 className="text-[clamp(19px,4vw,36px)] leading-[1.18] font-extrabold">{headline}</h3><Footer />
                   </div>
-                </div>
+                </>}
+                {template.layout === 'clean-white' && <>
+                  <div className="absolute top-0 inset-x-0 h-[2%]" style={{ backgroundColor: accent }} />
+                  <div className="absolute top-[4%] left-[4%] right-[4%] h-[25%] flex items-start"><h3 className="text-[clamp(18px,3.5vw,32px)] leading-[1.2] font-extrabold text-slate-900">{headline}</h3></div>
+                  <div className="absolute top-[31%] left-[4%] right-[4%] h-[52%] bg-slate-700 flex items-center justify-center overflow-hidden">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <Placeholder />}</div>
+                  <div className="absolute bottom-[3%] left-[4%] right-[4%] text-[clamp(9px,1.7vw,14px)] text-slate-600"><Footer dark /></div>
+                </>}
+                {template.layout === 'high-contrast' && <>
+                  <div className="absolute inset-0 bg-zinc-950" />
+                  <div className="absolute top-[8%] left-[3%] right-[3%] h-[50%] bg-slate-700 flex items-center justify-center overflow-hidden border-[3px] border-black">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <Placeholder />}</div>
+                  <div className="absolute top-[61%] left-[5%] right-[5%]"><h3 className="text-[clamp(18px,3.7vw,34px)] leading-[1.18] font-extrabold" style={{ color: accent }}>{headline}</h3></div>
+                  <div className="absolute bottom-[4%] left-[5%] right-[5%] text-white"><Footer /></div>
+                </>}
+                {template.layout === 'framed' && <>
+                  <div className="absolute inset-[2.5%] bg-white border-[1.5%] border-white">
+                    <div className="absolute top-[4%] left-[2%] right-[2%] h-[58%] bg-slate-700 flex items-center justify-center overflow-hidden">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <Placeholder />}</div>
+                    <div className="absolute top-[64%] left-[2%] right-[2%]"><span className="inline-block px-3 py-1 text-white text-[clamp(9px,1.8vw,14px)] font-bold" style={{ backgroundColor: accent }}>{tagline}</span><h3 className="mt-2 text-[clamp(17px,3.4vw,31px)] leading-[1.2] font-extrabold text-slate-900">{headline}</h3></div>
+                    <div className="absolute bottom-[2%] left-[2%] right-[2%] text-[clamp(9px,1.7vw,14px)] font-bold" style={{ color: accent }}><Footer dark /></div>
+                  </div>
+                </>}
+                {template.layout === 'top-headline' && <>
+                  <div className="absolute inset-0 bg-white" />
+                  <div className="absolute top-[3%] left-[5%] right-[5%] h-[24%]"><h3 className="text-[clamp(18px,3.6vw,33px)] leading-[1.18] font-extrabold text-slate-900">{headline}</h3></div>
+                  <div className="absolute top-[29%] left-[4%] right-[4%] h-[58%] bg-slate-700 flex items-center justify-center overflow-hidden">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <Placeholder />}</div>
+                  <div className="absolute bottom-0 inset-x-0 h-[10%] px-[5%] flex items-center text-white text-[clamp(9px,1.8vw,15px)]" style={{ backgroundColor: accent }}><Footer /></div>
+                </>}
+                {template.layout === 'breaking-red' && <>
+                  <div className="absolute inset-0" style={{ background: `linear-gradient(145deg, ${accent}, #450a0a)` }} />
+                  <div className="absolute top-[5%] left-[5%] right-[5%] h-[54%] border-[3px] border-white bg-slate-700 flex items-center justify-center overflow-hidden">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <Placeholder />}</div>
+                  <div className="absolute top-[62%] left-[5%] right-[5%] text-white"><h3 className="text-[clamp(18px,3.6vw,33px)] leading-[1.2] font-extrabold">{headline}</h3></div>
+                  <div className="absolute bottom-[4%] left-[5%] right-[5%] text-white"><Footer /></div>
+                </>}
+                {template.layout === 'editorial' && <>
+                  <div className="absolute inset-0 bg-stone-50" />
+                  <div className="absolute top-[5%] left-[6%] right-[6%] h-[55%] flex gap-[4%]">
+                    <div className="w-[58%]"><div className="text-[clamp(28px,5vw,48px)] leading-none" style={{ color: accent }}>“</div><h3 className="text-[clamp(17px,3.3vw,30px)] leading-[1.2] font-extrabold text-slate-900">{headline}</h3><p className="mt-3 text-[clamp(10px,1.8vw,16px)] font-bold" style={{ color: accent }}>{portalName}</p></div>
+                    <div className="w-[38%] rounded-t-full overflow-hidden bg-slate-200 flex items-center justify-center">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <Placeholder />}</div>
+                  </div>
+                  <div className="absolute bottom-0 inset-x-0 h-[27%] px-[6%] py-[4%] text-white flex items-end" style={{ backgroundColor: accent }}><Footer /></div>
+                </>}
+                {template.layout === 'blue-channel' && <>
+                  <div className="absolute inset-0" style={{ backgroundColor: accent }} />
+                  <div className="absolute top-[5%] left-[5%] right-[5%] h-[53%] rounded-xl overflow-hidden bg-slate-700 flex items-center justify-center">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <Placeholder />}</div>
+                  <div className="absolute top-[62%] left-[5%] right-[5%] text-white"><h3 className="text-[clamp(18px,3.7vw,34px)] leading-[1.2] font-extrabold">{headline}</h3></div>
+                  <div className="absolute bottom-[4%] left-[5%] right-[5%] text-white"><Footer /></div>
+                </>}
+                {template.layout === 'minimal-photo' && <>
+                  <div className="absolute inset-0 bg-slate-50" />
+                  <div className="absolute top-[4%] left-[5%] right-[5%] h-[8%] flex items-center justify-between text-[clamp(9px,1.7vw,14px)] font-bold text-slate-700"><span>{portalName}</span><span>{date}</span></div>
+                  <div className="absolute top-[15%] left-[5%] right-[5%] h-[48%] rounded-xl overflow-hidden bg-slate-700 flex items-center justify-center">{photoUrl ? <img src={photoUrl} alt="নিউজ ছবি" className="w-full h-full object-cover" /> : <Placeholder />}</div>
+                  <div className="absolute top-[67%] left-[5%] right-[5%]"><h3 className="text-[clamp(18px,3.6vw,33px)] leading-[1.2] font-extrabold text-slate-900">{headline}</h3></div>
+                  <div className="absolute bottom-[4%] left-[5%] right-[5%] text-[clamp(9px,1.7vw,14px)]" style={{ color: accent }}><Footer dark /></div>
+                </>}
               </div>
             </div>
           </section>
