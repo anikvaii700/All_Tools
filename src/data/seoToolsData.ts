@@ -21,9 +21,9 @@ export const DEFAULT_OG_IMAGE = 'https://tools.mosafabd.com/og-image.jpg?v=7.0.0
 export const HOMEPAGE_SEO: ToolSeoInfo = {
   id: 'home',
   slug: '',
-  title: 'MoSaFa Tools - সকল অনলাইন টুলস পোর্টাল',
-  h1: 'আপনার প্রয়োজনীয় সকল অনলাইন টুলস এক জায়গায়',
-  description: 'অনলাইন সেবার দারুন প্লাটফর্ম, আপনিও আপনার বন্ধু বান্ধবের মাঝে এখনি  শেয়ার করুন',
+  title: 'MoSaFa Tools – ফ্রি বাংলা অনলাইন টুলস, CV, ছবি ও PDF Tools',
+  h1: 'বাংলা ও ইংরেজি অনলাইন টুলস—এক জায়গায়',
+  description: 'MoSaFa Tools-এ বিনামূল্যে ব্যবহার করুন বাংলা ও ইংরেজি অনলাইন টুলস—CV Maker, ছবি রিসাইজ, PDF, টাইপিং টেস্ট, ক্যালকুলেটর ও দৈনন্দিন কাজের টুল।'
   path: '/',
   canonicalUrl: 'https://tools.mosafabd.com/',
   ogImage: DEFAULT_OG_IMAGE,
@@ -84,20 +84,6 @@ export const TOOLS_SEO_REGISTRY: Record<string, ToolSeoInfo> = {
     category: 'Business & Legal',
     applicationCategory: 'BusinessApplication',
     keywords: ['all form fillup', 'অনলাইন ফরম', 'বাসা ভাড়ার রসিদ', 'চুক্তিপত্র', 'ক্যাশ মেমো'],
-  },
-  'love-test': {
-    id: 'love-test',
-    slug: 'love-test',
-    title: 'Love Test – প্রেম ও সম্পর্কের মজার পরীক্ষা',
-    h1: 'Love Test – প্রেম ও সম্পর্কের মজার পরীক্ষা',
-    description:
-      'সম্পর্কের সামঞ্জস্যতা, পারস্পরিক বিশ্বাস, সম্মান ও সুস্থ ভালোবাসার বাস্তব নির্দেশিকা পড়ুন। সুস্থ সম্পর্কের লক্ষণ, দৈনন্দিন অভ্যাস ও জরুরি পরামর্শ জানুন।',
-    path: '/tools/love-test',
-    canonicalUrl: 'https://tools.mosafabd.com/tools/love-test',
-    ogImage: DEFAULT_OG_IMAGE,
-    category: 'Entertainment',
-    applicationCategory: 'EntertainmentApplication',
-    keywords: ['love test', 'প্রেম পরীক্ষা', 'ভালোবাসার পরীক্ষা', 'love calculator', 'সম্পর্কের কুইজ'],
   },
   'typing-test': {
     id: 'typing-test',
