@@ -32,14 +32,6 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- 4. Love Test -->
-  <url>
-    <loc>https://tools.mosafabd.com/tools/love-test</loc>
-    <lastmod>2026-11-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
   <!-- 5. Typing Test -->
   <url>
     <loc>https://tools.mosafabd.com/tools/typing-test</loc>
