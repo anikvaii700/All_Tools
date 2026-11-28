@@ -116,7 +116,6 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
 }
 
 // Lazy-loaded 27 Tools for optimal bundle performance & lightning-fast initial page load
-const LoveTest = lazyWithRetry(() => import('./components/LoveTest').then((m) => ({ default: m.LoveTest })), 'LoveTest');
 const TypingTest = lazyWithRetry(() => import('./components/TypingTest').then((m) => ({ default: m.TypingTest })), 'TypingTest');
 const AgeCalculator = lazyWithRetry(() => import('./components/AgeCalculator').then((m) => ({ default: m.AgeCalculator })), 'AgeCalculator');
 const BanglaStatusHub = lazyWithRetry(() => import('./components/BanglaStatusHub').then((m) => ({ default: m.BanglaStatusHub })), 'BanglaStatusHub');
@@ -157,7 +156,6 @@ export type ToolId =
   | 'studymate-bd'
   | 'all-form-fillup'
   | 'entrepreneur-journey'
-  | 'love-test'
   | 'typing-test'
   | 'age-calc'
   | 'bangla-status'
@@ -188,7 +186,6 @@ export const VALID_TOOL_IDS: readonly ToolId[] = [
   'job-photo-signature-resizer',
   'studymate-bd',
   'all-form-fillup',
-  'love-test',
   'typing-test',
   'age-calc',
   'bangla-status',
@@ -1118,20 +1115,6 @@ export default function App() {
       keywords: ['বয়স ক্যালকুলেটর', 'age calculator', 'জন্ম তারিখ', 'হিসাব', 'দিন', 'মাস', 'বছর'],
     },
     {
-      id: 'love-test',
-      title: 'প্রেম টেস্ট (Love Test)',
-      badge: '🔥 ভাইরাল টেস্ট',
-      badgeColor: 'bg-rose-50 text-rose-600 border-rose-200',
-      category: 'lifestyle',
-      iconBg: 'from-rose-500 to-pink-600',
-      icon: <Heart className="w-6 h-6 fill-white text-white" />,
-      description:
-        'দুজনের বয়স, গায়ের রং, পারিবারিক সম্মতি, বাস্তব প্রশ্ন ও স্বভাব যাচাই করে সম্পর্কের গভীরতা ও ভবিষ্যৎ উদ্দেশ্য নির্ণয় করুন। সনদপত্র ডাউনলোড সুবিধা সহ!',
-      deviceTarget: 'mobile',
-      deviceTag: '📱 মোবাইলে সেরা (টাচ কুইজ ও শেয়ার)',
-      keywords: ['প্রেম টেস্ট', 'love test', 'সম্পর্ক', 'ভালোবাসা', 'বিবাহ', 'বিচ্ছেদ', 'পরীক্ষা'],
-    },
-    {
       id: 'random-picker',
       title: 'Random Picker Wheel (সিদ্ধান্ত চাকা)',
       badge: '🎡 লাকি হুইল',
@@ -1206,7 +1189,6 @@ export default function App() {
   const HIDDEN_FROM_HOMEPAGE_GRID: readonly ToolId[] = [
     'job-photo-signature-resizer',
     'poster-studio',
-    'love-test',
   ];
   const homepageTools = tools.filter((t) => !HIDDEN_FROM_HOMEPAGE_GRID.includes(t.id));
 
@@ -1588,15 +1570,6 @@ export default function App() {
 
   // Render standalone view if tool is selected
   // Original 7 tools:
-  if (activeTool === 'love-test') {
-    return wrapWithNavbar(
-      <LoveTest
-        onBackToHub={() => navigateToTool(null)}
-        onShowToast={showToast}
-        onNavigateToTool={(toolId) => navigateToTool(toolId as ToolId)}
-      />
-    );
-  }
   if (activeTool === 'typing-test') {
     return wrapWithNavbar(<TypingTest onBackToHub={() => navigateToTool(null)} onShowToast={showToast} />);
   }
