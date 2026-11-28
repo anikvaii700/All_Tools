@@ -23,6 +23,7 @@ import { SmartDocScannerStudio } from './SmartDocScannerStudio';
 import { PhotoSizePreset } from './photoStudioTypes';
 import { MoSaFaAIPhotoStudio } from './ai-photo-studio/MoSaFaAIPhotoStudio';
 import { PassportPresetId, StudioWorkspaceTab } from './ai-photo-studio/types';
+import { NewsPhotoCardMaker } from './NewsPhotoCardMaker';
 
 interface UltraDigitalStudioProps {
   onBackToHub?: () => void;
@@ -107,6 +108,11 @@ export const UltraDigitalStudio: React.FC<UltraDigitalStudioProps> = ({
           onOpenStandaloneTool={onNavigateToTool}
           onBackToHome={onBackToHub}
         />
+      )}
+
+      {/* News Photo Card Maker — new Ultra Digital Studio sub-tool */}
+      {activeSection === 'news-card' && (
+        <NewsPhotoCardMaker onBack={handleReturnToDashboard} onShowToast={onShowToast} />
       )}
 
       {/* 2. MoSaFa AI Photo Studio – All-in-One (Merges Digital Photo & Print Studio + Studio Backdrop Changer) */}
