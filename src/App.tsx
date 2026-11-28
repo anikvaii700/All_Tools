@@ -2261,15 +2261,15 @@ export default function App() {
           </div>
         )}
 
-        {/* Feature Highlights Bar */}
-        <div className="mt-12 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        {/* Feature Highlights — clear, non-absolute service promises */}
+        <section aria-label="MoSaFa Tools-এর সুবিধা" className="mt-10 sm:mt-12 bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/90 shadow-sm grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6 text-center">
           <div>
             <div className="text-2xl sm:text-3xl font-extrabold text-rose-500 mb-1 flex items-center justify-center gap-1">
               <CheckCircle className="w-6 h-6 text-rose-500" />
-              <span>১০০%</span>
+              <span>সহজ</span>
             </div>
-            <div className="text-xs font-bold text-slate-800">সুরক্ষিত ও ডিজিটাল</div>
-            <p className="text-[11px] text-slate-500 mt-0.5">সহজ ও বিশ্বস্ত সেবা</p>
+            <div className="text-xs font-bold text-slate-800">ব্যবহারবান্ধব টুলস</div>
+            <p className="text-[11px] text-slate-500 mt-1">সহজ ইন্টারফেসে প্রয়োজনীয় কাজ</p>
           </div>
 
           <div>
@@ -2277,17 +2277,17 @@ export default function App() {
               <Zap className="w-6 h-6 text-indigo-500" />
               <span>দ্রুত</span>
             </div>
-            <div className="text-xs font-bold text-slate-800">ইনস্ট্যান্ট লোডিং</div>
-            <p className="text-[11px] text-slate-500 mt-0.5">হালকা ও অপটিমাইজড</p>
+            <div className="text-xs font-bold text-slate-800">ঝামেলাহীন ব্যবহার</div>
+            <p className="text-[11px] text-slate-500 mt-1">কাজের ধাপ যতটা সম্ভব সংক্ষিপ্ত</p>
           </div>
 
           <div>
             <div className="text-2xl sm:text-3xl font-extrabold text-emerald-500 mb-1 flex items-center justify-center gap-1">
               <Lock className="w-6 h-6 text-emerald-500" />
-              <span>নিরাপদ</span>
+              <span>গোপনীয়তা</span>
             </div>
-            <div className="text-xs font-bold text-slate-800">ডাটা সেভ হয় না</div>
-            <p className="text-[11px] text-slate-500 mt-0.5">সম্পূর্ণ ক্লায়েন্ট সাইড</p>
+            <div className="text-xs font-bold text-slate-800">ডেটা ব্যবহারে স্বচ্ছতা</div>
+            <p className="text-[11px] text-slate-500 mt-1">টুলভেদে ডেটা প্রসেসিং পদ্ধতি ভিন্ন হতে পারে</p>
           </div>
 
           <div>
@@ -2295,10 +2295,10 @@ export default function App() {
               <Smartphone className="w-6 h-6 text-amber-500" />
               <span>রেসপনসিভ</span>
             </div>
-            <div className="text-xs font-bold text-slate-800">মোবাইল ও পিসি</div>
-            <p className="text-[11px] text-slate-500 mt-0.5">সব ডিভাইসে কাজ করে</p>
+            <div className="text-xs font-bold text-slate-800">মোবাইল ও কম্পিউটার</div>
+            <p className="text-[11px] text-slate-500 mt-1">বিভিন্ন স্ক্রিনে ব্যবহার উপযোগী</p>
           </div>
-        </div>
+        </section>
 
         {/* User Reviews Section - Bounded strictly within tools boundary like Notice Board */}
         <div className="mt-8 sm:mt-10">
