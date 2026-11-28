@@ -16,6 +16,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Zap,
+  Newspaper,
 } from 'lucide-react';
 import { PhotoSizePreset } from './photoStudioTypes';
 import { PassportPresetId, StudioWorkspaceTab } from './ai-photo-studio/types';
@@ -29,7 +30,8 @@ export type StudioSection =
   | 'doc-scanner'
   | 'id-card'
   | 'two-person'
-  | 'background-changer';
+  | 'background-changer'
+  | 'news-card';
 
 export interface StudioLaunchOptions {
   preset?: PhotoSizePreset;
@@ -121,6 +123,18 @@ export const StudioDashboard: React.FC<StudioDashboardProps> = ({
       iconBg: 'bg-teal-50 border border-teal-200',
       onClick: () => onSelectSection('id-card'),
       actionLabel: 'আইডি কার্ড তৈরি করুন',
+    },
+    {
+      id: 'news-card',
+      title: 'নিউজ ফটো কার্ড মেকার (1080×1080 Photo Card)',
+      englishTitle: 'Create square news graphics for Facebook and social media',
+      subtitle: 'নিউজের ছবি, পোর্টাল লোগো, শিরোনাম, তারিখ ও ওয়েবসাইট দিয়ে 1080×1080 নিউজ কার্ড তৈরি এবং PNG/PDF ডাউনলোড করুন।',
+      badge: 'নতুন • নিউজ গ্রাফিক্স',
+      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      icon: <Newspaper className="w-7 h-7 text-emerald-600" />,
+      iconBg: 'bg-emerald-50 border border-emerald-200',
+      onClick: () => onSelectSection('news-card'),
+      actionLabel: 'নিউজ ফটো কার্ড তৈরি করুন',
     },
     {
       id: 'two-person',
