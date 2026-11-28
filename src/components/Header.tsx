@@ -143,7 +143,6 @@ export const Header: React.FC<HeaderProps> = ({
 
     // 4. বিনোদন, প্রেম ও কুইজ
     { id: 'palmistry-ai', name: 'MoSaFa Palmistry AI (হস্তরেখা ও ভাগ্যরেখা)', icon: <Hand className="w-3.5 h-3.5 text-amber-600" />, category: 'বিনোদন ও কুইজ', badge: 'এআই হাত' },
-    { id: 'love-test', name: 'সম্পর্ক ও সুস্থ ভালোবাসা', icon: <Heart className="w-3.5 h-3.5 text-rose-600 fill-rose-600" />, category: 'বিনোদন ও কুইজ', badge: 'গাইড' },
     { id: 'bangla-quiz', name: 'বাংলা সাধারণ জ্ঞান ও মেধা কুইজ', icon: <Brain className="w-3.5 h-3.5 text-indigo-600" />, category: 'বিনোদন ও কুইজ', badge: 'কুইজ' },
     { id: 'random-picker', name: 'র‍্যান্ডম পিকার হুইল (ভাগ্যের চাকা)', icon: <Compass className="w-3.5 h-3.5 text-purple-600" />, category: 'বিনোদন ও কুইজ', badge: 'চাকা' },
     { id: 'name-reveal', name: 'নামের গোপন রহস্য ও বিশ্লেষণ', icon: <Sparkles className="w-3.5 h-3.5 text-rose-500" />, category: 'বিনোদন ও কুইজ', badge: 'রহস্য' },
