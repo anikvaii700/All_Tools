@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, ArrowUpRight } from 'lucide-react';
+import { MessageCircle, Wrench } from 'lucide-react';
 
 interface FooterProps {
   onNavigateTool?: (tool: any) => void;
@@ -9,6 +9,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({
+  onNavigateTool,
   onOpenDeveloperModal,
   onOpenLegalModal,
   onNavigateLegal,
@@ -25,79 +26,71 @@ export const Footer: React.FC<FooterProps> = ({
     }
   };
 
+  const handleToolClick = (tool: string) => {
+    onNavigateTool?.(tool);
+  };
+
   return (
-    <footer className="w-full bg-white border-t border-slate-200 pt-6 pb-8 px-4 mt-auto relative z-10">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* ২। সরাসরি ডেভেলপারকে মেসেজ দিন বাটন কার্ড */}
-        <div className="bg-slate-50/90 border border-slate-200 rounded-3xl p-5 sm:p-7 text-center shadow-xs max-w-2xl mx-auto">
-          <button
-            type="button"
-            onClick={onOpenDeveloperModal}
-            className="w-full py-4 px-6 bg-black hover:bg-slate-900 text-white font-black text-sm sm:text-base rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2.5 cursor-pointer active:scale-98 group"
-          >
-            <MessageSquare className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition shrink-0" />
-            <span>সরাসরি ডেভেলপারকে মেসেজ দিন</span>
-          </button>
-        </div>
-
-        {/* ৩। লিগ্যাল ও ট্রাস্ট পেজ লিংকসমূহ (Crawlable Internal Links) */}
-        <nav
-          aria-label="Legal and Information Links"
-          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-bold text-slate-600"
-        >
-          <a
-            href="/about"
-            onClick={(e) => handleLegalClick(e, 'about')}
-            className="hover:text-indigo-600 transition cursor-pointer no-underline text-inherit"
-          >
-            আমাদের সম্পর্কে (About Us)
-          </a>
-          <span className="text-slate-300" aria-hidden="true">•</span>
-          <a
-            href="/contact"
-            onClick={(e) => handleLegalClick(e, 'contact')}
-            className="hover:text-emerald-600 transition cursor-pointer no-underline text-inherit"
-          >
-            যোগাযোগ (Contact Us)
-          </a>
-          <span className="text-slate-300" aria-hidden="true">•</span>
-          <a
-            href="/privacy"
-            onClick={(e) => handleLegalClick(e, 'privacy')}
-            className="hover:text-rose-600 transition cursor-pointer no-underline text-inherit"
-          >
-            গোপনীয়তা নীতি (Privacy Policy)
-          </a>
-          <span className="text-slate-300" aria-hidden="true">•</span>
-          <a
-            href="/terms"
-            onClick={(e) => handleLegalClick(e, 'terms')}
-            className="hover:text-amber-600 transition cursor-pointer no-underline text-inherit"
-          >
-            শর্তাবলী (Terms & Conditions)
-          </a>
-        </nav>
-
-        {/* ৪। ফুটার কপিরাইট ও ডেভেলপার সাপোর্ট লিংক */}
-        <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 text-center sm:text-left">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-white p-0.5 border border-slate-200 shadow-2xs flex items-center justify-center shrink-0 overflow-hidden aspect-square">
-              <img src="/logo.png" alt="MoSaFa Tools Official Logo" className="w-full h-full object-contain aspect-square" />
-            </div>
-            <span className="font-extrabold text-slate-800">MoSaFa Tools</span>
-            <span>• সর্বস্বত্ব সংরক্ষিত ২০২৬</span>
+    <footer className="w-full mt-auto relative z-10 bg-slate-900 text-slate-300">
+      <div className="max-w-7xl 2xl:max-w-[1560px] mx-auto px-5 sm:px-8 lg:px-10 pt-10 sm:pt-12 pb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr] gap-8 sm:gap-10 lg:gap-16 pb-9">
+          {/* Brand and platform summary */}
+          <div className="max-w-md">
+            <a href="/" className="inline-flex items-center gap-2.5 no-underline text-white">
+              <span className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-sm">
+                <Wrench className="w-5 h-5 text-white" />
+              </span>
+              <span className="text-xl font-extrabold tracking-tight">MoSaFa Tools</span>
+            </a>
+            <p className="mt-4 text-sm leading-7 text-slate-400 max-w-md">
+              বাংলাদেশের দৈনন্দিন কাজের জন্য সহজ ও বিনামূল্যের অনলাইন টুলস প্ল্যাটফর্ম। CV তৈরি, ছবি রিসাইজ, PDF, বাংলা টাইপিং এবং প্রয়োজনীয় আরও অনেক টুল ব্যবহার করুন এক জায়গায়।
+            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={onOpenDeveloperModal}
-            className="inline-flex items-center gap-1.5 font-bold text-emerald-700 hover:text-emerald-800 transition cursor-pointer"
-          >
-            <span>হোয়াটসঅ্যাপে মেসেজ পাঠান</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" />
-          </button>
+          {/* Popular tools */}
+          <nav aria-label="গুরুত্বপূর্ণ টুলস">
+            <h2 className="text-sm font-extrabold text-white mb-4">গুরুত্বপূর্ণ টুলস</h2>
+            <ul className="space-y-3 text-sm">
+              <li><button type="button" onClick={() => handleToolClick('cv-maker')} className="text-left text-slate-400 hover:text-white transition">CV Maker</button></li>
+              <li><button type="button" onClick={() => handleToolClick('ultra-digital-studio')} className="text-left text-slate-400 hover:text-white transition">Photo Tools</button></li>
+              <li><button type="button" onClick={() => handleToolClick('pdf-toolkit')} className="text-left text-slate-400 hover:text-white transition">PDF Tools</button></li>
+              <li><button type="button" onClick={() => handleToolClick('typing-test')} className="text-left text-slate-400 hover:text-white transition">Bangla Typing Test</button></li>
+              <li><a href="/" className="text-slate-400 hover:text-white transition no-underline">সকল টুলস</a></li>
+            </ul>
+          </nav>
+
+          {/* Information and legal */}
+          <nav aria-label="তথ্য ও নীতিমালা">
+            <h2 className="text-sm font-extrabold text-white mb-4">তথ্য ও নীতিমালা</h2>
+            <ul className="space-y-3 text-sm">
+              <li><a href="/about" onClick={(e) => handleLegalClick(e, 'about')} className="text-slate-400 hover:text-white transition no-underline">আমাদের সম্পর্কে</a></li>
+              <li><a href="/contact" onClick={(e) => handleLegalClick(e, 'contact')} className="text-slate-400 hover:text-white transition no-underline">যোগাযোগ করুন</a></li>
+              <li><a href="/privacy" onClick={(e) => handleLegalClick(e, 'privacy')} className="text-slate-400 hover:text-white transition no-underline">প্রাইভেসি পলিসি</a></li>
+              <li><a href="/terms" onClick={(e) => handleLegalClick(e, 'terms')} className="text-slate-400 hover:text-white transition no-underline">ব্যবহারের শর্তাবলি</a></li>
+            </ul>
+          </nav>
+        </div>
+
+        <div className="border-t border-slate-700/80 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="MoSaFa Tools" className="w-6 h-6 rounded-md bg-white object-contain p-0.5" />
+            <span className="font-bold text-slate-200">MoSaFa Tools</span>
+            <span>• সর্বস্বত্ব সংরক্ষিত © ২০২৬</span>
+          </div>
+          <span>MoSaFa BD দ্বারা পরিচালিত</span>
         </div>
       </div>
+
+      {/* Compact WhatsApp-style contact shortcut in the footer corner */}
+      <button
+        type="button"
+        onClick={onOpenDeveloperModal}
+        aria-label="ডেভেলপারকে মেসেজ দিন"
+        title="ডেভেলপারকে মেসেজ দিন"
+        className="absolute bottom-5 right-5 sm:bottom-6 sm:right-7 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-900"
+      >
+        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+      </button>
     </footer>
   );
 };
